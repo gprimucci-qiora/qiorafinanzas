@@ -123,8 +123,13 @@ function mostrarVista(nombre) {
 let filasParaCargar = null;
 let ventanaParaCargar = null;
 
-function fechaISODesdeCelda(valor) {
-  const fecha = valor instanceof Date ? valor : new Date(valor);
+function fechaISODesdeCelda(serialExcel) {
+  const MS_POR_DIA = 86400 * 1000;
+  const DIAS_EPOCA_EXCEL = 25569; // días entre la época de Excel (1899-12-30) y la época Unix (1970-01-01)
+  const fecha = new Date(Math.round((serialExcel - DIAS_EPOCA_EXCEL) * MS_POR_DIA));
+  if (isNaN(fecha.getTime())) {
+    throw new Error('Fecha inválida en el archivo: valor "' + serialExcel + '" no es una fecha de Excel reconocible.');
+  }
   const anio = fecha.getUTCFullYear();
   const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
   const dia = String(fecha.getUTCDate()).padStart(2, '0');
@@ -136,7 +141,7 @@ document.getElementById('input-excel').addEventListener('change', function (even
   if (!archivo) return;
   const lector = new FileReader();
   lector.onload = function (e) {
-    const libro = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+    const libro = XLSX.read(e.target.result, { type: 'array' });
     const hoja = libro.Sheets[libro.SheetNames[0]];
     const filas = XLSX.utils.sheet_to_json(hoja);
 
