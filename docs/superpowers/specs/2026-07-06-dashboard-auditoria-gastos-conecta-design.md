@@ -132,6 +132,8 @@ Este cálculo se hace en consulta (vista SQL o cálculo en el cliente), no se al
 
 Dirección visual: inspirada en el proyecto Stitch "Qiora Financial Analytics" (sidebar oscuro, tarjetas KPI, tablas de drill-down, vista de detalle por distrito) — se adapta la maqueta a las categorías/estructura reales definidas en este documento, no a los datos de ejemplo genéricos de Stitch.
 
+Al ser un dashboard financiero de control de gasto, se prioriza la **densidad de visualización** sobre cada vista: no solo KPIs numéricos, sino gráficas de tendencia (serie mensual), composición (stacked bar/treemap por familia y por costo directo/operativo), y comparativos (mes actual vs. anterior) en cada nivel de drill-down, no solo en el Resumen Ejecutivo.
+
 ## 7. Roles y seguridad
 
 - **`admin`**: sube/reemplaza facturas, edita el glosario de sucursales, ve todas las vistas.
