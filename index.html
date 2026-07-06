@@ -59,7 +59,16 @@
   <canvas id="grafica-composicion-mensual" height="100"></canvas>
 </div>
     <div class="vista" id="vista-tipo-gasto"><h1>Por Tipo de Gasto</h1></div>
-    <div class="vista" id="vista-sucursal"><h1>Por Sucursal/Distrito</h1></div>
+    <div class="vista" id="vista-sucursal">
+  <h1>Por Sucursal / Distrito</h1>
+  <label><input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()"> Bolsa</label>
+  <label><input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()"> Prorrateado</label>
+  <table id="tabla-sucursales">
+    <thead><tr><th>Distrito</th><th>Costo Directo</th><th>Gasto Operativo</th><th>Total</th></tr></thead>
+    <tbody id="tabla-sucursales-body"></tbody>
+  </table>
+  <p id="bolsa-total-info"></p>
+</div>
     <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
     <div class="vista" id="vista-glosario">
   <h1>Glosario de Sucursales</h1>
@@ -148,6 +157,7 @@ function mostrarVista(nombre) {
   const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
   if (boton) boton.classList.add('activo');
   if (nombre === 'resumen') cargarResumenEjecutivo();
+  if (nombre === 'sucursal') cargarPorSucursal();
 }
 
 let filasParaCargar = null;
@@ -320,6 +330,35 @@ async function guardarGlosario() {
   if (error) { alert('Error: ' + error.message); return; }
   document.getElementById('form-glosario').style.display = 'none';
   await cargarGlosario();
+}
+
+let prorrateoActual = null;
+
+async function cargarPorSucursal() {
+  const glosarioMap = obtenerGlosarioMap();
+  const mesActual = primerYUltimoDiaMes(0);
+  const { data: facturas } = await supabaseClient
+    .from('facturas').select('*')
+    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
+  prorrateoActual = Calc.calcularProrrateo(facturas || [], glosarioMap);
+  renderizarSucursales();
+}
+
+function renderizarSucursales() {
+  if (!prorrateoActual) return;
+  const modo = document.querySelector('input[name="modo-prorrateo"]:checked').value;
+  const cuerpo = document.getElementById('tabla-sucursales-body');
+  cuerpo.innerHTML = '';
+  prorrateoActual.distritos.forEach((d) => {
+    const operativo = modo === 'prorrateado' ? d.gastoOperativoAsignado : 0;
+    const total = modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${d.distrito}</td><td>${formatoMoneda(d.costoDirecto)}</td><td>${formatoMoneda(operativo)}</td><td>${formatoMoneda(total)}</td>`;
+    cuerpo.appendChild(tr);
+  });
+  document.getElementById('bolsa-total-info').textContent = modo === 'bolsa'
+    ? 'Gasto operativo total sin asignar: ' + formatoMoneda(prorrateoActual.gastoOperativoBolsaTotal)
+    : '';
 }
 
 cargarSesion();
