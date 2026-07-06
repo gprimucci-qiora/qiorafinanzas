@@ -53,7 +53,18 @@
     <div class="vista" id="vista-sucursal"><h1>Por Sucursal/Distrito</h1></div>
     <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
     <div class="vista" id="vista-glosario"><h1>Glosario de Sucursales</h1></div>
-    <div class="vista" id="vista-cargar"><h1>Cargar Datos</h1></div>
+    <div class="vista" id="vista-cargar">
+  <h1>Cargar Datos</h1>
+  <p>Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
+  <input type="file" id="input-excel" accept=".xlsx,.xls">
+  <div id="preview-carga" style="display:none; margin-top: 16px;">
+    <p>Rango detectado: <strong id="preview-rango"></strong></p>
+    <p>Filas a cargar: <strong id="preview-filas"></strong></p>
+    <p style="color:#ffb020;">Esto reemplazará todas las facturas existentes con fecha de pago en ese rango.</p>
+    <button onclick="confirmarCarga()">Confirmar y reemplazar</button>
+  </div>
+  <p id="estado-carga"></p>
+</div>
   </div>
 </div>
 
@@ -107,6 +118,59 @@ function mostrarVista(nombre) {
   document.getElementById('vista-' + nombre).classList.add('activa');
   const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
   if (boton) boton.classList.add('activo');
+}
+
+let filasParaCargar = null;
+let ventanaParaCargar = null;
+
+document.getElementById('input-excel').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    const libro = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+    const hoja = libro.Sheets[libro.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(hoja);
+
+    filasParaCargar = filas.map((fila) => ({
+      familia: fila['FAMILIA'] || null,
+      gasto: fila['GASTO'] || null,
+      empresa: fila['EMPRESA'] || null,
+      sucursal: fila['SUCURSAL'] || null,
+      proveedor: fila['PROVEEDOR'] || null,
+      factura: fila['FACTURA'] || null,
+      subtotal: fila['SUBTOTAL'] ?? null,
+      iva: fila['IVA'] ?? null,
+      descuento: fila['DESCUENTO'] ?? null,
+      monto: fila['MONTO'] ?? null,
+      fecha_alta: fila['FECHA ALTA'] ? new Date(fila['FECHA ALTA']).toISOString().slice(0, 10) : null,
+      fecha_pago: new Date(fila['FECHA DE PAGO']).toISOString().slice(0, 10),
+      tipo_gasto_categoria: fila['TIPO DE GASTO'] || null,
+      linea_negocio: fila['LÍNEA DE NEGOCIO'] || null,
+      negocio: fila['NEGOCIO'] || 'CONECTA',
+    }));
+
+    ventanaParaCargar = Calc.computeVentana(filasParaCargar);
+    document.getElementById('preview-rango').textContent = ventanaParaCargar.fechaMin + ' a ' + ventanaParaCargar.fechaMax;
+    document.getElementById('preview-filas').textContent = filasParaCargar.length;
+    document.getElementById('preview-carga').style.display = 'block';
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCarga() {
+  document.getElementById('estado-carga').textContent = 'Cargando...';
+  const { error } = await supabaseClient.rpc('reemplazar_facturas', {
+    filas: filasParaCargar,
+    p_fecha_min: ventanaParaCargar.fechaMin,
+    p_fecha_max: ventanaParaCargar.fechaMax,
+  });
+  if (error) {
+    document.getElementById('estado-carga').textContent = 'Error: ' + error.message;
+    return;
+  }
+  document.getElementById('estado-carga').textContent = 'Carga completada: ' + filasParaCargar.length + ' filas.';
+  document.getElementById('preview-carga').style.display = 'none';
 }
 
 cargarSesion();
