@@ -58,7 +58,13 @@
   </div>
   <canvas id="grafica-composicion-mensual" height="100"></canvas>
 </div>
-    <div class="vista" id="vista-tipo-gasto"><h1>Por Tipo de Gasto</h1></div>
+    <div class="vista" id="vista-tipo-gasto">
+  <h1>Por Tipo de Gasto</h1>
+  <table id="tabla-tipo-gasto">
+    <thead><tr><th>Familia</th><th>Monto</th></tr></thead>
+    <tbody id="tabla-tipo-gasto-body"></tbody>
+  </table>
+</div>
     <div class="vista" id="vista-sucursal">
   <h1>Por Sucursal / Distrito</h1>
   <label><input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()"> Bolsa</label>
@@ -158,6 +164,7 @@ function mostrarVista(nombre) {
   if (boton) boton.classList.add('activo');
   if (nombre === 'resumen') cargarResumenEjecutivo();
   if (nombre === 'sucursal') cargarPorSucursal();
+  if (nombre === 'tipo-gasto') cargarPorTipoGasto();
 }
 
 let filasParaCargar = null;
@@ -359,6 +366,45 @@ function renderizarSucursales() {
   document.getElementById('bolsa-total-info').textContent = modo === 'bolsa'
     ? 'Gasto operativo total sin asignar: ' + formatoMoneda(prorrateoActual.gastoOperativoBolsaTotal)
     : '';
+}
+
+async function cargarPorTipoGasto() {
+  const mesActual = primerYUltimoDiaMes(0);
+  const { data: facturas } = await supabaseClient
+    .from('facturas').select('familia, gasto, monto')
+    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
+
+  const porFamilia = {};
+  (facturas || []).forEach((f) => {
+    porFamilia[f.familia] = porFamilia[f.familia] || { total: 0, porGasto: {} };
+    porFamilia[f.familia].total += f.monto || 0;
+    porFamilia[f.familia].porGasto[f.gasto] = (porFamilia[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
+  });
+
+  const cuerpo = document.getElementById('tabla-tipo-gasto-body');
+  cuerpo.innerHTML = '';
+  Object.keys(porFamilia).sort((a, b) => porFamilia[b].total - porFamilia[a].total).forEach((familia) => {
+    const filaFamilia = document.createElement('tr');
+    filaFamilia.style.cursor = 'pointer';
+    filaFamilia.innerHTML = `<td>▸ ${familia}</td><td>${formatoMoneda(porFamilia[familia].total)}</td>`;
+    filaFamilia.onclick = () => alternarDetalleGasto(familia);
+    cuerpo.appendChild(filaFamilia);
+
+    const filaDetalle = document.createElement('tr');
+    filaDetalle.id = 'detalle-' + familia.replace(/\s/g, '-');
+    filaDetalle.style.display = 'none';
+    const subfilas = Object.keys(porFamilia[familia].porGasto)
+      .sort((a, b) => porFamilia[familia].porGasto[b] - porFamilia[familia].porGasto[a])
+      .map((gasto) => `<div>${gasto}: ${formatoMoneda(porFamilia[familia].porGasto[gasto])}</div>`)
+      .join('');
+    filaDetalle.innerHTML = `<td colspan="2">${subfilas}</td>`;
+    cuerpo.appendChild(filaDetalle);
+  });
+}
+
+function alternarDetalleGasto(familia) {
+  const el = document.getElementById('detalle-' + familia.replace(/\s/g, '-'));
+  el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
 }
 
 cargarSesion();
