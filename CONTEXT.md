@@ -72,7 +72,16 @@ Filtro de tiempo global: default mes actual vs. mes anterior; opción YTD o rang
 
 ## Estado
 
-**2026-07-06:** Spec de diseño aprobado y commiteado. Análisis real hecho sobre `BD Facturas 22, 23, 24, 25 y 26.xlsx` (50,213 filas) y `Glosario sucursales 06072026.xlsx` (63 sucursales válidas). Siguiente paso: plan de implementación (`writing-plans`).
+**2026-07-06:** ✅ v1 implementada completa.
+
+**Completado (Tareas 1-17):**
+- Supabase: schema SQL (facturas, glosario_sucursales), RLS por rol, RPCs de carga con reemplazo por ventana.
+- `calc.js`: módulo de lógica de negocio (prorrateo, drill-down, etc.) con 10 tests pasando.
+- `index.html`: SPA vanilla con 6 vistas (Login, Cargar Datos, Glosario CRUD, Resumen Ejecutivo, Por Sucursal/Distrito, Por Tipo de Gasto, Sin Clasificar) + filtro de tiempo global.
+
+**Estado actual:** Listo para smoke-test manual (Giacomo con credenciales Supabase reales, Excel de prueba, validar RLS y reemplazo por ventana).
+
+**Fuera de alcance en v1:** comparación vs. presupuesto, historial de versiones, roles regionales, otras líneas de negocio.
 
 ## Glosario de términos
 
