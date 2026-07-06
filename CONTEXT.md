@@ -77,7 +77,7 @@ Filtro de tiempo global: default mes actual vs. mes anterior; opción YTD o rang
 **Completado (Tareas 1-17):**
 - Supabase: schema SQL (facturas, glosario_sucursales), RLS por rol, RPCs de carga con reemplazo por ventana.
 - `calc.js`: módulo de lógica de negocio (prorrateo, drill-down, etc.) con 10 tests pasando.
-- `index.html`: SPA vanilla con 6 vistas (Login, Cargar Datos, Glosario CRUD, Resumen Ejecutivo, Por Sucursal/Distrito, Por Tipo de Gasto, Sin Clasificar) + filtro de tiempo global.
+- `index.html`: SPA vanilla con login + 6 vistas (Cargar Datos, Glosario CRUD, Resumen Ejecutivo, Por Sucursal/Distrito, Por Tipo de Gasto, Sin Clasificar) + filtro de tiempo global.
 
 **Estado actual:** Listo para smoke-test manual (Giacomo con credenciales Supabase reales, Excel de prueba, validar RLS y reemplazo por ventana).
 
