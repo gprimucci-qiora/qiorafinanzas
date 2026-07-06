@@ -54,7 +54,7 @@
     <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
     <div class="vista" id="vista-glosario">
   <h1>Glosario de Sucursales</h1>
-  <button onclick="mostrarFormularioGlosario()">+ Agregar sucursal</button>
+  <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()">+ Agregar sucursal</button>
   <div id="form-glosario" style="display:none; margin: 12px 0;">
     <input id="glosario-sucursal" placeholder="Sucursal (código completo)">
     <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal">
@@ -126,6 +126,7 @@ async function cargarSesion() {
   document.getElementById('app-shell').style.display = 'block';
   if (perfil.rol !== 'admin') {
     document.getElementById('nav-cargar').style.display = 'none';
+    document.getElementById('btn-agregar-glosario').style.display = 'none';
   }
   await cargarGlosario();
   mostrarVista('resumen');
