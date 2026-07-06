@@ -164,6 +164,13 @@ async function cargarSesion() {
     .select('nombre, rol')
     .eq('id', session.user.id)
     .single();
+  if (!perfil) {
+    await supabaseClient.auth.signOut();
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-shell').style.display = 'none';
+    document.getElementById('login-error').textContent = 'Tu usuario no tiene un perfil asignado. Contacta al administrador.';
+    return;
+  }
   usuarioActual = perfil;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
@@ -208,32 +215,42 @@ document.getElementById('input-excel').addEventListener('change', function (even
   if (!archivo) return;
   const lector = new FileReader();
   lector.onload = function (e) {
-    const libro = XLSX.read(e.target.result, { type: 'array' });
-    const hoja = libro.Sheets[libro.SheetNames[0]];
-    const filas = XLSX.utils.sheet_to_json(hoja);
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja);
 
-    filasParaCargar = filas.map((fila) => ({
-      familia: fila['FAMILIA'] || null,
-      gasto: fila['GASTO'] || null,
-      empresa: fila['EMPRESA'] || null,
-      sucursal: fila['SUCURSAL'] || null,
-      proveedor: fila['PROVEEDOR'] || null,
-      factura: fila['FACTURA'] || null,
-      subtotal: fila['SUBTOTAL'] ?? null,
-      iva: fila['IVA'] ?? null,
-      descuento: fila['DESCUENTO'] ?? null,
-      monto: fila['MONTO'] ?? null,
-      fecha_alta: fila['FECHA ALTA'] ? fechaISODesdeCelda(fila['FECHA ALTA']) : null,
-      fecha_pago: fechaISODesdeCelda(fila['FECHA DE PAGO']),
-      tipo_gasto_categoria: fila['TIPO DE GASTO'] || null,
-      linea_negocio: fila['LÍNEA DE NEGOCIO'] || null,
-      negocio: fila['NEGOCIO'] || 'CONECTA',
-    }));
+      filasParaCargar = filas.map((fila, indice) => {
+        try {
+          return {
+            familia: fila['FAMILIA'] || null,
+            gasto: fila['GASTO'] || null,
+            empresa: fila['EMPRESA'] || null,
+            sucursal: fila['SUCURSAL'] || null,
+            proveedor: fila['PROVEEDOR'] || null,
+            factura: fila['FACTURA'] || null,
+            subtotal: fila['SUBTOTAL'] ?? null,
+            iva: fila['IVA'] ?? null,
+            descuento: fila['DESCUENTO'] ?? null,
+            monto: fila['MONTO'] ?? null,
+            fecha_alta: fila['FECHA ALTA'] ? fechaISODesdeCelda(fila['FECHA ALTA']) : null,
+            fecha_pago: fechaISODesdeCelda(fila['FECHA DE PAGO']),
+            tipo_gasto_categoria: fila['TIPO DE GASTO'] || null,
+            linea_negocio: fila['LÍNEA DE NEGOCIO'] || null,
+            negocio: fila['NEGOCIO'] || 'CONECTA',
+          };
+        } catch (errorFila) {
+          throw new Error('Fila ' + (indice + 2) + ' del Excel: ' + errorFila.message);
+        }
+      });
 
-    ventanaParaCargar = Calc.computeVentana(filasParaCargar);
-    document.getElementById('preview-rango').textContent = ventanaParaCargar.fechaMin + ' a ' + ventanaParaCargar.fechaMax;
-    document.getElementById('preview-filas').textContent = filasParaCargar.length;
-    document.getElementById('preview-carga').style.display = 'block';
+      ventanaParaCargar = Calc.computeVentana(filasParaCargar);
+      document.getElementById('preview-rango').textContent = ventanaParaCargar.fechaMin + ' a ' + ventanaParaCargar.fechaMax;
+      document.getElementById('preview-filas').textContent = filasParaCargar.length;
+      document.getElementById('preview-carga').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga').textContent = 'Error al leer el archivo: ' + error.message;
+    }
   };
   lector.readAsArrayBuffer(archivo);
 });
@@ -326,36 +343,63 @@ function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 }
 
+async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
+  const TAMANO_PAGINA = 1000;
+  let todas = [];
+  let desde = 0;
+  while (true) {
+    const { data, error } = await supabaseClient
+      .from('facturas')
+      .select(columnas)
+      .gte('fecha_pago', fechaInicio)
+      .lte('fecha_pago', fechaFin)
+      .range(desde, desde + TAMANO_PAGINA - 1);
+    if (error) throw error;
+    todas = todas.concat(data || []);
+    if (!data || data.length < TAMANO_PAGINA) break;
+    desde += TAMANO_PAGINA;
+  }
+  return todas;
+}
+
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
   const mesActual = obtenerRangoActivo();
+  const compararConAnterior = rangoActivoTipo === 'mes-actual';
   const mesAnterior = primerYUltimoDiaMes(-1);
 
-  const [{ data: facturasActual }, { data: facturasAnterior }] = await Promise.all([
-    supabaseClient.from('facturas').select('*').gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin),
-    supabaseClient.from('facturas').select('*').gte('fecha_pago', mesAnterior.inicio).lte('fecha_pago', mesAnterior.fin),
-  ]);
+  const facturasActual = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
+  const facturasAnterior = compararConAnterior
+    ? await obtenerFacturasEnRango(mesAnterior.inicio, mesAnterior.fin, '*')
+    : [];
 
-  const kpisActual = Calc.calcularKPIs(facturasActual || [], glosarioMap);
-  const kpisAnterior = Calc.calcularKPIs(facturasAnterior || [], glosarioMap);
+  const kpisActual = Calc.calcularKPIs(facturasActual, glosarioMap);
+  const kpisAnterior = Calc.calcularKPIs(facturasAnterior, glosarioMap);
 
   document.getElementById('kpi-total').textContent = formatoMoneda(kpisActual.totalPagado);
   document.getElementById('kpi-directo').textContent = formatoMoneda(kpisActual.costoDirecto);
   document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
   document.getElementById('kpi-sin-clasificar').textContent = formatoMoneda(kpisActual.sinClasificar);
 
-  const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
-  document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
+  if (compararConAnterior) {
+    const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
+    document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
+  } else {
+    document.getElementById('kpi-total-var').textContent = '';
+  }
 
   const ctx = document.getElementById('grafica-composicion-mensual');
   if (window.graficaComposicion) window.graficaComposicion.destroy();
+  const labels = compararConAnterior ? ['Mes anterior', 'Periodo actual'] : ['Periodo actual'];
+  const datosDirecto = compararConAnterior ? [kpisAnterior.costoDirecto, kpisActual.costoDirecto] : [kpisActual.costoDirecto];
+  const datosOperativo = compararConAnterior ? [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo] : [kpisActual.gastoOperativo];
   window.graficaComposicion = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Mes anterior', 'Mes actual'],
+      labels: labels,
       datasets: [
-        { label: 'Costo Directo', data: [kpisAnterior.costoDirecto, kpisActual.costoDirecto], backgroundColor: '#E85420' },
-        { label: 'Gasto Operativo', data: [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo], backgroundColor: '#2a2e3a' },
+        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#E85420' },
+        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#2a2e3a' },
       ],
     },
     options: { scales: { x: { stacked: true }, y: { stacked: true } } },
@@ -400,10 +444,8 @@ let prorrateoActual = null;
 async function cargarPorSucursal() {
   const glosarioMap = obtenerGlosarioMap();
   const mesActual = obtenerRangoActivo();
-  const { data: facturas } = await supabaseClient
-    .from('facturas').select('*')
-    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
-  prorrateoActual = Calc.calcularProrrateo(facturas || [], glosarioMap);
+  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
+  prorrateoActual = Calc.calcularProrrateo(facturas, glosarioMap);
   renderizarSucursales();
 }
 
@@ -412,26 +454,31 @@ function renderizarSucursales() {
   const modo = document.querySelector('input[name="modo-prorrateo"]:checked').value;
   const cuerpo = document.getElementById('tabla-sucursales-body');
   cuerpo.innerHTML = '';
+  let totalAsignado = 0;
   prorrateoActual.distritos.forEach((d) => {
     const operativo = modo === 'prorrateado' ? d.gastoOperativoAsignado : 0;
     const total = modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto;
+    totalAsignado += d.gastoOperativoAsignado;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${d.distrito}</td><td>${formatoMoneda(d.costoDirecto)}</td><td>${formatoMoneda(operativo)}</td><td>${formatoMoneda(total)}</td>`;
     cuerpo.appendChild(tr);
   });
-  document.getElementById('bolsa-total-info').textContent = modo === 'bolsa'
-    ? 'Gasto operativo total sin asignar: ' + formatoMoneda(prorrateoActual.gastoOperativoBolsaTotal)
-    : '';
+  const noAsignado = prorrateoActual.gastoOperativoBolsaTotal - totalAsignado;
+  if (modo === 'bolsa') {
+    document.getElementById('bolsa-total-info').textContent = 'Gasto operativo total sin asignar: ' + formatoMoneda(prorrateoActual.gastoOperativoBolsaTotal);
+  } else if (noAsignado > 0.01) {
+    document.getElementById('bolsa-total-info').textContent = 'Gasto operativo no asignado (sin distritos con folios en su región durante el periodo): ' + formatoMoneda(noAsignado);
+  } else {
+    document.getElementById('bolsa-total-info').textContent = '';
+  }
 }
 
 async function cargarPorTipoGasto() {
   const mesActual = obtenerRangoActivo();
-  const { data: facturas } = await supabaseClient
-    .from('facturas').select('familia, gasto, monto')
-    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
+  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, 'familia, gasto, monto');
 
   const porFamilia = {};
-  (facturas || []).forEach((f) => {
+  facturas.forEach((f) => {
     porFamilia[f.familia] = porFamilia[f.familia] || { total: 0, porGasto: {} };
     porFamilia[f.familia].total += f.monto || 0;
     porFamilia[f.familia].porGasto[f.gasto] = (porFamilia[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
@@ -466,12 +513,10 @@ function alternarDetalleGasto(familia) {
 async function cargarSinClasificar() {
   const glosarioMap = obtenerGlosarioMap();
   const mesActual = obtenerRangoActivo();
-  const { data: facturas } = await supabaseClient
-    .from('facturas').select('*')
-    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
+  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
 
   const porSucursal = {};
-  (facturas || []).forEach((raw) => {
+  facturas.forEach((raw) => {
     const f = Calc.clasificarFactura(raw, glosarioMap);
     if (f.tipo_gasto !== 'SIN_CLASIFICAR') return;
     porSucursal[f.sucursal] = porSucursal[f.sucursal] || { count: 0, monto: 0 };
