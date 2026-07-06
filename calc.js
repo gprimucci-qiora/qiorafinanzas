@@ -41,8 +41,63 @@
     });
   }
 
+  function calcularProrrateo(facturas, glosarioMap) {
+    const distritos = new Set();
+    const costoDirecto = {};
+    const folios = {};
+    const bolsas = {};
+
+    for (const raw of facturas) {
+      const f = clasificarFactura(raw, glosarioMap);
+      if (f.tipo_gasto === 'COSTOS DIRECTOS') {
+        const distrito = f.sucursal_secundaria;
+        distritos.add(distrito);
+        costoDirecto[distrito] = (costoDirecto[distrito] || 0) + (f.monto || 0);
+        folios[distrito] = (folios[distrito] || 0) + 1;
+      } else if (f.tipo_gasto === 'GASTOS OPERATIVOS') {
+        const entrada = glosarioMap[f.sucursal];
+        const region = entrada ? entrada.region : null;
+        bolsas[f.sucursal] = bolsas[f.sucursal] || { monto: 0, region };
+        bolsas[f.sucursal].monto += (f.monto || 0);
+      }
+      // SIN_CLASIFICAR no participa del prorrateo; se reporta aparte (Task 15)
+    }
+
+    const distritoList = Array.from(distritos);
+    const gastoOperativoAsignado = {};
+    for (const d of distritoList) gastoOperativoAsignado[d] = 0;
+
+    for (const sucursalBolsa in bolsas) {
+      const bolsa = bolsas[sucursalBolsa];
+      const esNacional = !bolsa.region || bolsa.region === 'NACIONAL';
+      const scope = esNacional
+        ? distritoList
+        : distritoList.filter((d) => glosarioMap[d] && glosarioMap[d].region === bolsa.region);
+      const totalFoliosScope = scope.reduce((sum, d) => sum + (folios[d] || 0), 0);
+      if (totalFoliosScope === 0) continue;
+      for (const d of scope) {
+        gastoOperativoAsignado[d] += bolsa.monto * ((folios[d] || 0) / totalFoliosScope);
+      }
+    }
+
+    const gastoOperativoBolsaTotal = Object.values(bolsas).reduce((sum, b) => sum + b.monto, 0);
+
+    return {
+      distritos: distritoList.map((d) => ({
+        distrito: d,
+        costoDirecto: costoDirecto[d] || 0,
+        folios: folios[d] || 0,
+        gastoOperativoAsignado: gastoOperativoAsignado[d],
+        totalProrrateado: (costoDirecto[d] || 0) + gastoOperativoAsignado[d],
+      })),
+      gastoOperativoBolsaTotal,
+      bolsas,
+    };
+  }
+
   return {
     computeVentana,
     clasificarFactura,
+    calcularProrrateo,
   };
 });
