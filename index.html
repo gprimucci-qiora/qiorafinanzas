@@ -123,6 +123,14 @@ function mostrarVista(nombre) {
 let filasParaCargar = null;
 let ventanaParaCargar = null;
 
+function fechaISODesdeCelda(valor) {
+  const fecha = valor instanceof Date ? valor : new Date(valor);
+  const anio = fecha.getUTCFullYear();
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getUTCDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
 document.getElementById('input-excel').addEventListener('change', function (evento) {
   const archivo = evento.target.files[0];
   if (!archivo) return;
@@ -143,8 +151,8 @@ document.getElementById('input-excel').addEventListener('change', function (even
       iva: fila['IVA'] ?? null,
       descuento: fila['DESCUENTO'] ?? null,
       monto: fila['MONTO'] ?? null,
-      fecha_alta: fila['FECHA ALTA'] ? new Date(fila['FECHA ALTA']).toISOString().slice(0, 10) : null,
-      fecha_pago: new Date(fila['FECHA DE PAGO']).toISOString().slice(0, 10),
+      fecha_alta: fila['FECHA ALTA'] ? fechaISODesdeCelda(fila['FECHA ALTA']) : null,
+      fecha_pago: fechaISODesdeCelda(fila['FECHA DE PAGO']),
       tipo_gasto_categoria: fila['TIPO DE GASTO'] || null,
       linea_negocio: fila['LÍNEA DE NEGOCIO'] || null,
       negocio: fila['NEGOCIO'] || 'CONECTA',
