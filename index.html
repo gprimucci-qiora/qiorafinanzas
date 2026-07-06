@@ -48,7 +48,16 @@
     <button onclick="cerrarSesion()" style="margin-top: 24px; color: #ff6b6b;">Cerrar sesión</button>
   </div>
   <div id="contenido">
-    <div class="vista activa" id="vista-resumen"><h1>Resumen Ejecutivo</h1></div>
+    <div class="vista activa" id="vista-resumen">
+  <h1>Resumen Ejecutivo</h1>
+  <div id="kpis-resumen" style="display:flex; gap:16px;">
+    <div class="kpi-card"><p>Gasto Total</p><h2 id="kpi-total">-</h2><span id="kpi-total-var"></span></div>
+    <div class="kpi-card"><p>Costo Directo</p><h2 id="kpi-directo">-</h2></div>
+    <div class="kpi-card"><p>Gasto Operativo</p><h2 id="kpi-operativo">-</h2></div>
+    <div class="kpi-card"><p>Sin Clasificar</p><h2 id="kpi-sin-clasificar">-</h2></div>
+  </div>
+  <canvas id="grafica-composicion-mensual" height="100"></canvas>
+</div>
     <div class="vista" id="vista-tipo-gasto"><h1>Por Tipo de Gasto</h1></div>
     <div class="vista" id="vista-sucursal"><h1>Por Sucursal/Distrito</h1></div>
     <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
@@ -138,6 +147,7 @@ function mostrarVista(nombre) {
   document.getElementById('vista-' + nombre).classList.add('activa');
   const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
   if (boton) boton.classList.add('activo');
+  if (nombre === 'resumen') cargarResumenEjecutivo();
 }
 
 let filasParaCargar = null;
@@ -226,6 +236,57 @@ function obtenerGlosarioMap() {
   const mapa = {};
   glosarioActual.forEach((fila) => { mapa[fila.sucursal] = fila; });
   return mapa;
+}
+
+function primerYUltimoDiaMes(offsetMeses) {
+  const hoy = new Date();
+  const base = new Date(hoy.getFullYear(), hoy.getMonth() + offsetMeses, 1);
+  const primero = new Date(base.getFullYear(), base.getMonth(), 1);
+  const ultimo = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+  return {
+    inicio: primero.toISOString().slice(0, 10),
+    fin: ultimo.toISOString().slice(0, 10),
+  };
+}
+
+function formatoMoneda(valor) {
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
+}
+
+async function cargarResumenEjecutivo() {
+  const glosarioMap = obtenerGlosarioMap();
+  const mesActual = primerYUltimoDiaMes(0);
+  const mesAnterior = primerYUltimoDiaMes(-1);
+
+  const [{ data: facturasActual }, { data: facturasAnterior }] = await Promise.all([
+    supabaseClient.from('facturas').select('*').gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin),
+    supabaseClient.from('facturas').select('*').gte('fecha_pago', mesAnterior.inicio).lte('fecha_pago', mesAnterior.fin),
+  ]);
+
+  const kpisActual = Calc.calcularKPIs(facturasActual || [], glosarioMap);
+  const kpisAnterior = Calc.calcularKPIs(facturasAnterior || [], glosarioMap);
+
+  document.getElementById('kpi-total').textContent = formatoMoneda(kpisActual.totalPagado);
+  document.getElementById('kpi-directo').textContent = formatoMoneda(kpisActual.costoDirecto);
+  document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
+  document.getElementById('kpi-sin-clasificar').textContent = formatoMoneda(kpisActual.sinClasificar);
+
+  const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
+  document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
+
+  const ctx = document.getElementById('grafica-composicion-mensual');
+  if (window.graficaComposicion) window.graficaComposicion.destroy();
+  window.graficaComposicion = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mes anterior', 'Mes actual'],
+      datasets: [
+        { label: 'Costo Directo', data: [kpisAnterior.costoDirecto, kpisActual.costoDirecto], backgroundColor: '#E85420' },
+        { label: 'Gasto Operativo', data: [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo], backgroundColor: '#2a2e3a' },
+      ],
+    },
+    options: { scales: { x: { stacked: true }, y: { stacked: true } } },
+  });
 }
 
 function mostrarFormularioGlosario() {
