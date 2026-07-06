@@ -126,3 +126,20 @@ test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos 
   assert.strictEqual(distA.gastoOperativoAsignado, 0);
   assert.strictEqual(result.gastoOperativoBolsaTotal, 500);
 });
+
+test('calcularKPIs suma correctamente costo directo, operativo y sin clasificar', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-X': { region: 'NACIONAL', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-A', monto: 1000 },
+    { sucursal: 'BOLSA-X', monto: 500 },
+    { sucursal: 'DESCONOCIDA', monto: 50 },
+  ];
+  const result = Calc.calcularKPIs(facturas, glosarioMap);
+  assert.strictEqual(result.totalPagado, 1550);
+  assert.strictEqual(result.costoDirecto, 1000);
+  assert.strictEqual(result.gastoOperativo, 500);
+  assert.strictEqual(result.sinClasificar, 50);
+});

@@ -95,9 +95,28 @@
     };
   }
 
+  function calcularKPIs(facturas, glosarioMap) {
+    let totalPagado = 0;
+    let costoDirecto = 0;
+    let gastoOperativo = 0;
+    let sinClasificar = 0;
+
+    for (const raw of facturas) {
+      const f = clasificarFactura(raw, glosarioMap);
+      const monto = f.monto || 0;
+      totalPagado += monto;
+      if (f.tipo_gasto === 'COSTOS DIRECTOS') costoDirecto += monto;
+      else if (f.tipo_gasto === 'GASTOS OPERATIVOS') gastoOperativo += monto;
+      else sinClasificar += monto;
+    }
+
+    return { totalPagado, costoDirecto, gastoOperativo, sinClasificar };
+  }
+
   return {
     computeVentana,
     clasificarFactura,
     calcularProrrateo,
+    calcularKPIs,
   };
 });
