@@ -75,7 +75,14 @@
   </table>
   <p id="bolsa-total-info"></p>
 </div>
-    <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
+    <div class="vista" id="vista-sin-clasificar">
+  <h1>Sin Clasificar</h1>
+  <p>Sucursales que aparecen en las facturas pero no están en el glosario. Agrégalas desde "Glosario de Sucursales".</p>
+  <table id="tabla-sin-clasificar">
+    <thead><tr><th>Sucursal</th><th>Facturas</th><th>Monto</th></tr></thead>
+    <tbody id="tabla-sin-clasificar-body"></tbody>
+  </table>
+</div>
     <div class="vista" id="vista-glosario">
   <h1>Glosario de Sucursales</h1>
   <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()">+ Agregar sucursal</button>
@@ -165,6 +172,7 @@ function mostrarVista(nombre) {
   if (nombre === 'resumen') cargarResumenEjecutivo();
   if (nombre === 'sucursal') cargarPorSucursal();
   if (nombre === 'tipo-gasto') cargarPorTipoGasto();
+  if (nombre === 'sin-clasificar') cargarSinClasificar();
 }
 
 let filasParaCargar = null;
@@ -405,6 +413,31 @@ async function cargarPorTipoGasto() {
 function alternarDetalleGasto(familia) {
   const el = document.getElementById('detalle-' + familia.replace(/\s/g, '-'));
   el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+
+async function cargarSinClasificar() {
+  const glosarioMap = obtenerGlosarioMap();
+  const mesActual = primerYUltimoDiaMes(0);
+  const { data: facturas } = await supabaseClient
+    .from('facturas').select('*')
+    .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
+
+  const porSucursal = {};
+  (facturas || []).forEach((raw) => {
+    const f = Calc.clasificarFactura(raw, glosarioMap);
+    if (f.tipo_gasto !== 'SIN_CLASIFICAR') return;
+    porSucursal[f.sucursal] = porSucursal[f.sucursal] || { count: 0, monto: 0 };
+    porSucursal[f.sucursal].count += 1;
+    porSucursal[f.sucursal].monto += f.monto || 0;
+  });
+
+  const cuerpo = document.getElementById('tabla-sin-clasificar-body');
+  cuerpo.innerHTML = '';
+  Object.keys(porSucursal).sort((a, b) => porSucursal[b].monto - porSucursal[a].monto).forEach((sucursal) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${sucursal}</td><td>${porSucursal[sucursal].count}</td><td>${formatoMoneda(porSucursal[sucursal].monto)}</td>`;
+    cuerpo.appendChild(tr);
+  });
 }
 
 cargarSesion();
