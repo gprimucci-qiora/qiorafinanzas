@@ -52,7 +52,25 @@
     <div class="vista" id="vista-tipo-gasto"><h1>Por Tipo de Gasto</h1></div>
     <div class="vista" id="vista-sucursal"><h1>Por Sucursal/Distrito</h1></div>
     <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
-    <div class="vista" id="vista-glosario"><h1>Glosario de Sucursales</h1></div>
+    <div class="vista" id="vista-glosario">
+  <h1>Glosario de Sucursales</h1>
+  <button onclick="mostrarFormularioGlosario()">+ Agregar sucursal</button>
+  <div id="form-glosario" style="display:none; margin: 12px 0;">
+    <input id="glosario-sucursal" placeholder="Sucursal (código completo)">
+    <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal">
+    <input id="glosario-region" placeholder="Región">
+    <input id="glosario-sucursal-secundaria" placeholder="Sucursal secundaria (distrito real)">
+    <select id="glosario-tipo-gasto">
+      <option value="COSTOS DIRECTOS">COSTOS DIRECTOS</option>
+      <option value="GASTOS OPERATIVOS">GASTOS OPERATIVOS</option>
+    </select>
+    <button onclick="guardarGlosario()">Guardar</button>
+  </div>
+  <table id="tabla-glosario">
+    <thead><tr><th>Sucursal</th><th>Tipo</th><th>Región</th><th>Sucursal secundaria</th><th>Tipo de gasto</th><th></th></tr></thead>
+    <tbody id="tabla-glosario-body"></tbody>
+  </table>
+</div>
     <div class="vista" id="vista-cargar">
   <h1>Cargar Datos</h1>
   <p>Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
@@ -109,6 +127,7 @@ async function cargarSesion() {
   if (perfil.rol !== 'admin') {
     document.getElementById('nav-cargar').style.display = 'none';
   }
+  await cargarGlosario();
   mostrarVista('resumen');
 }
 
@@ -184,6 +203,61 @@ async function confirmarCarga() {
   }
   document.getElementById('estado-carga').textContent = 'Carga completada: ' + filasParaCargar.length + ' filas.';
   document.getElementById('preview-carga').style.display = 'none';
+}
+
+let glosarioActual = [];
+
+async function cargarGlosario() {
+  const { data, error } = await supabaseClient.from('glosario_sucursales').select('*').order('sucursal');
+  if (error) { console.error(error); return; }
+  glosarioActual = data;
+  const cuerpo = document.getElementById('tabla-glosario-body');
+  cuerpo.innerHTML = '';
+  data.forEach((fila) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${fila.sucursal}</td><td>${fila.tipo_sucursal || ''}</td><td>${fila.region || ''}</td><td>${fila.sucursal_secundaria || ''}</td><td>${fila.tipo_gasto || ''}</td>
+      <td>${usuarioActual && usuarioActual.rol === 'admin' ? '<button onclick="editarGlosario(\'' + fila.sucursal.replace(/'/g, "\\'") + '\')">Editar</button>' : ''}</td>`;
+    cuerpo.appendChild(tr);
+  });
+}
+
+function obtenerGlosarioMap() {
+  const mapa = {};
+  glosarioActual.forEach((fila) => { mapa[fila.sucursal] = fila; });
+  return mapa;
+}
+
+function mostrarFormularioGlosario() {
+  document.getElementById('form-glosario').style.display = 'block';
+  document.getElementById('glosario-sucursal').value = '';
+  document.getElementById('glosario-tipo-sucursal').value = '';
+  document.getElementById('glosario-region').value = '';
+  document.getElementById('glosario-sucursal-secundaria').value = '';
+}
+
+function editarGlosario(sucursal) {
+  const fila = glosarioActual.find((f) => f.sucursal === sucursal);
+  if (!fila) return;
+  document.getElementById('form-glosario').style.display = 'block';
+  document.getElementById('glosario-sucursal').value = fila.sucursal;
+  document.getElementById('glosario-tipo-sucursal').value = fila.tipo_sucursal || '';
+  document.getElementById('glosario-region').value = fila.region || '';
+  document.getElementById('glosario-sucursal-secundaria').value = fila.sucursal_secundaria || '';
+  document.getElementById('glosario-tipo-gasto').value = fila.tipo_gasto || 'COSTOS DIRECTOS';
+}
+
+async function guardarGlosario() {
+  const registro = {
+    sucursal: document.getElementById('glosario-sucursal').value,
+    tipo_sucursal: document.getElementById('glosario-tipo-sucursal').value,
+    region: document.getElementById('glosario-region').value,
+    sucursal_secundaria: document.getElementById('glosario-sucursal-secundaria').value,
+    tipo_gasto: document.getElementById('glosario-tipo-gasto').value,
+  };
+  const { error } = await supabaseClient.from('glosario_sucursales').upsert(registro);
+  if (error) { alert('Error: ' + error.message); return; }
+  document.getElementById('form-glosario').style.display = 'none';
+  await cargarGlosario();
 }
 
 cargarSesion();
