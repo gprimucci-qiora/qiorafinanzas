@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QiORA Conecta — Auditoría de Gastos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="calc.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0f1117; color: #e6e8ec; }
+  #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; }
+  #login-card { background: #171a23; padding: 32px; border-radius: 12px; width: 320px; }
+  #login-card input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #2a2e3a; background: #0f1117; color: #e6e8ec; }
+  #login-card button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: #E85420; color: white; font-weight: 600; cursor: pointer; }
+  #app-shell { display: none; }
+  #sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: #171a23; padding: 20px 12px; }
+  #sidebar button { display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 4px; background: transparent; border: none; color: #b0b4c0; border-radius: 6px; cursor: pointer; }
+  #sidebar button.activo { background: #E85420; color: white; }
+  #contenido { margin-left: 220px; padding: 24px; }
+  .vista { display: none; }
+  .vista.activa { display: block; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="login-card">
+    <h2>QiORA Conecta</h2>
+    <p>Auditoría de Gastos</p>
+    <input id="login-email" type="email" placeholder="Correo">
+    <input id="login-password" type="password" placeholder="Contraseña">
+    <button onclick="iniciarSesion()">Entrar</button>
+    <p id="login-error" style="color:#ff6b6b;"></p>
+  </div>
+</div>
+
+<div id="app-shell">
+  <div id="sidebar">
+    <button data-vista="resumen" onclick="mostrarVista('resumen')">Resumen Ejecutivo</button>
+    <button data-vista="tipo-gasto" onclick="mostrarVista('tipo-gasto')">Por Tipo de Gasto</button>
+    <button data-vista="sucursal" onclick="mostrarVista('sucursal')">Por Sucursal/Distrito</button>
+    <button data-vista="sin-clasificar" onclick="mostrarVista('sin-clasificar')">Sin Clasificar</button>
+    <button data-vista="glosario" onclick="mostrarVista('glosario')">Glosario de Sucursales</button>
+    <button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')">Cargar Datos</button>
+    <button onclick="cerrarSesion()" style="margin-top: 24px; color: #ff6b6b;">Cerrar sesión</button>
+  </div>
+  <div id="contenido">
+    <div class="vista activa" id="vista-resumen"><h1>Resumen Ejecutivo</h1></div>
+    <div class="vista" id="vista-tipo-gasto"><h1>Por Tipo de Gasto</h1></div>
+    <div class="vista" id="vista-sucursal"><h1>Por Sucursal/Distrito</h1></div>
+    <div class="vista" id="vista-sin-clasificar"><h1>Sin Clasificar</h1></div>
+    <div class="vista" id="vista-glosario"><h1>Glosario de Sucursales</h1></div>
+    <div class="vista" id="vista-cargar"><h1>Cargar Datos</h1></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
+const SUPABASE_ANON_KEY = 'TU-ANON-KEY';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let usuarioActual = null;
+
+async function iniciarSesion() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    document.getElementById('login-error').textContent = 'Credenciales inválidas';
+    return;
+  }
+  await cargarSesion();
+}
+
+async function cerrarSesion() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+async function cargarSesion() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-shell').style.display = 'none';
+    return;
+  }
+  const { data: perfil } = await supabaseClient
+    .from('usuarios')
+    .select('nombre, rol')
+    .eq('id', session.user.id)
+    .single();
+  usuarioActual = perfil;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  if (perfil.rol !== 'admin') {
+    document.getElementById('nav-cargar').style.display = 'none';
+  }
+  mostrarVista('resumen');
+}
+
+function mostrarVista(nombre) {
+  document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
+  document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
+  document.getElementById('vista-' + nombre).classList.add('activa');
+  const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
+  if (boton) boton.classList.add('activo');
+}
+
+cargarSesion();
+</script>
+</body>
+</html>
