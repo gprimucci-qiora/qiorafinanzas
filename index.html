@@ -353,6 +353,7 @@ async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
       .select(columnas)
       .gte('fecha_pago', fechaInicio)
       .lte('fecha_pago', fechaFin)
+      .order('id')
       .range(desde, desde + TAMANO_PAGINA - 1);
     if (error) throw error;
     todas = todas.concat(data || []);
