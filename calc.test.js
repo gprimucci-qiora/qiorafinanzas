@@ -108,3 +108,21 @@ test('calcularProrrateo cuenta folios como número de renglones, no de FACTURA d
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
   assert.strictEqual(distA.folios, 3);
 });
+
+test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos con folios en el periodo', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-ORIENTE': { region: 'ORIENTE', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-A', monto: 100 },
+    { sucursal: 'BOLSA-ORIENTE', monto: 500 },
+  ];
+  const result = Calc.calcularProrrateo(facturas, glosarioMap);
+  const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
+  // No district in ORIENTE appeared in this period's direct-cost invoices,
+  // so BOLSA-ORIENTE's scope has 0 total folios: it must be skipped, not
+  // crash or produce NaN, and DIST-A (a different region) must stay untouched.
+  assert.strictEqual(distA.gastoOperativoAsignado, 0);
+  assert.strictEqual(result.gastoOperativoBolsaTotal, 500);
+});
