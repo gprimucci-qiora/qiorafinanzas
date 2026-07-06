@@ -48,6 +48,18 @@
     <button onclick="cerrarSesion()" style="margin-top: 24px; color: #ff6b6b;">Cerrar sesión</button>
   </div>
   <div id="contenido">
+    <div id="filtro-tiempo" style="margin-bottom: 16px;">
+      <select id="filtro-tiempo-tipo" onchange="cambiarFiltroTiempo()">
+        <option value="mes-actual">Mes actual vs. mes anterior</option>
+        <option value="ytd">Acumulado del año (YTD)</option>
+        <option value="rango">Rango personalizado</option>
+      </select>
+      <span id="filtro-rango-personalizado" style="display:none;">
+        <input type="date" id="filtro-fecha-inicio">
+        <input type="date" id="filtro-fecha-fin">
+        <button onclick="aplicarRangoPersonalizado()">Aplicar</button>
+      </span>
+    </div>
     <div class="vista activa" id="vista-resumen">
   <h1>Resumen Ejecutivo</h1>
   <div id="kpis-resumen" style="display:flex; gap:16px;">
@@ -274,13 +286,49 @@ function primerYUltimoDiaMes(offsetMeses) {
   };
 }
 
+let rangoActivoTipo = 'mes-actual';
+let rangoPersonalizado = null;
+
+function obtenerRangoActivo() {
+  if (rangoActivoTipo === 'rango' && rangoPersonalizado) {
+    return rangoPersonalizado;
+  }
+  if (rangoActivoTipo === 'ytd') {
+    const hoy = new Date();
+    return {
+      inicio: new Date(hoy.getFullYear(), 0, 1).toISOString().slice(0, 10),
+      fin: hoy.toISOString().slice(0, 10),
+    };
+  }
+  return primerYUltimoDiaMes(0);
+}
+
+function cambiarFiltroTiempo() {
+  rangoActivoTipo = document.getElementById('filtro-tiempo-tipo').value;
+  document.getElementById('filtro-rango-personalizado').style.display = rangoActivoTipo === 'rango' ? 'inline' : 'none';
+  if (rangoActivoTipo !== 'rango') recargarVistaActiva();
+}
+
+function aplicarRangoPersonalizado() {
+  rangoPersonalizado = {
+    inicio: document.getElementById('filtro-fecha-inicio').value,
+    fin: document.getElementById('filtro-fecha-fin').value,
+  };
+  recargarVistaActiva();
+}
+
+function recargarVistaActiva() {
+  const vistaActiva = document.querySelector('#sidebar button.activo');
+  if (vistaActiva) mostrarVista(vistaActiva.dataset.vista);
+}
+
 function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 }
 
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
-  const mesActual = primerYUltimoDiaMes(0);
+  const mesActual = obtenerRangoActivo();
   const mesAnterior = primerYUltimoDiaMes(-1);
 
   const [{ data: facturasActual }, { data: facturasAnterior }] = await Promise.all([
@@ -351,7 +399,7 @@ let prorrateoActual = null;
 
 async function cargarPorSucursal() {
   const glosarioMap = obtenerGlosarioMap();
-  const mesActual = primerYUltimoDiaMes(0);
+  const mesActual = obtenerRangoActivo();
   const { data: facturas } = await supabaseClient
     .from('facturas').select('*')
     .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
@@ -377,7 +425,7 @@ function renderizarSucursales() {
 }
 
 async function cargarPorTipoGasto() {
-  const mesActual = primerYUltimoDiaMes(0);
+  const mesActual = obtenerRangoActivo();
   const { data: facturas } = await supabaseClient
     .from('facturas').select('familia, gasto, monto')
     .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
@@ -417,7 +465,7 @@ function alternarDetalleGasto(familia) {
 
 async function cargarSinClasificar() {
   const glosarioMap = obtenerGlosarioMap();
-  const mesActual = primerYUltimoDiaMes(0);
+  const mesActual = obtenerRangoActivo();
   const { data: facturas } = await supabaseClient
     .from('facturas').select('*')
     .gte('fecha_pago', mesActual.inicio).lte('fecha_pago', mesActual.fin);
