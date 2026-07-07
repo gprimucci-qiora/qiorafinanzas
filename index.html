@@ -123,35 +123,35 @@
 
   <main class="ml-64 min-h-screen">
     <header class="flex justify-between items-center h-16 px-8 w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant">
-      <div id="filtro-tiempo" class="flex items-center gap-1 bg-white border border-outline-variant rounded-full px-1 py-1">
-        <button onclick="cambiarMesGlobal(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
-          <span class="material-symbols-outlined text-lg">chevron_left</span>
-        </button>
-        <span id="mes-global-label" class="text-xs font-gordita-bold uppercase tracking-widest px-3 min-w-[120px] text-center">-</span>
-        <button onclick="cambiarMesGlobal(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
-          <span class="material-symbols-outlined text-lg">chevron_right</span>
-        </button>
+      <div class="flex items-center gap-3">
+        <div id="filtro-tiempo" class="flex items-center gap-1 bg-white border border-outline-variant rounded-full px-1 py-1">
+          <button onclick="cambiarMesGlobal(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-lg">chevron_left</span>
+          </button>
+          <span id="mes-global-label" class="text-xs font-gordita-bold uppercase tracking-widest px-3 min-w-[120px] text-center">-</span>
+          <button onclick="cambiarMesGlobal(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-lg">chevron_right</span>
+          </button>
+        </div>
+        <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+          <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+            <input type="radio" name="modo-periodo-global" value="mes" checked onchange="cambiarModoPeriodoGlobal('mes')" class="hidden"> Mes
+          </label>
+          <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+            <input type="radio" name="modo-periodo-global" value="ytd" onchange="cambiarModoPeriodoGlobal('ytd')" class="hidden"> YTD
+          </label>
+        </div>
       </div>
     </header>
 
     <div id="contenido" class="p-8 max-w-[1440px] mx-auto">
 
       <div class="vista activa" id="vista-resumen">
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
-            <p id="bienvenida-usuario" class="text-sm text-on-surface-variant mt-2">Bienvenido -</p>
-            <p id="info-actualizada" class="text-xs text-on-surface-variant"></p>
-          </div>
-          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-periodo-resumen" value="mes" checked onchange="cambiarModoPeriodoResumen('mes')" class="hidden"> Mes
-            </label>
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-periodo-resumen" value="ytd" onchange="cambiarModoPeriodoResumen('ytd')" class="hidden"> YTD
-            </label>
-          </div>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
+          <p id="bienvenida-usuario" class="text-sm text-on-surface-variant mt-2">Bienvenido -</p>
+          <p id="info-actualizada" class="text-xs text-on-surface-variant"></p>
         </div>
         <div id="kpis-resumen" class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
@@ -225,23 +225,13 @@
             <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
             <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Sucursal / Distrito</h1>
           </div>
-          <div class="flex gap-3">
-            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="modo-periodo-sucursal" value="mes" checked onchange="cambiarModoPeriodoSucursal('mes')" class="hidden"> Mes
-              </label>
-              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="modo-periodo-sucursal" value="ytd" onchange="cambiarModoPeriodoSucursal('ytd')" class="hidden"> YTD
-              </label>
-            </div>
-            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
-              </label>
-              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
-              </label>
-            </div>
+          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
+            </label>
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
+            </label>
           </div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -416,19 +406,9 @@
         <button onclick="mostrarVista('sucursal')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver
         </button>
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
-          </div>
-          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-periodo-distrito" value="mes" checked onchange="cambiarModoPeriodoDistrito('mes')" class="hidden"> Mes
-            </label>
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-periodo-distrito" value="ytd" onchange="cambiarModoPeriodoDistrito('ytd')" class="hidden"> YTD
-            </label>
-          </div>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
@@ -500,8 +480,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
 let ultimaFechaConDatos = null;
-let modoPeriodoResumen = 'mes';
-let modoPeriodoSucursal = 'mes';
+let modoPeriodoGlobal = 'mes';
 
 async function iniciarSesion() {
   const email = document.getElementById('login-email').value;
@@ -757,21 +736,15 @@ async function recargarVistaActiva() {
   if (vistaActiva) await mostrarVista(vistaActiva.dataset.vista);
 }
 
-async function cambiarModoPeriodoResumen(modo) {
-  modoPeriodoResumen = modo;
+async function cambiarModoPeriodoGlobal(modo) {
+  modoPeriodoGlobal = modo;
   mostrarIndicadorCarga();
   try {
-    await cargarResumenEjecutivo();
-  } finally {
-    ocultarIndicadorCarga();
-  }
-}
-
-async function cambiarModoPeriodoSucursal(modo) {
-  modoPeriodoSucursal = modo;
-  mostrarIndicadorCarga();
-  try {
-    await cargarPorSucursal();
+    if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
+      await renderizarDetalleDistrito();
+    } else {
+      await recargarVistaActiva();
+    }
   } finally {
     ocultarIndicadorCarga();
   }
@@ -811,7 +784,7 @@ async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const rangos = calcularRangosPeriodo(modoPeriodoResumen, anioRef, mesRef);
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
   const facturasActual = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
   const facturasAnterior = rangos.comparacionMoM
@@ -827,7 +800,7 @@ async function cargarResumenEjecutivo() {
   document.getElementById('kpi-directo').textContent = formatoMoneda(kpisActual.costoDirecto);
   document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
   document.getElementById('kpi-anio-anterior').textContent = formatoMoneda(kpisAnioAnterior.totalPagado);
-  if (modoPeriodoResumen === 'ytd') {
+  if (modoPeriodoGlobal === 'ytd') {
     document.getElementById('kpi-anio-anterior-titulo').textContent = 'Mismo Periodo Año Anterior';
     document.getElementById('kpi-anio-anterior-mes').textContent = 'YTD Ene-' + MESES_ABREV[mesRef] + ' ' + (anioRef - 1);
   } else {
@@ -1067,7 +1040,7 @@ function ordenarSucursales(columna) {
 async function cargarPorSucursal() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const rangos = calcularRangosPeriodo(modoPeriodoSucursal, anioRef, mesRef);
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
   const facturas = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
   prorrateoActual = Calc.calcularProrrateo(facturas, glosarioMap);
   renderizarSucursales();
@@ -1080,7 +1053,7 @@ let ordenMovimientos = { columna: 'deltaPesos', direccion: 'desc' };
 
 async function cargarTopMovimientos(glosarioMap, rangos) {
   const { anio: anioRef } = mesGlobalSeleccionado;
-  const rangoComparacion = modoPeriodoSucursal === 'ytd' ? rangos.comparacionYoY : rangos.comparacionMoM;
+  const rangoComparacion = modoPeriodoGlobal === 'ytd' ? rangos.comparacionYoY : rangos.comparacionMoM;
 
   const inicioVentana = rangoDeMes(anioRef - 1, 0).inicio;
   const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangos.actual.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
@@ -1185,6 +1158,13 @@ function renderizarGraficaBurbujas(canvasId, refGrafica, puntos) {
   const suben = aPuntos(puntos.filter((d) => d.deltaPesos >= 0));
   const bajan = aPuntos(puntos.filter((d) => d.deltaPesos < 0));
 
+  const valoresX = puntos.map((d) => clamp(d.deltaPct));
+  const minDato = Math.min(0, ...valoresX);
+  const maxDato = Math.max(0, ...valoresX);
+  const margen = Math.max((maxDato - minDato) * 0.15, 10);
+  const minX = minDato - margen;
+  const maxX = maxDato + margen;
+
   window[refGrafica] = new Chart(ctx, {
     type: 'bubble',
     data: {
@@ -1217,8 +1197,8 @@ function renderizarGraficaBurbujas(canvasId, refGrafica, puntos) {
       },
       scales: {
         x: {
-          min: -LIMITE_X - 10,
-          max: LIMITE_X + 10,
+          min: minX,
+          max: maxX,
           title: { display: true, text: '% de variación', font: { family: 'Gordita', weight: 'bold' } },
           grid: { color: '#e2e2e2' },
           border: { display: false },
@@ -1302,7 +1282,7 @@ let tipoGastoPorFamilia = {};
 async function cargarPorTipoGasto() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const rangos = calcularRangosPeriodo(modoPeriodoResumen, anioRef, mesRef);
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
   const inicioVentana = rangoDeMes(anioRef - 1, 0).inicio;
   const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangos.actual.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
@@ -1413,7 +1393,6 @@ async function cargarSinClasificar() {
 }
 
 let distritoActual = null;
-let modoPeriodoDistrito = 'mes';
 let filtroVariacionesDistrito = 'todos';
 
 async function cambiarFiltroVariacionesDistrito(filtro) {
@@ -1446,25 +1425,12 @@ function alternarDetalleFamiliaDistrito(familia) {
 
 async function abrirDetalleDistrito(distrito) {
   distritoActual = distrito;
-  modoPeriodoDistrito = 'mes';
   filtroVariacionesDistrito = 'todos';
-  const radioMes = document.querySelector('input[name="modo-periodo-distrito"][value="mes"]');
-  if (radioMes) radioMes.checked = true;
   const radioTodos = document.querySelector('input[name="filtro-variaciones-distrito"][value="todos"]');
   if (radioTodos) radioTodos.checked = true;
   document.getElementById('vista-sucursal').classList.remove('activa');
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
-  mostrarIndicadorCarga();
-  try {
-    await renderizarDetalleDistrito();
-  } finally {
-    ocultarIndicadorCarga();
-  }
-}
-
-async function cambiarModoPeriodoDistrito(modo) {
-  modoPeriodoDistrito = modo;
   mostrarIndicadorCarga();
   try {
     await renderizarDetalleDistrito();
@@ -1534,7 +1500,7 @@ async function renderizarDetalleDistrito() {
     etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy: datosYoyTendencia,
   });
 
-  const rangosDistrito = calcularRangosPeriodo(modoPeriodoDistrito, anioRef, mesRef);
+  const rangosDistrito = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
   const rangoActualPeriodo = rangosDistrito.actual;
   const rangoComparacionMoM = rangosDistrito.comparacionMoM;
   const rangoComparacionYoY = rangosDistrito.comparacionYoY;
@@ -1586,8 +1552,8 @@ async function renderizarDetalleDistrito() {
       });
   });
 
-  const mapaComparacionVariaciones = modoPeriodoDistrito === 'ytd' ? porFamiliaYoY : porFamiliaMoM;
-  const tituloVariaciones = modoPeriodoDistrito === 'ytd'
+  const mapaComparacionVariaciones = modoPeriodoGlobal === 'ytd' ? porFamiliaYoY : porFamiliaMoM;
+  const tituloVariaciones = modoPeriodoGlobal === 'ytd'
     ? 'Mayores Variaciones ($ real) — vs. mismo periodo año anterior'
     : 'Mayores Variaciones ($ real) — vs. mes anterior (MoM)';
   let variacionesFamilias = Object.keys(porFamiliaActualPeriodo)
@@ -1615,7 +1581,7 @@ async function renderizarDetalleDistrito() {
   const prorrateoPeriodo = Calc.calcularProrrateo(facturasPeriodoCompania, glosarioMap);
   const entradaDistrito = prorrateoPeriodo.distritos.find((d) => d.distrito === distrito);
   const operativoAsignado = entradaDistrito ? entradaDistrito.gastoOperativoAsignado : 0;
-  const etiquetaPeriodo = modoPeriodoDistrito === 'ytd' ? 'YTD ' + anioRef : claveMes(anioRef, mesRef);
+  const etiquetaPeriodo = modoPeriodoGlobal === 'ytd' ? 'YTD ' + anioRef : claveMes(anioRef, mesRef);
   document.getElementById('detalle-distrito-operativo').innerHTML = `<span>Gasto Operativo Asignado (${etiquetaPeriodo})</span><span>${formatoMoneda(operativoAsignado)}</span>`;
 }
 
