@@ -139,6 +139,8 @@
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
           <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
+          <p id="bienvenida-usuario" class="text-sm text-on-surface-variant mt-2">Bienvenido -</p>
+          <p id="info-actualizada" class="text-xs text-on-surface-variant"></p>
         </div>
         <div id="kpis-resumen" class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
@@ -147,7 +149,10 @@
             </div>
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Total</p>
             <h2 id="kpi-total" class="font-gordita-bold text-3xl text-primary">-</h2>
-            <span id="kpi-total-var" class="text-xs font-gordita-bold text-on-surface-variant"></span>
+            <div class="flex gap-3 mt-1">
+              <span id="kpi-total-mom" class="text-xs font-gordita-bold"></span>
+              <span id="kpi-total-yoy" class="text-xs font-gordita-bold"></span>
+            </div>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <div class="p-2 bg-qiora-blue/10 rounded-lg inline-flex mb-4">
@@ -155,6 +160,10 @@
             </div>
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Costo Directo</p>
             <h2 id="kpi-directo" class="font-gordita-bold text-3xl text-primary">-</h2>
+            <div class="flex gap-3 mt-1">
+              <span id="kpi-directo-mom" class="text-xs font-gordita-bold"></span>
+              <span id="kpi-directo-yoy" class="text-xs font-gordita-bold"></span>
+            </div>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <div class="p-2 bg-secondary-container/10 rounded-lg inline-flex mb-4">
@@ -162,13 +171,18 @@
             </div>
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Operativo</p>
             <h2 id="kpi-operativo" class="font-gordita-bold text-3xl text-primary">-</h2>
+            <div class="flex gap-3 mt-1">
+              <span id="kpi-operativo-mom" class="text-xs font-gordita-bold"></span>
+              <span id="kpi-operativo-yoy" class="text-xs font-gordita-bold"></span>
+            </div>
           </div>
           <div class="bg-primary text-on-primary p-6 rounded-xl shadow-sm">
             <div class="p-2 bg-on-primary/10 rounded-lg inline-flex mb-4">
-              <span class="material-symbols-outlined text-on-primary">help</span>
+              <span class="material-symbols-outlined text-on-primary">event_repeat</span>
             </div>
-            <p class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1 opacity-60">Sin Clasificar</p>
-            <h2 id="kpi-sin-clasificar" class="font-gordita-bold text-3xl">-</h2>
+            <p class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1 opacity-60">Mismo Mes Año Anterior</p>
+            <h2 id="kpi-anio-anterior" class="font-gordita-bold text-3xl">-</h2>
+            <p id="kpi-anio-anterior-mes" class="text-xs opacity-60 mt-1">-</p>
           </div>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
@@ -395,6 +409,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
+let ultimaFechaConDatos = null;
 
 async function iniciarSesion() {
   const email = document.getElementById('login-email').value;
@@ -581,8 +596,14 @@ async function obtenerUltimoMesConDatos() {
     const hoy = new Date();
     return { anio: hoy.getFullYear(), mes: hoy.getMonth() };
   }
+  ultimaFechaConDatos = data[0].fecha_pago;
   const fecha = new Date(data[0].fecha_pago + 'T00:00:00');
   return { anio: fecha.getFullYear(), mes: fecha.getMonth() };
+}
+
+function formatoFechaLarga(fechaISO) {
+  const fecha = new Date(fechaISO + 'T00:00:00');
+  return fecha.getDate() + ' de ' + MESES_LARGOS[fecha.getMonth()].toLowerCase() + ' de ' + fecha.getFullYear();
 }
 
 function actualizarEtiquetaMesGlobal() {
@@ -638,22 +659,47 @@ async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
 
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const mesActual = obtenerRangoActivo();
-  const mesAnterior = rangoDeMes(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes - 1);
+  const mesAnterior = rangoDeMes(anioRef, mesRef - 1);
+  const mesAnioAnterior = rangoDeMes(anioRef - 1, mesRef);
 
   const facturasActual = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
   const facturasAnterior = await obtenerFacturasEnRango(mesAnterior.inicio, mesAnterior.fin, '*');
+  const facturasAnioAnterior = await obtenerFacturasEnRango(mesAnioAnterior.inicio, mesAnioAnterior.fin, '*');
 
   const kpisActual = Calc.calcularKPIs(facturasActual, glosarioMap);
   const kpisAnterior = Calc.calcularKPIs(facturasAnterior, glosarioMap);
+  const kpisAnioAnterior = Calc.calcularKPIs(facturasAnioAnterior, glosarioMap);
 
   document.getElementById('kpi-total').textContent = formatoMoneda(kpisActual.totalPagado);
   document.getElementById('kpi-directo').textContent = formatoMoneda(kpisActual.costoDirecto);
   document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
-  document.getElementById('kpi-sin-clasificar').textContent = formatoMoneda(kpisActual.sinClasificar);
+  document.getElementById('kpi-anio-anterior').textContent = formatoMoneda(kpisAnioAnterior.totalPagado);
+  document.getElementById('kpi-anio-anterior-mes').textContent = MESES_LARGOS[mesRef] + ' ' + (anioRef - 1);
 
-  const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
-  document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
+  const claseVar = (v) => (v === null ? 'text-on-surface-variant' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
+  const textoVar = (v, etiqueta) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '% ' + etiqueta);
+
+  const pintarVariacion = (idMom, idYoy, actual, anterior, anioAnt) => {
+    const mom = Calc.calcularVariacionPct(actual, anterior);
+    const yoy = Calc.calcularVariacionPct(actual, anioAnt);
+    const elMom = document.getElementById(idMom);
+    const elYoy = document.getElementById(idYoy);
+    elMom.textContent = textoVar(mom, 'MoM');
+    elMom.className = 'text-xs font-gordita-bold ' + claseVar(mom);
+    elYoy.textContent = textoVar(yoy, 'YoY');
+    elYoy.className = 'text-xs font-gordita-bold ' + claseVar(yoy);
+  };
+
+  pintarVariacion('kpi-total-mom', 'kpi-total-yoy', kpisActual.totalPagado, kpisAnterior.totalPagado, kpisAnioAnterior.totalPagado);
+  pintarVariacion('kpi-directo-mom', 'kpi-directo-yoy', kpisActual.costoDirecto, kpisAnterior.costoDirecto, kpisAnioAnterior.costoDirecto);
+  pintarVariacion('kpi-operativo-mom', 'kpi-operativo-yoy', kpisActual.gastoOperativo, kpisAnterior.gastoOperativo, kpisAnioAnterior.gastoOperativo);
+
+  document.getElementById('bienvenida-usuario').textContent = 'Bienvenido, ' + (usuarioActual ? usuarioActual.nombre : '');
+  document.getElementById('info-actualizada').textContent = ultimaFechaConDatos
+    ? 'Información actualizada hasta: ' + formatoFechaLarga(ultimaFechaConDatos)
+    : '';
 
   await renderizarTendenciaAnual(glosarioMap);
   await cargarPorTipoGasto();
