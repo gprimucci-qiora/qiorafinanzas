@@ -555,6 +555,13 @@ function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 }
 
+function formatoCompacto(valor) {
+  const abs = Math.abs(valor);
+  if (abs >= 1e6) return '$' + (valor / 1e6).toFixed(1) + 'M';
+  if (abs >= 1e3) return '$' + (valor / 1e3).toFixed(0) + 'K';
+  return '$' + valor;
+}
+
 async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
   const TAMANO_PAGINA = 1000;
   let todas = [];
@@ -807,12 +814,40 @@ async function abrirDetalleDistrito(distrito) {
   const ctxTendencia = document.getElementById('grafica-tendencia-distrito');
   if (window.graficaTendenciaDistrito) window.graficaTendenciaDistrito.destroy();
   window.graficaTendenciaDistrito = new Chart(ctxTendencia, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels: clavesMeses,
-      datasets: [{ label: 'Gasto total', data: clavesMeses.map((c) => totalesPorMes[c]), backgroundColor: '#2DD4BF' }],
+      datasets: [{
+        label: 'Gasto total',
+        data: clavesMeses.map((c) => totalesPorMes[c]),
+        borderColor: '#2DD4BF',
+        backgroundColor: 'rgba(45, 212, 191, 0.1)',
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#2DD4BF',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+      }],
     },
-    options: { plugins: { legend: { display: false } } },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (ctx) => formatoMoneda(ctx.parsed.y) },
+        },
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+      },
+    },
   });
 
   const porFamiliaVentana = Calc.agruparPorFamiliaGasto(directasDistrito);
@@ -826,8 +861,41 @@ async function abrirDetalleDistrito(distrito) {
   if (window.graficaTopFamiliasDistrito) window.graficaTopFamiliasDistrito.destroy();
   window.graficaTopFamiliasDistrito = new Chart(ctxTop, {
     type: 'bar',
-    data: { labels: labelsTop, datasets: [{ label: 'Monto', data: datosTop, backgroundColor: '#000000' }] },
-    options: { indexAxis: 'y', plugins: { legend: { display: false } } },
+    data: { labels: labelsTop, datasets: [{ label: 'Monto', data: datosTop, backgroundColor: '#2DD4BF', borderRadius: 4, maxBarThickness: 24 }] },
+    options: {
+      indexAxis: 'y',
+      layout: { padding: { right: 56 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (ctx) => formatoMoneda(ctx.parsed.x) },
+        },
+      },
+      scales: {
+        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', weight: 'bold' } } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasValorTopFamilias',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const valor = chart.data.datasets[0].data[i];
+          ctx.save();
+          ctx.fillStyle = '#1b1b1b';
+          ctx.font = "bold 11px 'Gordita', sans-serif";
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(formatoMoneda(valor), bar.x + 6, bar.y);
+          ctx.restore();
+        });
+      },
+    }],
   });
 
   const rangoMesRef = rangoDeMes(anioRef, mesRef);
@@ -869,7 +937,19 @@ async function abrirDetalleDistrito(distrito) {
     filaDetalle.style.display = 'none';
     const subfilas = Object.keys(porFamiliaMesRef[familia].porGasto)
       .sort((a, b) => porFamiliaMesRef[familia].porGasto[b] - porFamiliaMesRef[familia].porGasto[a])
-      .map((gasto) => `<div class="flex justify-between py-1 text-xs text-on-surface-variant"><span>${gasto}</span><span class="font-gordita-bold">${formatoMoneda(porFamiliaMesRef[familia].porGasto[gasto])}</span></div>`)
+      .map((gasto) => {
+        const montoGasto = porFamiliaMesRef[familia].porGasto[gasto];
+        const montoGastoAnt = (porFamiliaMesAnt[familia] && porFamiliaMesAnt[familia].porGasto[gasto]) || 0;
+        const montoGastoAnioAnt = (porFamiliaMesAnioAnt[familia] && porFamiliaMesAnioAnt[familia].porGasto[gasto]) || 0;
+        const momGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnt);
+        const yoyGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnioAnt);
+        return `<div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 py-1.5 text-xs text-on-surface-variant border-t border-outline-variant/50 first:border-t-0">
+          <span>${gasto}</span>
+          <span class="font-gordita-bold text-right text-on-surface">${formatoMoneda(montoGasto)}</span>
+          <span class="text-right ${claseColor(momGasto)}">${textoVar(momGasto)}</span>
+          <span class="text-right ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</span>
+        </div>`;
+      })
       .join('');
     filaDetalle.innerHTML = `<td colspan="4" class="px-8 py-4">${subfilas}</td>`;
     cuerpoDetalle.appendChild(filaDetalle);
