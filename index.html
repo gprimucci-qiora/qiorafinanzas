@@ -258,6 +258,32 @@
           </table>
           <p id="bolsa-total-info" class="px-8 py-4 bg-surface-container-low text-xs font-gordita-bold text-on-surface-variant"></p>
         </section>
+
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg mt-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Mapa de Variaciones (Costos Directos)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Cada burbuja es una familia de gasto en un distrito. Eje X: % de variación (valores extremos se limitan visualmente a ±150% para mantener la escala legible; el tooltip muestra el % real). Eje Y: monto actual. Tamaño: el $ real que cambió — lo que de verdad importa investigar.</p>
+          <div style="height: 320px;">
+            <canvas id="grafica-burbujas-variaciones"></canvas>
+          </div>
+        </div>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+          <div class="px-8 py-4 border-b border-outline-variant">
+            <h3 class="font-gordita-bold text-lg text-primary">Top Movimientos</h3>
+          </div>
+          <table id="tabla-top-movimientos" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Familia</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Δ$</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Δ%</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-top-movimientos-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
       </div>
 
       <div class="vista" id="vista-sin-clasificar">
@@ -1019,6 +1045,134 @@ async function cargarPorSucursal() {
   const facturas = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
   prorrateoActual = Calc.calcularProrrateo(facturas, glosarioMap);
   renderizarSucursales();
+  await cargarTopMovimientos(glosarioMap, rangos);
+}
+
+async function cargarTopMovimientos(glosarioMap, rangos) {
+  const { anio: anioRef } = mesGlobalSeleccionado;
+  const rangoComparacion = modoPeriodoSucursal === 'ytd' ? rangos.comparacionYoY : rangos.comparacionMoM;
+
+  const inicioVentana = rangoDeMes(anioRef - 1, 0).inicio;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangos.actual.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
+  const directas = clasificadas.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS');
+
+  const enRango = (f, rango) => rango && f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
+  const facturasActual = directas.filter((f) => enRango(f, rangos.actual));
+  const facturasComparacion = rangoComparacion ? directas.filter((f) => enRango(f, rangoComparacion)) : [];
+
+  const agruparPorDistritoFamilia = (filas) => {
+    const mapa = {};
+    filas.forEach((f) => {
+      const clave = f.sucursal_secundaria + '|' + f.familia;
+      mapa[clave] = mapa[clave] || { distrito: f.sucursal_secundaria, familia: f.familia, total: 0 };
+      mapa[clave].total += f.monto || 0;
+    });
+    return mapa;
+  };
+
+  const mapaActual = agruparPorDistritoFamilia(facturasActual);
+  const mapaComparacion = agruparPorDistritoFamilia(facturasComparacion);
+  const clavesTodas = new Set([...Object.keys(mapaActual), ...Object.keys(mapaComparacion)]);
+
+  const combinaciones = Array.from(clavesTodas).map((clave) => {
+    const entradaActual = mapaActual[clave];
+    const entradaComparacion = mapaComparacion[clave];
+    const base = entradaActual || entradaComparacion;
+    const monto = entradaActual ? entradaActual.total : 0;
+    const anterior = entradaComparacion ? entradaComparacion.total : 0;
+    return {
+      distrito: base.distrito,
+      familia: base.familia,
+      monto,
+      deltaPesos: monto - anterior,
+      deltaPct: Calc.calcularVariacionPct(monto, anterior),
+    };
+  }).filter((d) => d.deltaPct !== null && Math.abs(d.deltaPesos) > 0.01);
+
+  renderizarTablaTopMovimientos(combinaciones);
+  renderizarGraficaBurbujasVariaciones(combinaciones);
+}
+
+function renderizarTablaTopMovimientos(combinaciones) {
+  const top = combinaciones.slice().sort((a, b) => Math.abs(b.deltaPesos) - Math.abs(a.deltaPesos)).slice(0, 15);
+  const claseColor = (v) => (v === null ? '' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
+  const textoVar = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+
+  const cuerpo = document.getElementById('tabla-top-movimientos-body');
+  cuerpo.innerHTML = '';
+  top.forEach((d) => {
+    const tr = document.createElement('tr');
+    const signoDelta = d.deltaPesos >= 0 ? '+' : '';
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4">${d.familia}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.monto)}</td><td class="px-6 py-4 text-right font-gordita-bold ${claseColor(d.deltaPesos)}">${signoDelta}${formatoMoneda(d.deltaPesos)}</td><td class="px-6 py-4 text-right ${claseColor(d.deltaPct)}">${textoVar(d.deltaPct)}</td>`;
+    cuerpo.appendChild(tr);
+  });
+}
+
+function renderizarGraficaBurbujasVariaciones(combinaciones) {
+  const ctx = document.getElementById('grafica-burbujas-variaciones');
+  if (window.graficaBurbujasVariaciones) window.graficaBurbujasVariaciones.destroy();
+  if (combinaciones.length === 0) return;
+
+  const LIMITE_X = 150;
+  const clamp = (v) => Math.max(-LIMITE_X, Math.min(LIMITE_X, v));
+  const maxDelta = Math.max.apply(null, combinaciones.map((d) => Math.abs(d.deltaPesos)).concat([1]));
+  const RADIO_MIN = 4;
+  const RADIO_MAX = 32;
+  const escalaRadio = (valor) => RADIO_MIN + (RADIO_MAX - RADIO_MIN) * Math.sqrt(Math.abs(valor) / maxDelta);
+
+  const aPuntos = (lista) => lista.map((d) => ({ x: clamp(d.deltaPct), y: d.monto, r: escalaRadio(d.deltaPesos), _d: d }));
+  const suben = aPuntos(combinaciones.filter((d) => d.deltaPesos >= 0));
+  const bajan = aPuntos(combinaciones.filter((d) => d.deltaPesos < 0));
+
+  window.graficaBurbujasVariaciones = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label: 'Aumentó', data: suben, backgroundColor: 'rgba(186, 26, 26, 0.55)', borderColor: '#ba1a1a', borderWidth: 1 },
+        { label: 'Disminuyó', data: bajan, backgroundColor: 'rgba(46, 204, 113, 0.55)', borderColor: '#2ECC71', borderWidth: 1 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: {
+            title: (items) => items[0].raw._d.distrito + ' — ' + items[0].raw._d.familia,
+            label: (item) => {
+              const d = item.raw._d;
+              const signo = d.deltaPesos >= 0 ? '+' : '';
+              return [
+                'Monto: ' + formatoMoneda(d.monto),
+                'Cambio: ' + signo + formatoMoneda(d.deltaPesos) + ' (' + (d.deltaPct >= 0 ? '+' : '') + d.deltaPct.toFixed(1) + '%)',
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: -LIMITE_X - 10,
+          max: LIMITE_X + 10,
+          title: { display: true, text: '% de variación', font: { family: 'Gordita', weight: 'bold' } },
+          grid: { color: '#e2e2e2' },
+          border: { display: false },
+          ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } },
+        },
+        y: {
+          title: { display: true, text: 'Monto actual', font: { family: 'Gordita', weight: 'bold' } },
+          grid: { color: '#e2e2e2' },
+          border: { display: false },
+          ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } },
+        },
+      },
+    },
+  });
 }
 
 function renderizarSucursales() {
