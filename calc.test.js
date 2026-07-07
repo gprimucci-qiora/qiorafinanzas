@@ -143,3 +143,25 @@ test('calcularKPIs suma correctamente costo directo, operativo y sin clasificar'
   assert.strictEqual(result.gastoOperativo, 500);
   assert.strictEqual(result.sinClasificar, 50);
 });
+
+test('calcularVariacionPct calcula el porcentaje de variación correcto', () => {
+  assert.strictEqual(Calc.calcularVariacionPct(150, 100), 50);
+  assert.strictEqual(Calc.calcularVariacionPct(80, 100), -20);
+});
+
+test('calcularVariacionPct retorna null si no hay monto anterior para comparar', () => {
+  assert.strictEqual(Calc.calcularVariacionPct(500, 0), null);
+});
+
+test('agruparPorFamiliaGasto agrega correctamente por familia y por gasto', () => {
+  const facturas = [
+    { familia: 'GASOLINA', gasto: 'GASOLINA', monto: 100 },
+    { familia: 'GASOLINA', gasto: 'GASOLINA', monto: 50 },
+    { familia: 'RENTAS', gasto: 'RENTA LOCALES', monto: 200 },
+  ];
+  const resultado = Calc.agruparPorFamiliaGasto(facturas);
+  assert.strictEqual(resultado['GASOLINA'].total, 150);
+  assert.strictEqual(resultado['GASOLINA'].porGasto['GASOLINA'], 150);
+  assert.strictEqual(resultado['RENTAS'].total, 200);
+  assert.strictEqual(resultado['RENTAS'].porGasto['RENTA LOCALES'], 200);
+});

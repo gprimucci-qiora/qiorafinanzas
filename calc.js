@@ -113,10 +113,27 @@
     return { totalPagado, costoDirecto, gastoOperativo, sinClasificar };
   }
 
+  function calcularVariacionPct(actual, anterior) {
+    if (!anterior) return null;
+    return ((actual - anterior) / anterior) * 100;
+  }
+
+  function agruparPorFamiliaGasto(facturas) {
+    const porFamilia = {};
+    facturas.forEach((f) => {
+      porFamilia[f.familia] = porFamilia[f.familia] || { total: 0, porGasto: {} };
+      porFamilia[f.familia].total += f.monto || 0;
+      porFamilia[f.familia].porGasto[f.gasto] = (porFamilia[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
+    });
+    return porFamilia;
+  }
+
   return {
     computeVentana,
     clasificarFactura,
     calcularProrrateo,
     calcularKPIs,
+    calcularVariacionPct,
+    agruparPorFamiliaGasto,
   };
 });
