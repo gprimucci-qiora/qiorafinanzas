@@ -137,11 +137,21 @@
     <div id="contenido" class="p-8 max-w-[1440px] mx-auto">
 
       <div class="vista activa" id="vista-resumen">
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
-          <p id="bienvenida-usuario" class="text-sm text-on-surface-variant mt-2">Bienvenido -</p>
-          <p id="info-actualizada" class="text-xs text-on-surface-variant"></p>
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
+            <p id="bienvenida-usuario" class="text-sm text-on-surface-variant mt-2">Bienvenido -</p>
+            <p id="info-actualizada" class="text-xs text-on-surface-variant"></p>
+          </div>
+          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-periodo-resumen" value="mes" checked onchange="cambiarModoPeriodoResumen('mes')" class="hidden"> Mes
+            </label>
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-periodo-resumen" value="ytd" onchange="cambiarModoPeriodoResumen('ytd')" class="hidden"> YTD
+            </label>
+          </div>
         </div>
         <div id="kpis-resumen" class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
@@ -181,7 +191,7 @@
             <div class="p-2 bg-on-primary/10 rounded-lg inline-flex mb-4">
               <span class="material-symbols-outlined text-on-primary">event_repeat</span>
             </div>
-            <p class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1 opacity-60">Mismo Mes Año Anterior</p>
+            <p id="kpi-anio-anterior-titulo" class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1 opacity-60">Mismo Mes Año Anterior</p>
             <h2 id="kpi-anio-anterior" class="font-gordita-bold text-3xl">-</h2>
             <p id="kpi-anio-anterior-mes" class="text-xs opacity-60 mt-1">-</p>
           </div>
@@ -215,13 +225,23 @@
             <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
             <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Sucursal / Distrito</h1>
           </div>
-          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
-            </label>
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
-            </label>
+          <div class="flex gap-3">
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="modo-periodo-sucursal" value="mes" checked onchange="cambiarModoPeriodoSucursal('mes')" class="hidden"> Mes
+              </label>
+              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="modo-periodo-sucursal" value="ytd" onchange="cambiarModoPeriodoSucursal('ytd')" class="hidden"> YTD
+              </label>
+            </div>
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
+              </label>
+              <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
+              </label>
+            </div>
           </div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -377,9 +397,11 @@
           <canvas id="grafica-tendencia-distrito" height="90"></canvas>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 id="titulo-variaciones-distrito" class="font-gordita-bold text-lg text-primary mb-1">Mayores Variaciones (% MoM)</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Familias con el mayor cambio en este distrito vs. el periodo de comparación (rojo = más gasto, verde = menos gasto).</p>
-          <canvas id="grafica-top-familias-distrito" height="180"></canvas>
+          <h3 id="titulo-variaciones-distrito" class="font-gordita-bold text-lg text-primary mb-1">Mayores Variaciones ($ real)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Ordenado por el impacto real en pesos, no solo por %, para que un gran gasto que apenas se movió no se pierda contra uno chico que fluctuó mucho (rojo = más gasto, verde = menos gasto).</p>
+          <div style="height: 220px;">
+            <canvas id="grafica-top-familias-distrito"></canvas>
+          </div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
           <table id="tabla-detalle-distrito" class="w-full text-left border-collapse">
@@ -426,6 +448,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
 let ultimaFechaConDatos = null;
+let modoPeriodoResumen = 'mes';
+let modoPeriodoSucursal = 'mes';
 
 async function iniciarSesion() {
   const email = document.getElementById('login-email').value;
@@ -621,6 +645,21 @@ function obtenerRangoActivo() {
   return rangoDeMes(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes);
 }
 
+function calcularRangosPeriodo(modo, anioRef, mesRef) {
+  if (modo === 'ytd') {
+    return {
+      actual: { inicio: rangoDeMes(anioRef, 0).inicio, fin: rangoDeMes(anioRef, mesRef).fin },
+      comparacionMoM: null,
+      comparacionYoY: { inicio: rangoDeMes(anioRef - 1, 0).inicio, fin: rangoDeMes(anioRef - 1, mesRef).fin },
+    };
+  }
+  return {
+    actual: rangoDeMes(anioRef, mesRef),
+    comparacionMoM: rangoDeMes(anioRef, mesRef - 1),
+    comparacionYoY: rangoDeMes(anioRef - 1, mesRef),
+  };
+}
+
 async function obtenerUltimoMesConDatos() {
   const { data, error } = await supabaseClient
     .from('facturas')
@@ -666,6 +705,26 @@ async function recargarVistaActiva() {
   if (vistaActiva) await mostrarVista(vistaActiva.dataset.vista);
 }
 
+async function cambiarModoPeriodoResumen(modo) {
+  modoPeriodoResumen = modo;
+  mostrarIndicadorCarga();
+  try {
+    await cargarResumenEjecutivo();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+async function cambiarModoPeriodoSucursal(modo) {
+  modoPeriodoSucursal = modo;
+  mostrarIndicadorCarga();
+  try {
+    await cargarPorSucursal();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
 function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 }
@@ -700,13 +759,13 @@ async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const mesActual = obtenerRangoActivo();
-  const mesAnterior = rangoDeMes(anioRef, mesRef - 1);
-  const mesAnioAnterior = rangoDeMes(anioRef - 1, mesRef);
+  const rangos = calcularRangosPeriodo(modoPeriodoResumen, anioRef, mesRef);
 
-  const facturasActual = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
-  const facturasAnterior = await obtenerFacturasEnRango(mesAnterior.inicio, mesAnterior.fin, '*');
-  const facturasAnioAnterior = await obtenerFacturasEnRango(mesAnioAnterior.inicio, mesAnioAnterior.fin, '*');
+  const facturasActual = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
+  const facturasAnterior = rangos.comparacionMoM
+    ? await obtenerFacturasEnRango(rangos.comparacionMoM.inicio, rangos.comparacionMoM.fin, '*')
+    : [];
+  const facturasAnioAnterior = await obtenerFacturasEnRango(rangos.comparacionYoY.inicio, rangos.comparacionYoY.fin, '*');
 
   const kpisActual = Calc.calcularKPIs(facturasActual, glosarioMap);
   const kpisAnterior = Calc.calcularKPIs(facturasAnterior, glosarioMap);
@@ -716,7 +775,13 @@ async function cargarResumenEjecutivo() {
   document.getElementById('kpi-directo').textContent = formatoMoneda(kpisActual.costoDirecto);
   document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
   document.getElementById('kpi-anio-anterior').textContent = formatoMoneda(kpisAnioAnterior.totalPagado);
-  document.getElementById('kpi-anio-anterior-mes').textContent = MESES_LARGOS[mesRef] + ' ' + (anioRef - 1);
+  if (modoPeriodoResumen === 'ytd') {
+    document.getElementById('kpi-anio-anterior-titulo').textContent = 'Mismo Periodo Año Anterior';
+    document.getElementById('kpi-anio-anterior-mes').textContent = 'YTD Ene-' + MESES_ABREV[mesRef] + ' ' + (anioRef - 1);
+  } else {
+    document.getElementById('kpi-anio-anterior-titulo').textContent = 'Mismo Mes Año Anterior';
+    document.getElementById('kpi-anio-anterior-mes').textContent = MESES_LARGOS[mesRef] + ' ' + (anioRef - 1);
+  }
 
   const claseVar = (v) => (v === null ? 'text-on-surface-variant' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
   const textoVar = (v, etiqueta) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '% ' + etiqueta);
@@ -949,8 +1014,9 @@ function ordenarSucursales(columna) {
 
 async function cargarPorSucursal() {
   const glosarioMap = obtenerGlosarioMap();
-  const mesActual = obtenerRangoActivo();
-  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoSucursal, anioRef, mesRef);
+  const facturas = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
   prorrateoActual = Calc.calcularProrrateo(facturas, glosarioMap);
   renderizarSucursales();
 }
@@ -1012,24 +1078,23 @@ let tipoGastoPorFamilia = {};
 async function cargarPorTipoGasto() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const rangoMesRef = rangoDeMes(anioRef, mesRef);
-  const rangoMesAnt = rangoDeMes(anioRef, mesRef - 1);
-  const rangoMesAnioAnt = rangoDeMes(anioRef - 1, mesRef);
+  const rangos = calcularRangosPeriodo(modoPeriodoResumen, anioRef, mesRef);
 
-  const inicioVentana = rangoDeMes(anioRef, mesRef - 12).inicio;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangoMesRef.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const inicioVentana = rangoDeMes(anioRef - 1, 0).inicio;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangos.actual.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
   const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
 
-  const facturasMesRef = clasificadas.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);
-  const facturasMesAnt = clasificadas.filter((f) => f.fecha_pago >= rangoMesAnt.inicio && f.fecha_pago <= rangoMesAnt.fin);
-  const facturasMesAnioAnt = clasificadas.filter((f) => f.fecha_pago >= rangoMesAnioAnt.inicio && f.fecha_pago <= rangoMesAnioAnt.fin);
+  const enRango = (f, rango) => rango && f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
+  const facturasActual = clasificadas.filter((f) => enRango(f, rangos.actual));
+  const facturasMoM = rangos.comparacionMoM ? clasificadas.filter((f) => enRango(f, rangos.comparacionMoM)) : [];
+  const facturasYoY = clasificadas.filter((f) => enRango(f, rangos.comparacionYoY));
 
-  porFamiliaActual = Calc.agruparPorFamiliaGasto(facturasMesRef);
-  porFamiliaAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasMesAnt);
-  porFamiliaAnioAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasMesAnioAnt);
+  porFamiliaActual = Calc.agruparPorFamiliaGasto(facturasActual);
+  porFamiliaAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasMoM);
+  porFamiliaAnioAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasYoY);
 
   tipoGastoPorFamilia = {};
-  facturasMesRef.forEach((f) => {
+  facturasActual.forEach((f) => {
     tipoGastoPorFamilia[f.familia] = tipoGastoPorFamilia[f.familia] || { 'COSTOS DIRECTOS': 0, 'GASTOS OPERATIVOS': 0, SIN_CLASIFICAR: 0 };
     tipoGastoPorFamilia[f.familia][f.tipo_gasto] = (tipoGastoPorFamilia[f.familia][f.tipo_gasto] || 0) + (f.monto || 0);
   });
@@ -1173,7 +1238,7 @@ async function cambiarModoPeriodoDistrito(modo) {
 function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
   document.getElementById('titulo-variaciones-distrito').textContent = titulo;
   const labels = variaciones.map((d) => d.familia);
-  const valores = variaciones.map((d) => d.variacion);
+  const valores = variaciones.map((d) => d.deltaPesos);
   const colores = valores.map((v) => (v >= 0 ? '#ba1a1a' : '#2ECC71'));
 
   const ctx = document.getElementById('grafica-top-familias-distrito');
@@ -1181,10 +1246,11 @@ function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
   if (variaciones.length === 0) return;
   window.graficaTopFamiliasDistrito = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Variación', data: valores, backgroundColor: colores, borderRadius: 4, maxBarThickness: 28 }] },
+    data: { labels, datasets: [{ label: 'Variación', data: valores, backgroundColor: colores, borderRadius: 4, maxBarThickness: 20 }] },
     options: {
       indexAxis: 'y',
-      layout: { padding: { left: 56, right: 56 } },
+      maintainAspectRatio: false,
+      layout: { padding: { left: 90, right: 90 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -1192,11 +1258,17 @@ function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
           padding: 10,
           titleFont: { family: 'Gordita', weight: 'bold' },
           bodyFont: { family: 'Gordita' },
-          callbacks: { label: (ctx2) => (ctx2.parsed.x >= 0 ? '+' : '') + ctx2.parsed.x.toFixed(1) + '%' },
+          callbacks: {
+            label: (ctx2) => {
+              const d = variaciones[ctx2.dataIndex];
+              const signo = d.deltaPesos >= 0 ? '+' : '';
+              return signo + formatoMoneda(d.deltaPesos) + ' (' + (d.deltaPct >= 0 ? '+' : '') + d.deltaPct.toFixed(1) + '%)';
+            },
+          },
         },
       },
       scales: {
-        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } } },
+        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
         y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', weight: 'bold' } } },
       },
     },
@@ -1205,14 +1277,14 @@ function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
       afterDatasetsDraw(chart) {
         const { ctx: ctxDibujo } = chart;
         chart.getDatasetMeta(0).data.forEach((barra, i) => {
-          const valor = valores[i];
-          const texto = (valor >= 0 ? '+' : '') + valor.toFixed(1) + '%';
+          const d = variaciones[i];
+          const texto = (d.deltaPesos >= 0 ? '+' : '') + formatoCompactoCorto(d.deltaPesos) + ' (' + (d.deltaPct >= 0 ? '+' : '') + d.deltaPct.toFixed(0) + '%)';
           ctxDibujo.save();
-          ctxDibujo.fillStyle = valor >= 0 ? '#ba1a1a' : '#2ECC71';
-          ctxDibujo.font = "bold 11px 'Gordita', sans-serif";
-          ctxDibujo.textAlign = valor >= 0 ? 'left' : 'right';
+          ctxDibujo.fillStyle = d.deltaPesos >= 0 ? '#ba1a1a' : '#2ECC71';
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = d.deltaPesos >= 0 ? 'left' : 'right';
           ctxDibujo.textBaseline = 'middle';
-          ctxDibujo.fillText(texto, barra.x + (valor >= 0 ? 6 : -6), barra.y);
+          ctxDibujo.fillText(texto, barra.x + (d.deltaPesos >= 0 ? 6 : -6), barra.y);
           ctxDibujo.restore();
         });
       },
@@ -1270,18 +1342,10 @@ async function renderizarDetalleDistrito() {
     etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy: datosYoyTendencia,
   });
 
-  let rangoActualPeriodo;
-  let rangoComparacionMoM;
-  let rangoComparacionYoY;
-  if (modoPeriodoDistrito === 'ytd') {
-    rangoActualPeriodo = { inicio: rangoDeMes(anioRef, 0).inicio, fin: rangoDeMes(anioRef, mesRef).fin };
-    rangoComparacionMoM = null;
-    rangoComparacionYoY = { inicio: rangoDeMes(anioRef - 1, 0).inicio, fin: rangoDeMes(anioRef - 1, mesRef).fin };
-  } else {
-    rangoActualPeriodo = rangoDeMes(anioRef, mesRef);
-    rangoComparacionMoM = rangoDeMes(anioRef, mesRef - 1);
-    rangoComparacionYoY = rangoDeMes(anioRef - 1, mesRef);
-  }
+  const rangosDistrito = calcularRangosPeriodo(modoPeriodoDistrito, anioRef, mesRef);
+  const rangoActualPeriodo = rangosDistrito.actual;
+  const rangoComparacionMoM = rangosDistrito.comparacionMoM;
+  const rangoComparacionYoY = rangosDistrito.comparacionYoY;
 
   const esDelDistrito = (f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito;
   const enRango = (f, rango) => f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
@@ -1331,16 +1395,20 @@ async function renderizarDetalleDistrito() {
   });
 
   const mapaComparacionVariaciones = modoPeriodoDistrito === 'ytd' ? porFamiliaYoY : porFamiliaMoM;
-  const tituloVariaciones = modoPeriodoDistrito === 'ytd' ? 'Mayores Variaciones YTD (% YoY)' : 'Mayores Variaciones (% MoM)';
+  const tituloVariaciones = modoPeriodoDistrito === 'ytd' ? 'Mayores Variaciones YTD ($ real)' : 'Mayores Variaciones ($ real)';
   const variacionesFamilias = Object.keys(porFamiliaActualPeriodo)
     .map((familia) => {
       const actual = porFamiliaActualPeriodo[familia].total;
       const anterior = (mapaComparacionVariaciones[familia] && mapaComparacionVariaciones[familia].total) || 0;
-      return { familia, variacion: Calc.calcularVariacionPct(actual, anterior) };
+      return {
+        familia,
+        deltaPesos: actual - anterior,
+        deltaPct: Calc.calcularVariacionPct(actual, anterior),
+      };
     })
-    .filter((d) => d.variacion !== null)
-    .sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion))
-    .slice(0, 6)
+    .filter((d) => d.deltaPct !== null && Math.abs(d.deltaPesos) > 0.01)
+    .sort((a, b) => Math.abs(b.deltaPesos) - Math.abs(a.deltaPesos))
+    .slice(0, 5)
     .reverse();
   renderizarGraficaVariacionesDistrito(variacionesFamilias, tituloVariaciones);
 
