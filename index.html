@@ -260,7 +260,20 @@
         </section>
 
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg mt-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Mapa de Variaciones (Costos Directos)</h3>
+          <div class="flex justify-between items-start flex-wrap gap-4 mb-1">
+            <h3 class="font-gordita-bold text-lg text-primary">Mapa de Variaciones (Costos Directos)</h3>
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex shrink-0">
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-movimientos" value="todos" checked onchange="cambiarFiltroMovimientos('todos')" class="hidden"> Todos
+              </label>
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-movimientos" value="aumentos" onchange="cambiarFiltroMovimientos('aumentos')" class="hidden"> Solo Aumentos
+              </label>
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-movimientos" value="disminuciones" onchange="cambiarFiltroMovimientos('disminuciones')" class="hidden"> Solo Disminuciones
+              </label>
+            </div>
+          </div>
           <p class="text-xs text-on-surface-variant mb-6">Cada burbuja es una familia de gasto en un distrito. Eje X: % de variación (valores extremos se limitan visualmente a ±150% para mantener la escala legible; el tooltip muestra el % real). Eje Y: monto actual. Tamaño: el $ real que cambió — lo que de verdad importa investigar.</p>
           <div style="height: 320px;">
             <canvas id="grafica-burbujas-variaciones"></canvas>
@@ -274,11 +287,11 @@
           <table id="tabla-top-movimientos" class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Familia</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Δ$</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Δ%</th>
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarMovimientos('distrito')">Distrito <span id="orden-movimientos-distrito"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarMovimientos('familia')">Familia <span id="orden-movimientos-familia"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('monto')">Monto <span id="orden-movimientos-monto"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('deltaPesos')">Δ$ <span id="orden-movimientos-deltaPesos"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('deltaPct')">Δ% <span id="orden-movimientos-deltaPct"></span></th>
               </tr>
             </thead>
             <tbody id="tabla-top-movimientos-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -1034,7 +1047,7 @@ let prorrateoActual = null;
 let ordenSucursales = { columna: 'total', direccion: 'desc' };
 
 function actualizarIconoOrden(prefijo, orden) {
-  ['distrito', 'costoDirecto', 'operativo', 'total', 'familia', 'monto'].forEach((col) => {
+  ['distrito', 'costoDirecto', 'operativo', 'total', 'familia', 'monto', 'deltaPesos', 'deltaPct'].forEach((col) => {
     const el = document.getElementById(prefijo + '-' + col);
     if (el) el.textContent = '';
   });
@@ -1060,6 +1073,10 @@ async function cargarPorSucursal() {
   renderizarSucursales();
   await cargarTopMovimientos(glosarioMap, rangos);
 }
+
+let combinacionesMovimientos = [];
+let filtroMovimientos = 'todos';
+let ordenMovimientos = { columna: 'deltaPesos', direccion: 'desc' };
 
 async function cargarTopMovimientos(glosarioMap, rangos) {
   const { anio: anioRef } = mesGlobalSeleccionado;
@@ -1088,7 +1105,7 @@ async function cargarTopMovimientos(glosarioMap, rangos) {
   const mapaComparacion = agruparPorDistritoFamilia(facturasComparacion);
   const clavesTodas = new Set([...Object.keys(mapaActual), ...Object.keys(mapaComparacion)]);
 
-  const combinaciones = Array.from(clavesTodas).map((clave) => {
+  combinacionesMovimientos = Array.from(clavesTodas).map((clave) => {
     const entradaActual = mapaActual[clave];
     const entradaComparacion = mapaComparacion[clave];
     const base = entradaActual || entradaComparacion;
@@ -1103,12 +1120,42 @@ async function cargarTopMovimientos(glosarioMap, rangos) {
     };
   }).filter((d) => d.deltaPct !== null && Math.abs(d.deltaPesos) > 0.01);
 
-  renderizarTablaTopMovimientos(combinaciones);
-  renderizarGraficaBurbujasVariaciones(combinaciones);
+  renderizarTopMovimientos();
 }
 
-function renderizarTablaTopMovimientos(combinaciones) {
-  const top = combinaciones.slice().sort((a, b) => Math.abs(b.deltaPesos) - Math.abs(a.deltaPesos)).slice(0, 15);
+function cambiarFiltroMovimientos(filtro) {
+  filtroMovimientos = filtro;
+  renderizarTopMovimientos();
+}
+
+function ordenarMovimientos(columna) {
+  if (ordenMovimientos.columna === columna) {
+    ordenMovimientos.direccion = ordenMovimientos.direccion === 'desc' ? 'asc' : 'desc';
+  } else {
+    ordenMovimientos = { columna, direccion: (columna === 'distrito' || columna === 'familia') ? 'asc' : 'desc' };
+  }
+  renderizarTopMovimientos();
+}
+
+function renderizarTopMovimientos() {
+  let datos = combinacionesMovimientos;
+  if (filtroMovimientos === 'aumentos') datos = datos.filter((d) => d.deltaPesos > 0);
+  else if (filtroMovimientos === 'disminuciones') datos = datos.filter((d) => d.deltaPesos < 0);
+
+  renderizarGraficaBurbujasVariaciones(datos);
+
+  const dir = ordenMovimientos.direccion === 'asc' ? 1 : -1;
+  const columna = ordenMovimientos.columna;
+  const datosOrdenados = datos.slice().sort((a, b) => {
+    if (columna === 'distrito' || columna === 'familia') return a[columna].localeCompare(b[columna]) * dir;
+    if (columna === 'deltaPesos') return (Math.abs(a.deltaPesos) - Math.abs(b.deltaPesos)) * dir;
+    return (a[columna] - b[columna]) * dir;
+  });
+  actualizarIconoOrden('orden-movimientos', ordenMovimientos);
+  renderizarTablaTopMovimientos(datosOrdenados.slice(0, 20));
+}
+
+function renderizarTablaTopMovimientos(top) {
   const claseColor = (v) => (v === null ? '' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
   const textoVar = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
 
