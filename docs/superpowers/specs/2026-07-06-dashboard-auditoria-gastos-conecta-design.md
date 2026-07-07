@@ -109,7 +109,9 @@ Este diseño resuelve el caso de negocio explícito: una factura de hace 8 meses
 
 ## 5. Prorrateo de gasto operativo
 
-El "gasto operativo" (bolsa sin sucursal directa) se reparte entre distritos según proporción de folios pagados en el periodo, respetando el alcance regional:
+**Definición de "folio" (confirmada):** es el número de renglones/registros de costo directo pagados por distrito en el periodo — **no** el número de valores distintos de la columna `FACTURA`. Esto es necesario porque ~30% de los renglones (nómina, finiquitos, gastos de tiendas/cuadrillas) son transacciones internas sin folio de proveedor, pero sí representan actividad real del distrito.
+
+El "gasto operativo" (bolsa sin sucursal directa) se reparte entre distritos según proporción de folios (renglones) pagados en el periodo, respetando el alcance regional:
 
 - Bolsas con `region` específica (ej. `CAPITAL HUMANO BAJÍO`, `OPERACIONES BAJÍO`) se reparten **solo entre los distritos de esa región** (ej. Irapuato y León).
 - Bolsas con `region = NACIONAL` (ej. Control de Activos, Admin Póliza, Dirección, Flotillas) se reparten **entre los 17 distritos**.
