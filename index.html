@@ -93,9 +93,6 @@
         <li><button data-vista="resumen" onclick="mostrarVista('resumen')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">dashboard</span><span class="text-sm">Resumen Ejecutivo</span>
         </button></li>
-        <li><button data-vista="tipo-gasto" onclick="mostrarVista('tipo-gasto')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">payments</span><span class="text-sm">Por Tipo de Gasto</span>
-        </button></li>
         <li><button data-vista="sucursal" onclick="mostrarVista('sucursal')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">location_city</span><span class="text-sm">Por Sucursal/Distrito</span>
         </button></li>
@@ -174,18 +171,15 @@
             <h2 id="kpi-sin-clasificar" class="font-gordita-bold text-3xl">-</h2>
           </div>
         </div>
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-          <h3 class="font-gordita-bold text-lg text-primary mb-6">Composición del gasto</h3>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Costo Directo + Gasto Operativo por mes. % arriba de cada barra: variación vs. el mismo mes del año anterior (rojo = más gasto, verde = menos gasto).</p>
           <canvas id="grafica-composicion-mensual" height="90"></canvas>
         </div>
-      </div>
-
-      <div class="vista" id="vista-tipo-gasto">
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Tipo de Gasto</h1>
-        </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <div class="px-8 py-4 border-b border-outline-variant">
+            <h3 class="font-gordita-bold text-lg text-primary">Por Tipo de Gasto</h3>
+          </div>
           <table id="tabla-tipo-gasto" class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
@@ -457,7 +451,6 @@ function mostrarVista(nombre) {
   if (boton) boton.classList.add('activo');
   if (nombre === 'resumen') cargarResumenEjecutivo();
   if (nombre === 'sucursal') cargarPorSucursal();
-  if (nombre === 'tipo-gasto') cargarPorTipoGasto();
   if (nombre === 'sin-clasificar') cargarSinClasificar();
   if (nombre === 'usuarios') cargarUsuarios();
 }
@@ -660,21 +653,88 @@ async function cargarResumenEjecutivo() {
   const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
   document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
 
+  await renderizarTendenciaAnual(glosarioMap);
+  await cargarPorTipoGasto();
+}
+
+async function renderizarTendenciaAnual(glosarioMap) {
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
+  const finVentana = rangoDeMes(anioRef, mesRef).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, fecha_pago');
+
+  const porMes = {};
+  facturasVentana.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMes[clave] = porMes[clave] || [];
+    porMes[clave].push(f);
+  });
+
+  const etiquetas = [];
+  const datosDirecto = [];
+  const datosOperativo = [];
+  const datosYoy = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const claveActual = claveMes(base.getFullYear(), base.getMonth());
+    const claveAnioAnterior = claveMes(base.getFullYear() - 1, base.getMonth());
+
+    const kpisMes = Calc.calcularKPIs(porMes[claveActual] || [], glosarioMap);
+    const kpisMesAnioAnterior = Calc.calcularKPIs(porMes[claveAnioAnterior] || [], glosarioMap);
+
+    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+    datosDirecto.push(kpisMes.costoDirecto);
+    datosOperativo.push(kpisMes.gastoOperativo);
+    datosYoy.push(Calc.calcularVariacionPct(kpisMes.totalPagado, kpisMesAnioAnterior.totalPagado));
+  }
+
   const ctx = document.getElementById('grafica-composicion-mensual');
   if (window.graficaComposicion) window.graficaComposicion.destroy();
-  const labels = ['Mes anterior', 'Periodo actual'];
-  const datosDirecto = [kpisAnterior.costoDirecto, kpisActual.costoDirecto];
-  const datosOperativo = [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo];
   window.graficaComposicion = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels: etiquetas,
       datasets: [
-        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF' },
-        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b' },
+        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF', stack: 'gasto', maxBarThickness: 24 },
+        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b', stack: 'gasto', maxBarThickness: 24, borderRadius: 4 },
       ],
     },
-    options: { scales: { x: { stacked: true }, y: { stacked: true } } },
+    options: {
+      layout: { padding: { top: 28 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (ctxTooltip) => ctxTooltip.dataset.label + ': ' + formatoMoneda(ctxTooltip.parsed.y) },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+        y: { stacked: true, beginAtZero: true, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasYoyTendenciaAnual',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const metaOperativo = chart.getDatasetMeta(1);
+        metaOperativo.data.forEach((barra, i) => {
+          const yoy = datosYoy[i];
+          if (yoy === null || yoy === undefined) return;
+          const texto = (yoy >= 0 ? '+' : '') + yoy.toFixed(0) + '%';
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = yoy >= 0 ? '#ba1a1a' : '#2ECC71';
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.fillText(texto, barra.x, barra.y - 8);
+          ctxDibujo.restore();
+        });
+      },
+    }],
   });
 }
 
