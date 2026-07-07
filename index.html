@@ -423,7 +423,20 @@
           <canvas id="grafica-tendencia-distrito" height="90"></canvas>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 id="titulo-variaciones-distrito" class="font-gordita-bold text-lg text-primary mb-1">Mayores Variaciones ($ real)</h3>
+          <div class="flex justify-between items-start flex-wrap gap-4 mb-1">
+            <h3 id="titulo-variaciones-distrito" class="font-gordita-bold text-lg text-primary">Mayores Variaciones ($ real)</h3>
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex shrink-0">
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-variaciones-distrito" value="todos" checked onchange="cambiarFiltroVariacionesDistrito('todos')" class="hidden"> Todos
+              </label>
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-variaciones-distrito" value="aumentos" onchange="cambiarFiltroVariacionesDistrito('aumentos')" class="hidden"> Solo Aumentos
+              </label>
+              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+                <input type="radio" name="filtro-variaciones-distrito" value="disminuciones" onchange="cambiarFiltroVariacionesDistrito('disminuciones')" class="hidden"> Solo Disminuciones
+              </label>
+            </div>
+          </div>
           <p class="text-xs text-on-surface-variant mb-6">Ordenado por el impacto real en pesos, no solo por %, para que un gran gasto que apenas se movió no se pierda contra uno chico que fluctuó mucho (rojo = más gasto, verde = menos gasto).</p>
           <div style="height: 220px;">
             <canvas id="grafica-top-familias-distrito"></canvas>
@@ -1344,6 +1357,17 @@ async function cargarSinClasificar() {
 
 let distritoActual = null;
 let modoPeriodoDistrito = 'mes';
+let filtroVariacionesDistrito = 'todos';
+
+async function cambiarFiltroVariacionesDistrito(filtro) {
+  filtroVariacionesDistrito = filtro;
+  mostrarIndicadorCarga();
+  try {
+    await renderizarDetalleDistrito();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
 
 function claveMes(anio, mes) {
   return anio + '-' + String(mes + 1).padStart(2, '0');
@@ -1366,8 +1390,11 @@ function alternarDetalleFamiliaDistrito(familia) {
 async function abrirDetalleDistrito(distrito) {
   distritoActual = distrito;
   modoPeriodoDistrito = 'mes';
+  filtroVariacionesDistrito = 'todos';
   const radioMes = document.querySelector('input[name="modo-periodo-distrito"][value="mes"]');
   if (radioMes) radioMes.checked = true;
+  const radioTodos = document.querySelector('input[name="filtro-variaciones-distrito"][value="todos"]');
+  if (radioTodos) radioTodos.checked = true;
   document.getElementById('vista-sucursal').classList.remove('activa');
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
@@ -1549,8 +1576,10 @@ async function renderizarDetalleDistrito() {
   });
 
   const mapaComparacionVariaciones = modoPeriodoDistrito === 'ytd' ? porFamiliaYoY : porFamiliaMoM;
-  const tituloVariaciones = modoPeriodoDistrito === 'ytd' ? 'Mayores Variaciones YTD ($ real)' : 'Mayores Variaciones ($ real)';
-  const variacionesFamilias = Object.keys(porFamiliaActualPeriodo)
+  const tituloVariaciones = modoPeriodoDistrito === 'ytd'
+    ? 'Mayores Variaciones ($ real) — vs. mismo periodo año anterior'
+    : 'Mayores Variaciones ($ real) — vs. mes anterior (MoM)';
+  let variacionesFamilias = Object.keys(porFamiliaActualPeriodo)
     .map((familia) => {
       const actual = porFamiliaActualPeriodo[familia].total;
       const anterior = (mapaComparacionVariaciones[familia] && mapaComparacionVariaciones[familia].total) || 0;
@@ -1560,7 +1589,15 @@ async function renderizarDetalleDistrito() {
         deltaPct: Calc.calcularVariacionPct(actual, anterior),
       };
     })
-    .filter((d) => d.deltaPct !== null && Math.abs(d.deltaPesos) > 0.01)
+    .filter((d) => d.deltaPct !== null && Math.abs(d.deltaPesos) > 0.01);
+
+  if (filtroVariacionesDistrito === 'aumentos') {
+    variacionesFamilias = variacionesFamilias.filter((d) => d.deltaPesos > 0);
+  } else if (filtroVariacionesDistrito === 'disminuciones') {
+    variacionesFamilias = variacionesFamilias.filter((d) => d.deltaPesos < 0);
+  }
+
+  variacionesFamilias = variacionesFamilias
     .sort((a, b) => Math.abs(b.deltaPesos) - Math.abs(a.deltaPesos))
     .slice(0, 5)
     .reverse();
