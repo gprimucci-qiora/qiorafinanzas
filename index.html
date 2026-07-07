@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QiORA Conecta — Auditoría de Gastos</title>
+<link rel="icon" type="image/png" href="logo-qiora.png">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/gordita" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -390,6 +391,10 @@
   </main>
 </div>
 
+<div id="indicador-carga" class="fixed top-4 right-4 bg-primary text-on-primary text-xs font-gordita-bold px-4 py-2 rounded-full shadow-lg z-50 items-center gap-2" style="display:none;">
+  <span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Cargando información...
+</div>
+
 <div id="modal-password" class="fixed inset-0 bg-black/40 items-center justify-center z-50" style="display:none;">
   <div class="bg-white rounded-xl p-6 w-80 shadow-xl">
     <h3 class="font-gordita-bold text-lg text-primary mb-4">Cambiar contraseña</h3>
@@ -460,16 +465,35 @@ async function cargarSesion() {
   mostrarVista('resumen');
 }
 
-function mostrarVista(nombre) {
+function mostrarIndicadorCarga() {
+  document.getElementById('indicador-carga').style.display = 'flex';
+}
+
+function ocultarIndicadorCarga() {
+  document.getElementById('indicador-carga').style.display = 'none';
+}
+
+async function mostrarVista(nombre) {
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
   document.getElementById('vista-' + nombre).classList.add('activa');
   const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
   if (boton) boton.classList.add('activo');
-  if (nombre === 'resumen') cargarResumenEjecutivo();
-  if (nombre === 'sucursal') cargarPorSucursal();
-  if (nombre === 'sin-clasificar') cargarSinClasificar();
-  if (nombre === 'usuarios') cargarUsuarios();
+
+  const cargadores = {
+    resumen: cargarResumenEjecutivo,
+    sucursal: cargarPorSucursal,
+    'sin-clasificar': cargarSinClasificar,
+    usuarios: cargarUsuarios,
+  };
+  const cargador = cargadores[nombre];
+  if (!cargador) return;
+  mostrarIndicadorCarga();
+  try {
+    await cargador();
+  } finally {
+    ocultarIndicadorCarga();
+  }
 }
 
 let filasParaCargar = null;
@@ -610,20 +634,25 @@ function actualizarEtiquetaMesGlobal() {
   document.getElementById('mes-global-label').textContent = MESES_LARGOS[mesGlobalSeleccionado.mes] + ' ' + mesGlobalSeleccionado.anio;
 }
 
-function cambiarMesGlobal(delta) {
+async function cambiarMesGlobal(delta) {
   const base = new Date(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes + delta, 1);
   mesGlobalSeleccionado = { anio: base.getFullYear(), mes: base.getMonth() };
   actualizarEtiquetaMesGlobal();
-  if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
-    renderizarDetalleDistrito();
-  } else {
-    recargarVistaActiva();
+  mostrarIndicadorCarga();
+  try {
+    if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
+      await renderizarDetalleDistrito();
+    } else {
+      await recargarVistaActiva();
+    }
+  } finally {
+    ocultarIndicadorCarga();
   }
 }
 
-function recargarVistaActiva() {
+async function recargarVistaActiva() {
   const vistaActiva = document.querySelector('#sidebar button.activo');
-  if (vistaActiva) mostrarVista(vistaActiva.dataset.vista);
+  if (vistaActiva) await mostrarVista(vistaActiva.dataset.vista);
 }
 
 function formatoMoneda(valor) {
@@ -1101,7 +1130,12 @@ async function abrirDetalleDistrito(distrito) {
   document.getElementById('vista-sucursal').classList.remove('activa');
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
-  await renderizarDetalleDistrito();
+  mostrarIndicadorCarga();
+  try {
+    await renderizarDetalleDistrito();
+  } finally {
+    ocultarIndicadorCarga();
+  }
 }
 
 async function renderizarDetalleDistrito() {
