@@ -183,8 +183,8 @@
           <table id="tabla-tipo-gasto" class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarTipoGasto('familia')">Familia <span id="orden-tipogasto-familia"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarTipoGasto('monto')">Monto <span id="orden-tipogasto-monto"></span></th>
               </tr>
             </thead>
             <tbody id="tabla-tipo-gasto-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -211,10 +211,10 @@
           <table id="tabla-sucursales" class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Gasto Operativo</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total</th>
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarSucursales('distrito')">Distrito <span id="orden-sucursal-distrito"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('costoDirecto')">Costo Directo <span id="orden-sucursal-costoDirecto"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('operativo')">Gasto Operativo <span id="orden-sucursal-operativo"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('total')">Total <span id="orden-sucursal-total"></span></th>
               </tr>
             </thead>
             <tbody id="tabla-sucursales-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -654,6 +654,25 @@ async function guardarGlosario() {
 }
 
 let prorrateoActual = null;
+let ordenSucursales = { columna: 'total', direccion: 'desc' };
+
+function actualizarIconoOrden(prefijo, orden) {
+  ['distrito', 'costoDirecto', 'operativo', 'total', 'familia', 'monto'].forEach((col) => {
+    const el = document.getElementById(prefijo + '-' + col);
+    if (el) el.textContent = '';
+  });
+  const activo = document.getElementById(prefijo + '-' + orden.columna);
+  if (activo) activo.textContent = orden.direccion === 'asc' ? '▲' : '▼';
+}
+
+function ordenarSucursales(columna) {
+  if (ordenSucursales.columna === columna) {
+    ordenSucursales.direccion = ordenSucursales.direccion === 'desc' ? 'asc' : 'desc';
+  } else {
+    ordenSucursales = { columna, direccion: columna === 'distrito' ? 'asc' : 'desc' };
+  }
+  renderizarSucursales();
+}
 
 async function cargarPorSucursal() {
   const glosarioMap = obtenerGlosarioMap();
@@ -666,18 +685,31 @@ async function cargarPorSucursal() {
 function renderizarSucursales() {
   if (!prorrateoActual) return;
   const modo = document.querySelector('input[name="modo-prorrateo"]:checked').value;
+
+  const filas = prorrateoActual.distritos.map((d) => ({
+    distrito: d.distrito,
+    costoDirecto: d.costoDirecto,
+    operativo: modo === 'prorrateado' ? d.gastoOperativoAsignado : 0,
+    total: modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto,
+  }));
+
+  const dir = ordenSucursales.direccion === 'asc' ? 1 : -1;
+  filas.sort((a, b) => {
+    if (ordenSucursales.columna === 'distrito') return a.distrito.localeCompare(b.distrito) * dir;
+    return (a[ordenSucursales.columna] - b[ordenSucursales.columna]) * dir;
+  });
+  actualizarIconoOrden('orden-sucursal', ordenSucursales);
+
   const cuerpo = document.getElementById('tabla-sucursales-body');
   cuerpo.innerHTML = '';
-  let totalAsignado = 0;
-  prorrateoActual.distritos.forEach((d) => {
-    const operativo = modo === 'prorrateado' ? d.gastoOperativoAsignado : 0;
-    const total = modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto;
-    totalAsignado += d.gastoOperativoAsignado;
+  filas.forEach((d) => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-surface-container-low/50 transition-colors';
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><button onclick="abrirDetalleDistrito('${d.distrito.replace(/'/g, "\\'")}')" class="hover:underline text-left">${d.distrito}</button></td><td class="px-6 py-4 text-right">${formatoMoneda(d.costoDirecto)}</td><td class="px-6 py-4 text-right">${formatoMoneda(operativo)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(total)}</td>`;
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><button onclick="abrirDetalleDistrito('${d.distrito.replace(/'/g, "\\'")}')" class="hover:underline text-left">${d.distrito}</button></td><td class="px-6 py-4 text-right">${formatoMoneda(d.costoDirecto)}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.operativo)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(d.total)}</td>`;
     cuerpo.appendChild(tr);
   });
+
+  const totalAsignado = prorrateoActual.distritos.reduce((s, d) => s + d.gastoOperativoAsignado, 0);
   const noAsignado = prorrateoActual.gastoOperativoBolsaTotal - totalAsignado;
   if (modo === 'bolsa') {
     document.getElementById('bolsa-total-info').textContent = 'Gasto operativo total sin asignar: ' + formatoMoneda(prorrateoActual.gastoOperativoBolsaTotal);
@@ -688,23 +720,46 @@ function renderizarSucursales() {
   }
 }
 
+let porFamiliaActual = null;
+let ordenTipoGasto = { columna: 'monto', direccion: 'desc' };
+
+function ordenarTipoGasto(columna) {
+  if (ordenTipoGasto.columna === columna) {
+    ordenTipoGasto.direccion = ordenTipoGasto.direccion === 'desc' ? 'asc' : 'desc';
+  } else {
+    ordenTipoGasto = { columna, direccion: columna === 'familia' ? 'asc' : 'desc' };
+  }
+  renderizarTipoGasto();
+}
+
 async function cargarPorTipoGasto() {
   const mesActual = obtenerRangoActivo();
   const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, 'familia, gasto, monto');
 
-  const porFamilia = {};
+  porFamiliaActual = {};
   facturas.forEach((f) => {
-    porFamilia[f.familia] = porFamilia[f.familia] || { total: 0, porGasto: {} };
-    porFamilia[f.familia].total += f.monto || 0;
-    porFamilia[f.familia].porGasto[f.gasto] = (porFamilia[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
+    porFamiliaActual[f.familia] = porFamiliaActual[f.familia] || { total: 0, porGasto: {} };
+    porFamiliaActual[f.familia].total += f.monto || 0;
+    porFamiliaActual[f.familia].porGasto[f.gasto] = (porFamiliaActual[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
   });
+  renderizarTipoGasto();
+}
+
+function renderizarTipoGasto() {
+  if (!porFamiliaActual) return;
+  const dir = ordenTipoGasto.direccion === 'asc' ? 1 : -1;
+  const familias = Object.keys(porFamiliaActual).sort((a, b) => {
+    if (ordenTipoGasto.columna === 'familia') return a.localeCompare(b) * dir;
+    return (porFamiliaActual[a].total - porFamiliaActual[b].total) * dir;
+  });
+  actualizarIconoOrden('orden-tipogasto', ordenTipoGasto);
 
   const cuerpo = document.getElementById('tabla-tipo-gasto-body');
   cuerpo.innerHTML = '';
-  Object.keys(porFamilia).sort((a, b) => porFamilia[b].total - porFamilia[a].total).forEach((familia) => {
+  familias.forEach((familia) => {
     const filaFamilia = document.createElement('tr');
     filaFamilia.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
-    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(porFamilia[familia].total)}</td>`;
+    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(porFamiliaActual[familia].total)}</td>`;
     filaFamilia.onclick = () => alternarDetalleGasto(familia);
     cuerpo.appendChild(filaFamilia);
 
@@ -712,9 +767,9 @@ async function cargarPorTipoGasto() {
     filaDetalle.id = 'detalle-' + familia.replace(/\s/g, '-');
     filaDetalle.className = 'bg-surface-container-low/50';
     filaDetalle.style.display = 'none';
-    const subfilas = Object.keys(porFamilia[familia].porGasto)
-      .sort((a, b) => porFamilia[familia].porGasto[b] - porFamilia[familia].porGasto[a])
-      .map((gasto) => `<div class="flex justify-between py-1 text-xs text-on-surface-variant"><span>${gasto}</span><span class="font-gordita-bold">${formatoMoneda(porFamilia[familia].porGasto[gasto])}</span></div>`)
+    const subfilas = Object.keys(porFamiliaActual[familia].porGasto)
+      .sort((a, b) => porFamiliaActual[familia].porGasto[b] - porFamiliaActual[familia].porGasto[a])
+      .map((gasto) => `<div class="flex justify-between py-1 text-xs text-on-surface-variant"><span>${gasto}</span><span class="font-gordita-bold">${formatoMoneda(porFamiliaActual[familia].porGasto[gasto])}</span></div>`)
       .join('');
     filaDetalle.innerHTML = `<td colspan="2" class="px-8 py-4">${subfilas}</td>`;
     cuerpo.appendChild(filaDetalle);
