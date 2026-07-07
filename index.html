@@ -119,17 +119,14 @@
 
   <main class="ml-64 min-h-screen">
     <header class="flex justify-between items-center h-16 px-8 w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant">
-      <div id="filtro-tiempo" class="flex items-center gap-sm">
-        <select id="filtro-tiempo-tipo" onchange="cambiarFiltroTiempo()" class="text-xs font-gordita-bold uppercase tracking-widest bg-white border border-outline-variant rounded px-3 py-1.5 text-on-surface-variant focus:outline-none">
-          <option value="mes-actual">Mes actual vs. mes anterior</option>
-          <option value="ytd">Acumulado del año (YTD)</option>
-          <option value="rango">Rango personalizado</option>
-        </select>
-        <span id="filtro-rango-personalizado" class="items-center gap-2" style="display:none;">
-          <input type="date" id="filtro-fecha-inicio" class="text-xs border border-outline-variant rounded px-2 py-1.5">
-          <input type="date" id="filtro-fecha-fin" class="text-xs border border-outline-variant rounded px-2 py-1.5">
-          <button onclick="aplicarRangoPersonalizado()" class="px-3 py-1.5 bg-primary text-on-primary text-xs font-gordita-bold rounded hover:opacity-90 transition-opacity">Aplicar</button>
-        </span>
+      <div id="filtro-tiempo" class="flex items-center gap-1 bg-white border border-outline-variant rounded-full px-1 py-1">
+        <button onclick="cambiarMesGlobal(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-lg">chevron_left</span>
+        </button>
+        <span id="mes-global-label" class="text-xs font-gordita-bold uppercase tracking-widest px-3 min-w-[120px] text-center">-</span>
+        <button onclick="cambiarMesGlobal(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-lg">chevron_right</span>
+        </button>
       </div>
     </header>
 
@@ -306,20 +303,9 @@
         <button onclick="mostrarVista('sucursal')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver
         </button>
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
-          </div>
-          <div class="flex items-center gap-1 bg-white border border-outline-variant rounded-full px-1 py-1">
-            <button onclick="cambiarMesReferenciaDistrito(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
-              <span class="material-symbols-outlined text-lg">chevron_left</span>
-            </button>
-            <span id="detalle-distrito-mes-label" class="text-xs font-gordita-bold uppercase tracking-widest px-3 min-w-[120px] text-center">-</span>
-            <button onclick="cambiarMesReferenciaDistrito(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
-              <span class="material-symbols-outlined text-lg">chevron_right</span>
-            </button>
-          </div>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
           <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
@@ -400,6 +386,8 @@ async function cargarSesion() {
     document.getElementById('nav-cargar').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   }
+  mesGlobalSeleccionado = await obtenerUltimoMesConDatos();
+  actualizarEtiquetaMesGlobal();
   await cargarGlosario();
   mostrarVista('resumen');
 }
@@ -515,46 +503,48 @@ function obtenerGlosarioMap() {
   return mapa;
 }
 
-function primerYUltimoDiaMes(offsetMeses) {
-  const hoy = new Date();
-  const base = new Date(hoy.getFullYear(), hoy.getMonth() + offsetMeses, 1);
-  const primero = new Date(base.getFullYear(), base.getMonth(), 1);
-  const ultimo = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+let mesGlobalSeleccionado = null;
+
+function rangoDeMes(anio, mes) {
+  const primero = new Date(anio, mes, 1);
+  const ultimo = new Date(anio, mes + 1, 0);
   return {
     inicio: primero.toISOString().slice(0, 10),
     fin: ultimo.toISOString().slice(0, 10),
   };
 }
 
-let rangoActivoTipo = 'mes-actual';
-let rangoPersonalizado = null;
-
 function obtenerRangoActivo() {
-  if (rangoActivoTipo === 'rango' && rangoPersonalizado) {
-    return rangoPersonalizado;
-  }
-  if (rangoActivoTipo === 'ytd') {
+  return rangoDeMes(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes);
+}
+
+async function obtenerUltimoMesConDatos() {
+  const { data, error } = await supabaseClient
+    .from('facturas')
+    .select('fecha_pago')
+    .order('fecha_pago', { ascending: false })
+    .limit(1);
+  if (error || !data || data.length === 0) {
     const hoy = new Date();
-    return {
-      inicio: new Date(hoy.getFullYear(), 0, 1).toISOString().slice(0, 10),
-      fin: hoy.toISOString().slice(0, 10),
-    };
+    return { anio: hoy.getFullYear(), mes: hoy.getMonth() };
   }
-  return primerYUltimoDiaMes(0);
+  const fecha = new Date(data[0].fecha_pago + 'T00:00:00');
+  return { anio: fecha.getFullYear(), mes: fecha.getMonth() };
 }
 
-function cambiarFiltroTiempo() {
-  rangoActivoTipo = document.getElementById('filtro-tiempo-tipo').value;
-  document.getElementById('filtro-rango-personalizado').style.display = rangoActivoTipo === 'rango' ? 'inline-flex' : 'none';
-  if (rangoActivoTipo !== 'rango') recargarVistaActiva();
+function actualizarEtiquetaMesGlobal() {
+  document.getElementById('mes-global-label').textContent = MESES_LARGOS[mesGlobalSeleccionado.mes] + ' ' + mesGlobalSeleccionado.anio;
 }
 
-function aplicarRangoPersonalizado() {
-  rangoPersonalizado = {
-    inicio: document.getElementById('filtro-fecha-inicio').value,
-    fin: document.getElementById('filtro-fecha-fin').value,
-  };
-  recargarVistaActiva();
+function cambiarMesGlobal(delta) {
+  const base = new Date(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes + delta, 1);
+  mesGlobalSeleccionado = { anio: base.getFullYear(), mes: base.getMonth() };
+  actualizarEtiquetaMesGlobal();
+  if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
+    renderizarDetalleDistrito();
+  } else {
+    recargarVistaActiva();
+  }
 }
 
 function recargarVistaActiva() {
@@ -596,13 +586,10 @@ async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
 async function cargarResumenEjecutivo() {
   const glosarioMap = obtenerGlosarioMap();
   const mesActual = obtenerRangoActivo();
-  const compararConAnterior = rangoActivoTipo === 'mes-actual';
-  const mesAnterior = primerYUltimoDiaMes(-1);
+  const mesAnterior = rangoDeMes(mesGlobalSeleccionado.anio, mesGlobalSeleccionado.mes - 1);
 
   const facturasActual = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
-  const facturasAnterior = compararConAnterior
-    ? await obtenerFacturasEnRango(mesAnterior.inicio, mesAnterior.fin, '*')
-    : [];
+  const facturasAnterior = await obtenerFacturasEnRango(mesAnterior.inicio, mesAnterior.fin, '*');
 
   const kpisActual = Calc.calcularKPIs(facturasActual, glosarioMap);
   const kpisAnterior = Calc.calcularKPIs(facturasAnterior, glosarioMap);
@@ -612,18 +599,14 @@ async function cargarResumenEjecutivo() {
   document.getElementById('kpi-operativo').textContent = formatoMoneda(kpisActual.gastoOperativo);
   document.getElementById('kpi-sin-clasificar').textContent = formatoMoneda(kpisActual.sinClasificar);
 
-  if (compararConAnterior) {
-    const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
-    document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
-  } else {
-    document.getElementById('kpi-total-var').textContent = '';
-  }
+  const variacion = kpisAnterior.totalPagado === 0 ? 0 : ((kpisActual.totalPagado - kpisAnterior.totalPagado) / kpisAnterior.totalPagado) * 100;
+  document.getElementById('kpi-total-var').textContent = (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '% vs. mes anterior';
 
   const ctx = document.getElementById('grafica-composicion-mensual');
   if (window.graficaComposicion) window.graficaComposicion.destroy();
-  const labels = compararConAnterior ? ['Mes anterior', 'Periodo actual'] : ['Periodo actual'];
-  const datosDirecto = compararConAnterior ? [kpisAnterior.costoDirecto, kpisActual.costoDirecto] : [kpisActual.costoDirecto];
-  const datosOperativo = compararConAnterior ? [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo] : [kpisActual.gastoOperativo];
+  const labels = ['Mes anterior', 'Periodo actual'];
+  const datosDirecto = [kpisAnterior.costoDirecto, kpisActual.costoDirecto];
+  const datosOperativo = [kpisAnterior.gastoOperativo, kpisActual.gastoOperativo];
   window.graficaComposicion = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -769,20 +752,6 @@ async function cargarSinClasificar() {
 
 let distritoActual = null;
 
-function mesReferenciaActivo() {
-  const fin = new Date(obtenerRangoActivo().fin + 'T00:00:00');
-  return { anio: fin.getFullYear(), mes: fin.getMonth() };
-}
-
-function rangoDeMes(anio, mes) {
-  const primero = new Date(anio, mes, 1);
-  const ultimo = new Date(anio, mes + 1, 0);
-  return {
-    inicio: primero.toISOString().slice(0, 10),
-    fin: ultimo.toISOString().slice(0, 10),
-  };
-}
-
 function claveMes(anio, mes) {
   return anio + '-' + String(mes + 1).padStart(2, '0');
 }
@@ -801,17 +770,8 @@ function alternarDetalleFamiliaDistrito(familia) {
   });
 }
 
-let mesReferenciaDistritoActual = null;
-
-function cambiarMesReferenciaDistrito(delta) {
-  const base = new Date(mesReferenciaDistritoActual.anio, mesReferenciaDistritoActual.mes + delta, 1);
-  mesReferenciaDistritoActual = { anio: base.getFullYear(), mes: base.getMonth() };
-  renderizarDetalleDistrito();
-}
-
 async function abrirDetalleDistrito(distrito) {
   distritoActual = distrito;
-  mesReferenciaDistritoActual = mesReferenciaActivo();
   document.getElementById('vista-sucursal').classList.remove('activa');
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
@@ -821,8 +781,7 @@ async function abrirDetalleDistrito(distrito) {
 async function renderizarDetalleDistrito() {
   const distrito = distritoActual;
   const glosarioMap = obtenerGlosarioMap();
-  const { anio: anioRef, mes: mesRef } = mesReferenciaDistritoActual;
-  document.getElementById('detalle-distrito-mes-label').textContent = MESES_LARGOS[mesRef] + ' ' + anioRef;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
 
   const inicioVentana = rangoDeMes(anioRef, mesRef - 5).inicio;
   const finVentana = rangoDeMes(anioRef, mesRef).fin;
