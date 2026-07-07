@@ -437,8 +437,8 @@
               </label>
             </div>
           </div>
-          <p class="text-xs text-on-surface-variant mb-6">Ordenado por el impacto real en pesos, no solo por %, para que un gran gasto que apenas se movió no se pierda contra uno chico que fluctuó mucho (rojo = más gasto, verde = menos gasto).</p>
-          <div style="height: 220px;">
+          <p class="text-xs text-on-surface-variant mb-6">Cada burbuja es una familia de gasto. Eje X: % de variación. Eje Y: monto actual. Tamaño: el $ real que cambió — para que un gran gasto que apenas se movió no se pierda contra uno chico que fluctuó mucho (rojo = más gasto, verde = menos gasto).</p>
+          <div style="height: 280px;">
             <canvas id="grafica-top-familias-distrito"></canvas>
           </div>
         </div>
@@ -1122,23 +1122,23 @@ function renderizarTablaTopMovimientos(combinaciones) {
   });
 }
 
-function renderizarGraficaBurbujasVariaciones(combinaciones) {
-  const ctx = document.getElementById('grafica-burbujas-variaciones');
-  if (window.graficaBurbujasVariaciones) window.graficaBurbujasVariaciones.destroy();
-  if (combinaciones.length === 0) return;
+function renderizarGraficaBurbujas(canvasId, refGrafica, puntos) {
+  const ctx = document.getElementById(canvasId);
+  if (window[refGrafica]) window[refGrafica].destroy();
+  if (puntos.length === 0) return;
 
   const LIMITE_X = 150;
   const clamp = (v) => Math.max(-LIMITE_X, Math.min(LIMITE_X, v));
-  const maxDelta = Math.max.apply(null, combinaciones.map((d) => Math.abs(d.deltaPesos)).concat([1]));
+  const maxDelta = Math.max.apply(null, puntos.map((d) => Math.abs(d.deltaPesos)).concat([1]));
   const RADIO_MIN = 4;
   const RADIO_MAX = 32;
   const escalaRadio = (valor) => RADIO_MIN + (RADIO_MAX - RADIO_MIN) * Math.sqrt(Math.abs(valor) / maxDelta);
 
   const aPuntos = (lista) => lista.map((d) => ({ x: clamp(d.deltaPct), y: d.monto, r: escalaRadio(d.deltaPesos), _d: d }));
-  const suben = aPuntos(combinaciones.filter((d) => d.deltaPesos >= 0));
-  const bajan = aPuntos(combinaciones.filter((d) => d.deltaPesos < 0));
+  const suben = aPuntos(puntos.filter((d) => d.deltaPesos >= 0));
+  const bajan = aPuntos(puntos.filter((d) => d.deltaPesos < 0));
 
-  window.graficaBurbujasVariaciones = new Chart(ctx, {
+  window[refGrafica] = new Chart(ctx, {
     type: 'bubble',
     data: {
       datasets: [
@@ -1156,7 +1156,7 @@ function renderizarGraficaBurbujasVariaciones(combinaciones) {
           titleFont: { family: 'Gordita', weight: 'bold' },
           bodyFont: { family: 'Gordita' },
           callbacks: {
-            title: (items) => items[0].raw._d.distrito + ' — ' + items[0].raw._d.familia,
+            title: (items) => items[0].raw._d.etiqueta,
             label: (item) => {
               const d = item.raw._d;
               const signo = d.deltaPesos >= 0 ? '+' : '';
@@ -1186,6 +1186,16 @@ function renderizarGraficaBurbujasVariaciones(combinaciones) {
       },
     },
   });
+}
+
+function renderizarGraficaBurbujasVariaciones(combinaciones) {
+  const puntos = combinaciones.map((d) => ({
+    etiqueta: d.distrito + ' — ' + d.familia,
+    monto: d.monto,
+    deltaPesos: d.deltaPesos,
+    deltaPct: d.deltaPct,
+  }));
+  renderizarGraficaBurbujas('grafica-burbujas-variaciones', 'graficaBurbujasVariaciones', puntos);
 }
 
 function renderizarSucursales() {
@@ -1418,59 +1428,13 @@ async function cambiarModoPeriodoDistrito(modo) {
 
 function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
   document.getElementById('titulo-variaciones-distrito').textContent = titulo;
-  const labels = variaciones.map((d) => d.familia);
-  const valores = variaciones.map((d) => d.deltaPesos);
-  const colores = valores.map((v) => (v >= 0 ? '#ba1a1a' : '#2ECC71'));
-
-  const ctx = document.getElementById('grafica-top-familias-distrito');
-  if (window.graficaTopFamiliasDistrito) window.graficaTopFamiliasDistrito.destroy();
-  if (variaciones.length === 0) return;
-  window.graficaTopFamiliasDistrito = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'Variación', data: valores, backgroundColor: colores, borderRadius: 4, maxBarThickness: 20 }] },
-    options: {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      layout: { padding: { left: 90, right: 90 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 10,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: {
-            label: (ctx2) => {
-              const d = variaciones[ctx2.dataIndex];
-              const signo = d.deltaPesos >= 0 ? '+' : '';
-              return signo + formatoMoneda(d.deltaPesos) + ' (' + (d.deltaPct >= 0 ? '+' : '') + d.deltaPct.toFixed(1) + '%)';
-            },
-          },
-        },
-      },
-      scales: {
-        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', weight: 'bold' } } },
-      },
-    },
-    plugins: [{
-      id: 'etiquetasVariacionesDistrito',
-      afterDatasetsDraw(chart) {
-        const { ctx: ctxDibujo } = chart;
-        chart.getDatasetMeta(0).data.forEach((barra, i) => {
-          const d = variaciones[i];
-          const texto = (d.deltaPesos >= 0 ? '+' : '') + formatoCompactoCorto(d.deltaPesos) + ' (' + (d.deltaPct >= 0 ? '+' : '') + d.deltaPct.toFixed(0) + '%)';
-          ctxDibujo.save();
-          ctxDibujo.fillStyle = d.deltaPesos >= 0 ? '#ba1a1a' : '#2ECC71';
-          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
-          ctxDibujo.textAlign = d.deltaPesos >= 0 ? 'left' : 'right';
-          ctxDibujo.textBaseline = 'middle';
-          ctxDibujo.fillText(texto, barra.x + (d.deltaPesos >= 0 ? 6 : -6), barra.y);
-          ctxDibujo.restore();
-        });
-      },
-    }],
-  });
+  const puntos = variaciones.map((d) => ({
+    etiqueta: d.familia,
+    monto: d.monto,
+    deltaPesos: d.deltaPesos,
+    deltaPct: d.deltaPct,
+  }));
+  renderizarGraficaBurbujas('grafica-top-familias-distrito', 'graficaTopFamiliasDistrito', puntos);
 }
 
 async function renderizarDetalleDistrito() {
@@ -1585,6 +1549,7 @@ async function renderizarDetalleDistrito() {
       const anterior = (mapaComparacionVariaciones[familia] && mapaComparacionVariaciones[familia].total) || 0;
       return {
         familia,
+        monto: actual,
         deltaPesos: actual - anterior,
         deltaPct: Calc.calcularVariacionPct(actual, anterior),
       };
@@ -1597,10 +1562,6 @@ async function renderizarDetalleDistrito() {
     variacionesFamilias = variacionesFamilias.filter((d) => d.deltaPesos < 0);
   }
 
-  variacionesFamilias = variacionesFamilias
-    .sort((a, b) => Math.abs(b.deltaPesos) - Math.abs(a.deltaPesos))
-    .slice(0, 5)
-    .reverse();
   renderizarGraficaVariacionesDistrito(variacionesFamilias, tituloVariaciones);
 
   const facturasPeriodoCompania = clasificadas24.filter((f) => enRango(f, rangoActualPeriodo));
