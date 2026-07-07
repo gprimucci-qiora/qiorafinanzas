@@ -777,8 +777,10 @@ function claveMes(anio, mes) {
 }
 
 function alternarDetalleFamiliaDistrito(familia) {
-  const el = document.getElementById('detalle-distrito-' + familia.replace(/\s/g, '-'));
-  el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+  const idGrupo = 'detalle-distrito-' + familia.replace(/\s/g, '-');
+  document.querySelectorAll('tr[data-grupo="' + idGrupo + '"]').forEach((fila) => {
+    fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+  });
 }
 
 async function abrirDetalleDistrito(distrito) {
@@ -931,28 +933,23 @@ async function abrirDetalleDistrito(distrito) {
     filaFamilia.onclick = () => alternarDetalleFamiliaDistrito(familia);
     cuerpoDetalle.appendChild(filaFamilia);
 
-    const filaDetalle = document.createElement('tr');
-    filaDetalle.id = 'detalle-distrito-' + familia.replace(/\s/g, '-');
-    filaDetalle.className = 'bg-surface-container-low/50';
-    filaDetalle.style.display = 'none';
-    const subfilas = Object.keys(porFamiliaMesRef[familia].porGasto)
+    const idGrupo = 'detalle-distrito-' + familia.replace(/\s/g, '-');
+    Object.keys(porFamiliaMesRef[familia].porGasto)
       .sort((a, b) => porFamiliaMesRef[familia].porGasto[b] - porFamiliaMesRef[familia].porGasto[a])
-      .map((gasto) => {
+      .forEach((gasto) => {
         const montoGasto = porFamiliaMesRef[familia].porGasto[gasto];
         const montoGastoAnt = (porFamiliaMesAnt[familia] && porFamiliaMesAnt[familia].porGasto[gasto]) || 0;
         const montoGastoAnioAnt = (porFamiliaMesAnioAnt[familia] && porFamiliaMesAnioAnt[familia].porGasto[gasto]) || 0;
         const momGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnt);
         const yoyGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnioAnt);
-        return `<div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 py-1.5 text-xs text-on-surface-variant border-t border-outline-variant/50 first:border-t-0">
-          <span>${gasto}</span>
-          <span class="font-gordita-bold text-right text-on-surface">${formatoMoneda(montoGasto)}</span>
-          <span class="text-right ${claseColor(momGasto)}">${textoVar(momGasto)}</span>
-          <span class="text-right ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</span>
-        </div>`;
-      })
-      .join('');
-    filaDetalle.innerHTML = `<td colspan="4" class="px-8 py-4">${subfilas}</td>`;
-    cuerpoDetalle.appendChild(filaDetalle);
+
+        const filaGasto = document.createElement('tr');
+        filaGasto.setAttribute('data-grupo', idGrupo);
+        filaGasto.className = 'bg-surface-container-low/50';
+        filaGasto.style.display = 'none';
+        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant">${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        cuerpoDetalle.appendChild(filaGasto);
+      });
   });
 
   const facturasMesRefTodas = facturasVentana.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);
