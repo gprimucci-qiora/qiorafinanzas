@@ -185,6 +185,8 @@
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
                 <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarTipoGasto('familia')">Familia <span id="orden-tipogasto-familia"></span></th>
                 <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarTipoGasto('monto')">Monto <span id="orden-tipogasto-monto"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% MoM</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% YoY</th>
               </tr>
             </thead>
             <tbody id="tabla-tipo-gasto-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -678,6 +680,7 @@ async function renderizarTendenciaAnual(glosarioMap) {
   });
 
   const etiquetas = [];
+  const etiquetasAnioAnterior = [];
   const datosDirecto = [];
   const datosOperativo = [];
   const datosAnioAnterior = [];
@@ -692,6 +695,7 @@ async function renderizarTendenciaAnual(glosarioMap) {
     const kpisMesAnioAnterior = Calc.calcularKPIs(porMes[claveAnioAnterior] || [], glosarioMap);
 
     etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+    etiquetasAnioAnterior.push(etiquetaMesCorta(base.getFullYear() - 1, base.getMonth()));
     datosDirecto.push(kpisMes.costoDirecto);
     datosOperativo.push(kpisMes.gastoOperativo);
     datosAnioAnterior.push(kpisMesAnioAnterior.totalPagado);
@@ -707,9 +711,9 @@ async function renderizarTendenciaAnual(glosarioMap) {
     data: {
       labels: etiquetas,
       datasets: [
+        { label: 'Año anterior', data: datosAnioAnterior, backgroundColor: 'transparent', borderColor: '#7e7576', borderWidth: 2, borderDash: [4, 3], borderSkipped: false, stack: 'anterior', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
         { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
         { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95, borderRadius: 4 },
-        { label: 'Año anterior', data: datosAnioAnterior, backgroundColor: 'transparent', borderColor: '#7e7576', borderWidth: 2, borderDash: [4, 3], borderSkipped: false, stack: 'anterior', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
       ],
     },
     options: {
@@ -721,7 +725,14 @@ async function renderizarTendenciaAnual(glosarioMap) {
           padding: 10,
           titleFont: { family: 'Gordita', weight: 'bold' },
           bodyFont: { family: 'Gordita' },
-          callbacks: { label: (ctxTooltip) => ctxTooltip.dataset.label + ': ' + formatoMoneda(ctxTooltip.parsed.y) },
+          callbacks: {
+            label: (ctxTooltip) => {
+              if (ctxTooltip.dataset.label === 'Año anterior') {
+                return etiquetasAnioAnterior[ctxTooltip.dataIndex] + ': ' + formatoMoneda(ctxTooltip.parsed.y);
+              }
+              return ctxTooltip.dataset.label + ': ' + formatoMoneda(ctxTooltip.parsed.y);
+            },
+          },
         },
       },
       scales: {
@@ -733,9 +744,9 @@ async function renderizarTendenciaAnual(glosarioMap) {
       id: 'etiquetasTendenciaAnual',
       afterDatasetsDraw(chart) {
         const { ctx: ctxDibujo } = chart;
-        const metaDirecto = chart.getDatasetMeta(0);
-        const metaOperativo = chart.getDatasetMeta(1);
-        const metaAnterior = chart.getDatasetMeta(2);
+        const metaAnterior = chart.getDatasetMeta(0);
+        const metaDirecto = chart.getDatasetMeta(1);
+        const metaOperativo = chart.getDatasetMeta(2);
 
         metaDirecto.data.forEach((barra, i) => {
           const altura = Math.abs(barra.base - barra.y);
@@ -774,11 +785,14 @@ async function renderizarTendenciaAnual(glosarioMap) {
           const yoy = datosYoy[i];
           if (yoy === null || yoy === undefined) return;
           const texto = (yoy >= 0 ? '+' : '') + yoy.toFixed(0) + '%';
+          const topActual = barra.y;
+          const topAnterior = metaAnterior.data[i].y - 12;
+          const topMost = Math.min(topActual, topAnterior);
           ctxDibujo.save();
           ctxDibujo.fillStyle = yoy >= 0 ? '#ba1a1a' : '#2ECC71';
           ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
           ctxDibujo.textAlign = 'center';
-          ctxDibujo.fillText(texto, barra.x, barra.y - 20);
+          ctxDibujo.fillText(texto, (barra.x + metaAnterior.data[i].x) / 2, topMost - 8);
           ctxDibujo.restore();
         });
       },
@@ -898,17 +912,44 @@ function ordenarTipoGasto(columna) {
   renderizarTipoGasto();
 }
 
-async function cargarPorTipoGasto() {
-  const mesActual = obtenerRangoActivo();
-  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, 'familia, gasto, monto');
+let porFamiliaAnteriorGlobal = {};
+let porFamiliaAnioAnteriorGlobal = {};
+let tipoGastoPorFamilia = {};
 
-  porFamiliaActual = {};
-  facturas.forEach((f) => {
-    porFamiliaActual[f.familia] = porFamiliaActual[f.familia] || { total: 0, porGasto: {} };
-    porFamiliaActual[f.familia].total += f.monto || 0;
-    porFamiliaActual[f.familia].porGasto[f.gasto] = (porFamiliaActual[f.familia].porGasto[f.gasto] || 0) + (f.monto || 0);
+async function cargarPorTipoGasto() {
+  const glosarioMap = obtenerGlosarioMap();
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangoMesRef = rangoDeMes(anioRef, mesRef);
+  const rangoMesAnt = rangoDeMes(anioRef, mesRef - 1);
+  const rangoMesAnioAnt = rangoDeMes(anioRef - 1, mesRef);
+
+  const inicioVentana = rangoDeMes(anioRef, mesRef - 12).inicio;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangoMesRef.fin, 'sucursal, familia, gasto, monto, fecha_pago');
+  const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
+
+  const facturasMesRef = clasificadas.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);
+  const facturasMesAnt = clasificadas.filter((f) => f.fecha_pago >= rangoMesAnt.inicio && f.fecha_pago <= rangoMesAnt.fin);
+  const facturasMesAnioAnt = clasificadas.filter((f) => f.fecha_pago >= rangoMesAnioAnt.inicio && f.fecha_pago <= rangoMesAnioAnt.fin);
+
+  porFamiliaActual = Calc.agruparPorFamiliaGasto(facturasMesRef);
+  porFamiliaAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasMesAnt);
+  porFamiliaAnioAnteriorGlobal = Calc.agruparPorFamiliaGasto(facturasMesAnioAnt);
+
+  tipoGastoPorFamilia = {};
+  facturasMesRef.forEach((f) => {
+    tipoGastoPorFamilia[f.familia] = tipoGastoPorFamilia[f.familia] || { 'COSTOS DIRECTOS': 0, 'GASTOS OPERATIVOS': 0, SIN_CLASIFICAR: 0 };
+    tipoGastoPorFamilia[f.familia][f.tipo_gasto] = (tipoGastoPorFamilia[f.familia][f.tipo_gasto] || 0) + (f.monto || 0);
   });
+
   renderizarTipoGasto();
+}
+
+function etiquetaTipoGasto(familia) {
+  const conteo = tipoGastoPorFamilia[familia];
+  if (!conteo) return '';
+  if (conteo['COSTOS DIRECTOS'] >= conteo['GASTOS OPERATIVOS'] && conteo['COSTOS DIRECTOS'] >= conteo.SIN_CLASIFICAR) return 'Costo Directo';
+  if (conteo['GASTOS OPERATIVOS'] >= conteo.SIN_CLASIFICAR) return 'Gasto Operativo';
+  return 'Sin Clasificar';
 }
 
 function renderizarTipoGasto() {
@@ -920,31 +961,49 @@ function renderizarTipoGasto() {
   });
   actualizarIconoOrden('orden-tipogasto', ordenTipoGasto);
 
+  const claseColor = (v) => (v === null ? '' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
+  const textoVar = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+
   const cuerpo = document.getElementById('tabla-tipo-gasto-body');
   cuerpo.innerHTML = '';
   familias.forEach((familia) => {
+    const montoActual = porFamiliaActual[familia].total;
+    const montoAnt = (porFamiliaAnteriorGlobal[familia] && porFamiliaAnteriorGlobal[familia].total) || 0;
+    const montoAnioAnt = (porFamiliaAnioAnteriorGlobal[familia] && porFamiliaAnioAnteriorGlobal[familia].total) || 0;
+    const mom = Calc.calcularVariacionPct(montoActual, montoAnt);
+    const yoy = Calc.calcularVariacionPct(montoActual, montoAnioAnt);
+
     const filaFamilia = document.createElement('tr');
     filaFamilia.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
-    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(porFamiliaActual[familia].total)}</td>`;
+    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}<span class="text-[9px] font-gordita-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-container-low text-on-surface-variant">${etiquetaTipoGasto(familia)}</span></span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(montoActual)}</td><td class="px-6 py-4 text-right ${claseColor(mom)}">${textoVar(mom)}</td><td class="px-6 py-4 text-right ${claseColor(yoy)}">${textoVar(yoy)}</td>`;
     filaFamilia.onclick = () => alternarDetalleGasto(familia);
     cuerpo.appendChild(filaFamilia);
 
-    const filaDetalle = document.createElement('tr');
-    filaDetalle.id = 'detalle-' + familia.replace(/\s/g, '-');
-    filaDetalle.className = 'bg-surface-container-low/50';
-    filaDetalle.style.display = 'none';
-    const subfilas = Object.keys(porFamiliaActual[familia].porGasto)
+    const idGrupo = 'tipogasto-' + familia.replace(/\s/g, '-');
+    Object.keys(porFamiliaActual[familia].porGasto)
       .sort((a, b) => porFamiliaActual[familia].porGasto[b] - porFamiliaActual[familia].porGasto[a])
-      .map((gasto) => `<div class="flex justify-between py-1 text-xs text-on-surface-variant"><span>${gasto}</span><span class="font-gordita-bold">${formatoMoneda(porFamiliaActual[familia].porGasto[gasto])}</span></div>`)
-      .join('');
-    filaDetalle.innerHTML = `<td colspan="2" class="px-8 py-4">${subfilas}</td>`;
-    cuerpo.appendChild(filaDetalle);
+      .forEach((gasto) => {
+        const montoGasto = porFamiliaActual[familia].porGasto[gasto];
+        const montoGastoAnt = (porFamiliaAnteriorGlobal[familia] && porFamiliaAnteriorGlobal[familia].porGasto[gasto]) || 0;
+        const montoGastoAnioAnt = (porFamiliaAnioAnteriorGlobal[familia] && porFamiliaAnioAnteriorGlobal[familia].porGasto[gasto]) || 0;
+        const momGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnt);
+        const yoyGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnioAnt);
+
+        const filaGasto = document.createElement('tr');
+        filaGasto.setAttribute('data-grupo', idGrupo);
+        filaGasto.className = 'bg-surface-container-low/50';
+        filaGasto.style.display = 'none';
+        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant">${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        cuerpo.appendChild(filaGasto);
+      });
   });
 }
 
 function alternarDetalleGasto(familia) {
-  const el = document.getElementById('detalle-' + familia.replace(/\s/g, '-'));
-  el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+  const idGrupo = 'tipogasto-' + familia.replace(/\s/g, '-');
+  document.querySelectorAll('tr[data-grupo="' + idGrupo + '"]').forEach((fila) => {
+    fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+  });
 }
 
 async function cargarSinClasificar() {
