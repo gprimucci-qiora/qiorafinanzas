@@ -1,132 +1,309 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QiORA Conecta — Auditoría de Gastos</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/gordita" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          surface: "#f9f9f9",
+          "surface-bright": "#f9f9f9",
+          "surface-container": "#eeeeee",
+          "surface-container-low": "#f3f3f3",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-high": "#e8e8e8",
+          "surface-container-highest": "#e2e2e2",
+          "on-surface": "#1b1b1b",
+          "on-surface-variant": "#4c4546",
+          outline: "#7e7576",
+          "outline-variant": "#cfc4c5",
+          primary: "#000000",
+          "on-primary": "#ffffff",
+          secondary: "#984700",
+          "secondary-container": "#fe9249",
+          "on-secondary-container": "#6c3100",
+          error: "#ba1a1a",
+          "on-error": "#ffffff",
+          "totalplay-cyan": "#00E5FF",
+          "qiora-green": "#2ECC71",
+          "qiora-blue": "#3498DB",
+          "qiora-orange": "#E67E22",
+          "brand-teal": "#2DD4BF",
+          "brand-emerald": "#10B981"
+        },
+        borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+        spacing: { xs: "4px", sm: "12px", base: "8px", md: "24px", gutter: "24px", lg: "48px", xl: "80px" },
+        fontFamily: { gordita: ["Gordita", "sans-serif"] }
+      }
+    }
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="calc.js"></script>
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0f1117; color: #e6e8ec; }
-  #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; }
-  #login-card { background: #171a23; padding: 32px; border-radius: 12px; width: 320px; }
-  #login-card input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #2a2e3a; background: #0f1117; color: #e6e8ec; }
-  #login-card button { width: 100%; padding: 10px; border-radius: 6px; border: none; background: #E85420; color: white; font-weight: 600; cursor: pointer; }
+  body { font-family: 'Gordita', sans-serif; -webkit-font-smoothing: antialiased; background-color: #f9f9f9; }
+  .font-gordita-bold { font-weight: 700; }
+  .font-gordita-regular { font-weight: 400; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: 20px; vertical-align: middle; }
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
   #app-shell { display: none; }
-  #sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: #171a23; padding: 20px 12px; }
-  #sidebar button { display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 4px; background: transparent; border: none; color: #b0b4c0; border-radius: 6px; cursor: pointer; }
-  #sidebar button.activo { background: #E85420; color: white; }
-  #contenido { margin-left: 220px; padding: 24px; }
+  #sidebar button.activo { background-color: #e8e8e8; color: #000000; font-weight: 700; border-right: 4px solid #000000; }
   .vista { display: none; }
   .vista.activa { display: block; }
 </style>
 </head>
-<body>
+<body class="bg-surface text-on-surface font-gordita-regular">
 
-<div id="login-screen">
-  <div id="login-card">
-    <h2>QiORA Conecta</h2>
-    <p>Auditoría de Gastos</p>
-    <input id="login-email" type="email" placeholder="Correo">
-    <input id="login-password" type="password" placeholder="Contraseña">
-    <button onclick="iniciarSesion()">Entrar</button>
-    <p id="login-error" style="color:#ff6b6b;"></p>
+<div id="login-screen" class="bg-surface">
+  <div id="login-card" class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 w-80">
+    <div class="w-10 h-10 bg-primary flex items-center justify-center rounded mb-4">
+      <span class="material-symbols-outlined text-on-primary">rocket_launch</span>
+    </div>
+    <h2 class="font-gordita-bold text-2xl text-primary">QiORA Conecta</h2>
+    <p class="text-on-surface-variant text-sm mb-6">Auditoría de Gastos</p>
+    <input id="login-email" type="email" placeholder="Correo" class="w-full mb-3 px-3 py-2 border border-outline-variant rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+    <input id="login-password" type="password" placeholder="Contraseña" class="w-full mb-4 px-3 py-2 border border-outline-variant rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+    <button onclick="iniciarSesion()" class="w-full py-2.5 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Entrar</button>
+    <p id="login-error" class="text-error text-xs mt-3"></p>
   </div>
 </div>
 
 <div id="app-shell">
-  <div id="sidebar">
-    <button data-vista="resumen" onclick="mostrarVista('resumen')">Resumen Ejecutivo</button>
-    <button data-vista="tipo-gasto" onclick="mostrarVista('tipo-gasto')">Por Tipo de Gasto</button>
-    <button data-vista="sucursal" onclick="mostrarVista('sucursal')">Por Sucursal/Distrito</button>
-    <button data-vista="sin-clasificar" onclick="mostrarVista('sin-clasificar')">Sin Clasificar</button>
-    <button data-vista="glosario" onclick="mostrarVista('glosario')">Glosario de Sucursales</button>
-    <button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')">Cargar Datos</button>
-    <button onclick="cerrarSesion()" style="margin-top: 24px; color: #ff6b6b;">Cerrar sesión</button>
-  </div>
-  <div id="contenido">
-    <div id="filtro-tiempo" style="margin-bottom: 16px;">
-      <select id="filtro-tiempo-tipo" onchange="cambiarFiltroTiempo()">
-        <option value="mes-actual">Mes actual vs. mes anterior</option>
-        <option value="ytd">Acumulado del año (YTD)</option>
-        <option value="rango">Rango personalizado</option>
-      </select>
-      <span id="filtro-rango-personalizado" style="display:none;">
-        <input type="date" id="filtro-fecha-inicio">
-        <input type="date" id="filtro-fecha-fin">
-        <button onclick="aplicarRangoPersonalizado()">Aplicar</button>
-      </span>
+  <aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-white border-r border-outline-variant w-64">
+    <div class="p-md flex items-center gap-sm">
+      <div class="w-10 h-10 bg-primary flex items-center justify-center rounded shrink-0">
+        <span class="material-symbols-outlined text-on-primary">rocket_launch</span>
+      </div>
+      <div class="overflow-hidden">
+        <h1 class="font-gordita-bold text-lg text-primary leading-tight truncate">QiORA Conecta</h1>
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Auditoría de Gastos</p>
+      </div>
     </div>
-    <div class="vista activa" id="vista-resumen">
-  <h1>Resumen Ejecutivo</h1>
-  <div id="kpis-resumen" style="display:flex; gap:16px;">
-    <div class="kpi-card"><p>Gasto Total</p><h2 id="kpi-total">-</h2><span id="kpi-total-var"></span></div>
-    <div class="kpi-card"><p>Costo Directo</p><h2 id="kpi-directo">-</h2></div>
-    <div class="kpi-card"><p>Gasto Operativo</p><h2 id="kpi-operativo">-</h2></div>
-    <div class="kpi-card"><p>Sin Clasificar</p><h2 id="kpi-sin-clasificar">-</h2></div>
-  </div>
-  <canvas id="grafica-composicion-mensual" height="100"></canvas>
-</div>
-    <div class="vista" id="vista-tipo-gasto">
-  <h1>Por Tipo de Gasto</h1>
-  <table id="tabla-tipo-gasto">
-    <thead><tr><th>Familia</th><th>Monto</th></tr></thead>
-    <tbody id="tabla-tipo-gasto-body"></tbody>
-  </table>
-</div>
-    <div class="vista" id="vista-sucursal">
-  <h1>Por Sucursal / Distrito</h1>
-  <label><input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()"> Bolsa</label>
-  <label><input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()"> Prorrateado</label>
-  <table id="tabla-sucursales">
-    <thead><tr><th>Distrito</th><th>Costo Directo</th><th>Gasto Operativo</th><th>Total</th></tr></thead>
-    <tbody id="tabla-sucursales-body"></tbody>
-  </table>
-  <p id="bolsa-total-info"></p>
-</div>
-    <div class="vista" id="vista-sin-clasificar">
-  <h1>Sin Clasificar</h1>
-  <p>Sucursales que aparecen en las facturas pero no están en el glosario. Agrégalas desde "Glosario de Sucursales".</p>
-  <table id="tabla-sin-clasificar">
-    <thead><tr><th>Sucursal</th><th>Facturas</th><th>Monto</th></tr></thead>
-    <tbody id="tabla-sin-clasificar-body"></tbody>
-  </table>
-</div>
-    <div class="vista" id="vista-glosario">
-  <h1>Glosario de Sucursales</h1>
-  <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()">+ Agregar sucursal</button>
-  <div id="form-glosario" style="display:none; margin: 12px 0;">
-    <input id="glosario-sucursal" placeholder="Sucursal (código completo)">
-    <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal">
-    <input id="glosario-region" placeholder="Región">
-    <input id="glosario-sucursal-secundaria" placeholder="Sucursal secundaria (distrito real)">
-    <select id="glosario-tipo-gasto">
-      <option value="COSTOS DIRECTOS">COSTOS DIRECTOS</option>
-      <option value="GASTOS OPERATIVOS">GASTOS OPERATIVOS</option>
-    </select>
-    <button onclick="guardarGlosario()">Guardar</button>
-  </div>
-  <table id="tabla-glosario">
-    <thead><tr><th>Sucursal</th><th>Tipo</th><th>Región</th><th>Sucursal secundaria</th><th>Tipo de gasto</th><th></th></tr></thead>
-    <tbody id="tabla-glosario-body"></tbody>
-  </table>
-</div>
-    <div class="vista" id="vista-cargar">
-  <h1>Cargar Datos</h1>
-  <p>Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
-  <input type="file" id="input-excel" accept=".xlsx,.xls">
-  <div id="preview-carga" style="display:none; margin-top: 16px;">
-    <p>Rango detectado: <strong id="preview-rango"></strong></p>
-    <p>Filas a cargar: <strong id="preview-filas"></strong></p>
-    <p style="color:#ffb020;">Esto reemplazará todas las facturas existentes con fecha de pago en ese rango.</p>
-    <button onclick="confirmarCarga()">Confirmar y reemplazar</button>
-  </div>
-  <p id="estado-carga"></p>
-</div>
-  </div>
+    <nav class="mt-lg flex-grow px-sm overflow-y-auto">
+      <ul class="space-y-1">
+        <li><button data-vista="resumen" onclick="mostrarVista('resumen')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">dashboard</span><span class="text-sm">Resumen Ejecutivo</span>
+        </button></li>
+        <li><button data-vista="tipo-gasto" onclick="mostrarVista('tipo-gasto')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">payments</span><span class="text-sm">Por Tipo de Gasto</span>
+        </button></li>
+        <li><button data-vista="sucursal" onclick="mostrarVista('sucursal')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">location_city</span><span class="text-sm">Por Sucursal/Distrito</span>
+        </button></li>
+        <li><button data-vista="sin-clasificar" onclick="mostrarVista('sin-clasificar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">warning</span><span class="text-sm">Sin Clasificar</span>
+        </button></li>
+        <li><button data-vista="glosario" onclick="mostrarVista('glosario')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">menu_book</span><span class="text-sm">Glosario de Sucursales</span>
+        </button></li>
+        <li><button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">upload_file</span><span class="text-sm">Cargar Datos</span>
+        </button></li>
+      </ul>
+    </nav>
+    <div class="p-md border-t border-outline-variant">
+      <button onclick="cerrarSesion()" class="w-full flex items-center gap-sm p-sm rounded-lg text-error hover:bg-error/5 transition-colors text-left">
+        <span class="material-symbols-outlined">logout</span><span class="text-sm font-gordita-bold">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="ml-64 min-h-screen">
+    <header class="flex justify-between items-center h-16 px-8 w-full sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant">
+      <div id="filtro-tiempo" class="flex items-center gap-sm">
+        <select id="filtro-tiempo-tipo" onchange="cambiarFiltroTiempo()" class="text-xs font-gordita-bold uppercase tracking-widest bg-white border border-outline-variant rounded px-3 py-1.5 text-on-surface-variant focus:outline-none">
+          <option value="mes-actual">Mes actual vs. mes anterior</option>
+          <option value="ytd">Acumulado del año (YTD)</option>
+          <option value="rango">Rango personalizado</option>
+        </select>
+        <span id="filtro-rango-personalizado" class="items-center gap-2" style="display:none;">
+          <input type="date" id="filtro-fecha-inicio" class="text-xs border border-outline-variant rounded px-2 py-1.5">
+          <input type="date" id="filtro-fecha-fin" class="text-xs border border-outline-variant rounded px-2 py-1.5">
+          <button onclick="aplicarRangoPersonalizado()" class="px-3 py-1.5 bg-primary text-on-primary text-xs font-gordita-bold rounded hover:opacity-90 transition-opacity">Aplicar</button>
+        </span>
+      </div>
+    </header>
+
+    <div id="contenido" class="p-8 max-w-[1440px] mx-auto">
+
+      <div class="vista activa" id="vista-resumen">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
+        </div>
+        <div id="kpis-resumen" class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-primary/5 rounded-lg inline-flex mb-4">
+              <span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Total</p>
+            <h2 id="kpi-total" class="font-gordita-bold text-3xl text-primary">-</h2>
+            <span id="kpi-total-var" class="text-xs font-gordita-bold text-on-surface-variant"></span>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-qiora-blue/10 rounded-lg inline-flex mb-4">
+              <span class="material-symbols-outlined text-qiora-blue">store</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Costo Directo</p>
+            <h2 id="kpi-directo" class="font-gordita-bold text-3xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-secondary-container/10 rounded-lg inline-flex mb-4">
+              <span class="material-symbols-outlined text-secondary">corporate_fare</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Operativo</p>
+            <h2 id="kpi-operativo" class="font-gordita-bold text-3xl text-primary">-</h2>
+          </div>
+          <div class="bg-primary text-on-primary p-6 rounded-xl shadow-sm">
+            <div class="p-2 bg-on-primary/10 rounded-lg inline-flex mb-4">
+              <span class="material-symbols-outlined text-on-primary">help</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1 opacity-60">Sin Clasificar</p>
+            <h2 id="kpi-sin-clasificar" class="font-gordita-bold text-3xl">-</h2>
+          </div>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+          <h3 class="font-gordita-bold text-lg text-primary mb-6">Composición del gasto</h3>
+          <canvas id="grafica-composicion-mensual" height="90"></canvas>
+        </div>
+      </div>
+
+      <div class="vista" id="vista-tipo-gasto">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Tipo de Gasto</h1>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-tipo-gasto" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-tipo-gasto-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-sucursal">
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Sucursal / Distrito</h1>
+          </div>
+          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
+            </label>
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
+            </label>
+          </div>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-sucursales" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Gasto Operativo</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-sucursales-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+          <p id="bolsa-total-info" class="px-8 py-4 bg-surface-container-low text-xs font-gordita-bold text-on-surface-variant"></p>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-sin-clasificar">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Sin Clasificar</h1>
+          <p class="text-on-surface-variant text-sm mt-2">Sucursales que aparecen en las facturas pero no están en el glosario. Agrégalas desde "Glosario de Sucursales".</p>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-sin-clasificar" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Facturas</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-sin-clasificar-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-glosario">
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Glosario de Sucursales</h1>
+          </div>
+          <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add</span> Agregar sucursal
+          </button>
+        </div>
+        <div id="form-glosario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
+          <input id="glosario-sucursal" placeholder="Sucursal (código completo)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+          <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal" class="px-3 py-2 border border-outline-variant rounded text-sm">
+          <input id="glosario-region" placeholder="Región" class="px-3 py-2 border border-outline-variant rounded text-sm">
+          <input id="glosario-sucursal-secundaria" placeholder="Sucursal secundaria (distrito real)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+          <select id="glosario-tipo-gasto" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <option value="COSTOS DIRECTOS">COSTOS DIRECTOS</option>
+            <option value="GASTOS OPERATIVOS">GASTOS OPERATIVOS</option>
+          </select>
+          <button onclick="guardarGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Guardar</button>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-glosario" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Región</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Sucursal secundaria</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo de gasto</th>
+                <th class="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody id="tabla-glosario-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-cargar">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Cargar Datos</h1>
+          <p class="text-on-surface-variant text-sm mt-2">Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+          <input type="file" id="input-excel" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+          <div id="preview-carga" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+            <p class="text-sm mb-1">Rango detectado: <strong id="preview-rango" class="font-gordita-bold text-primary"></strong></p>
+            <p class="text-sm mb-3">Filas a cargar: <strong id="preview-filas" class="font-gordita-bold text-primary"></strong></p>
+            <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará todas las facturas existentes con fecha de pago en ese rango.</p>
+            <button onclick="confirmarCarga()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+          </div>
+          <p id="estado-carga" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+        </div>
+      </div>
+
+    </div>
+  </main>
 </div>
 
 <script>
@@ -280,8 +457,9 @@ async function cargarGlosario() {
   cuerpo.innerHTML = '';
   data.forEach((fila) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fila.sucursal}</td><td>${fila.tipo_sucursal || ''}</td><td>${fila.region || ''}</td><td>${fila.sucursal_secundaria || ''}</td><td>${fila.tipo_gasto || ''}</td>
-      <td>${usuarioActual && usuarioActual.rol === 'admin' ? '<button onclick="editarGlosario(\'' + fila.sucursal.replace(/'/g, "\\'") + '\')">Editar</button>' : ''}</td>`;
+    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
+    tr.innerHTML = `<td class="px-8 py-4">${fila.sucursal}</td><td class="px-6 py-4">${fila.tipo_sucursal || ''}</td><td class="px-6 py-4">${fila.region || ''}</td><td class="px-6 py-4">${fila.sucursal_secundaria || ''}</td><td class="px-6 py-4">${fila.tipo_gasto || ''}</td>
+      <td class="px-6 py-4">${usuarioActual && usuarioActual.rol === 'admin' ? '<button onclick="editarGlosario(\'' + fila.sucursal.replace(/'/g, "\\'") + '\')" class="text-xs font-gordita-bold text-secondary hover:underline">Editar</button>' : ''}</td>`;
     cuerpo.appendChild(tr);
   });
 }
@@ -322,7 +500,7 @@ function obtenerRangoActivo() {
 
 function cambiarFiltroTiempo() {
   rangoActivoTipo = document.getElementById('filtro-tiempo-tipo').value;
-  document.getElementById('filtro-rango-personalizado').style.display = rangoActivoTipo === 'rango' ? 'inline' : 'none';
+  document.getElementById('filtro-rango-personalizado').style.display = rangoActivoTipo === 'rango' ? 'inline-flex' : 'none';
   if (rangoActivoTipo !== 'rango') recargarVistaActiva();
 }
 
@@ -399,8 +577,8 @@ async function cargarResumenEjecutivo() {
     data: {
       labels: labels,
       datasets: [
-        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#E85420' },
-        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#2a2e3a' },
+        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF' },
+        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b' },
       ],
     },
     options: { scales: { x: { stacked: true }, y: { stacked: true } } },
@@ -408,7 +586,7 @@ async function cargarResumenEjecutivo() {
 }
 
 function mostrarFormularioGlosario() {
-  document.getElementById('form-glosario').style.display = 'block';
+  document.getElementById('form-glosario').style.display = 'grid';
   document.getElementById('glosario-sucursal').value = '';
   document.getElementById('glosario-tipo-sucursal').value = '';
   document.getElementById('glosario-region').value = '';
@@ -418,7 +596,7 @@ function mostrarFormularioGlosario() {
 function editarGlosario(sucursal) {
   const fila = glosarioActual.find((f) => f.sucursal === sucursal);
   if (!fila) return;
-  document.getElementById('form-glosario').style.display = 'block';
+  document.getElementById('form-glosario').style.display = 'grid';
   document.getElementById('glosario-sucursal').value = fila.sucursal;
   document.getElementById('glosario-tipo-sucursal').value = fila.tipo_sucursal || '';
   document.getElementById('glosario-region').value = fila.region || '';
@@ -461,7 +639,8 @@ function renderizarSucursales() {
     const total = modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto;
     totalAsignado += d.gastoOperativoAsignado;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${d.distrito}</td><td>${formatoMoneda(d.costoDirecto)}</td><td>${formatoMoneda(operativo)}</td><td>${formatoMoneda(total)}</td>`;
+    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.costoDirecto)}</td><td class="px-6 py-4 text-right">${formatoMoneda(operativo)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(total)}</td>`;
     cuerpo.appendChild(tr);
   });
   const noAsignado = prorrateoActual.gastoOperativoBolsaTotal - totalAsignado;
@@ -489,19 +668,20 @@ async function cargarPorTipoGasto() {
   cuerpo.innerHTML = '';
   Object.keys(porFamilia).sort((a, b) => porFamilia[b].total - porFamilia[a].total).forEach((familia) => {
     const filaFamilia = document.createElement('tr');
-    filaFamilia.style.cursor = 'pointer';
-    filaFamilia.innerHTML = `<td>▸ ${familia}</td><td>${formatoMoneda(porFamilia[familia].total)}</td>`;
+    filaFamilia.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
+    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(porFamilia[familia].total)}</td>`;
     filaFamilia.onclick = () => alternarDetalleGasto(familia);
     cuerpo.appendChild(filaFamilia);
 
     const filaDetalle = document.createElement('tr');
     filaDetalle.id = 'detalle-' + familia.replace(/\s/g, '-');
+    filaDetalle.className = 'bg-surface-container-low/50';
     filaDetalle.style.display = 'none';
     const subfilas = Object.keys(porFamilia[familia].porGasto)
       .sort((a, b) => porFamilia[familia].porGasto[b] - porFamilia[familia].porGasto[a])
-      .map((gasto) => `<div>${gasto}: ${formatoMoneda(porFamilia[familia].porGasto[gasto])}</div>`)
+      .map((gasto) => `<div class="flex justify-between py-1 text-xs text-on-surface-variant"><span>${gasto}</span><span class="font-gordita-bold">${formatoMoneda(porFamilia[familia].porGasto[gasto])}</span></div>`)
       .join('');
-    filaDetalle.innerHTML = `<td colspan="2">${subfilas}</td>`;
+    filaDetalle.innerHTML = `<td colspan="2" class="px-8 py-4">${subfilas}</td>`;
     cuerpo.appendChild(filaDetalle);
   });
 }
@@ -529,7 +709,8 @@ async function cargarSinClasificar() {
   cuerpo.innerHTML = '';
   Object.keys(porSucursal).sort((a, b) => porSucursal[b].monto - porSucursal[a].monto).forEach((sucursal) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${sucursal}</td><td>${porSucursal[sucursal].count}</td><td>${formatoMoneda(porSucursal[sucursal].monto)}</td>`;
+    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
+    tr.innerHTML = `<td class="px-8 py-4">${sucursal}</td><td class="px-6 py-4 text-right">${porSucursal[sucursal].count}</td><td class="px-6 py-4 text-right font-gordita-bold text-error">${formatoMoneda(porSucursal[sucursal].monto)}</td>`;
     cuerpo.appendChild(tr);
   });
 }
