@@ -357,19 +357,29 @@
         <button onclick="mostrarVista('sucursal')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver
         </button>
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 id="detalle-distrito-titulo" class="font-gordita-bold text-4xl text-primary mt-1">-</h1>
+          </div>
+          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-periodo-distrito" value="mes" checked onchange="cambiarModoPeriodoDistrito('mes')" class="hidden"> Mes
+            </label>
+            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+              <input type="radio" name="modo-periodo-distrito" value="ytd" onchange="cambiarModoPeriodoDistrito('ytd')" class="hidden"> YTD
+            </label>
+          </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-lg text-primary mb-6">Tendencia mensual (últimos 6 meses)</h3>
-            <canvas id="grafica-tendencia-distrito" height="220"></canvas>
-          </div>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-lg text-primary mb-6">Top familias de gasto (últimos 6 meses)</h3>
-            <canvas id="grafica-top-familias-distrito" height="220"></canvas>
-          </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Barra sólida: Costo Directo + Gasto Operativo Asignado del mes en este distrito, con su monto dentro de cada tramo. Barra punteada: total del mismo mes hace un año. % arriba: variación vs. ese mes.</p>
+          <canvas id="grafica-tendencia-distrito" height="90"></canvas>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 id="titulo-variaciones-distrito" class="font-gordita-bold text-lg text-primary mb-1">Mayores Variaciones (% MoM)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Familias con el mayor cambio en este distrito vs. el periodo de comparación (rojo = más gasto, verde = menos gasto).</p>
+          <canvas id="grafica-top-familias-distrito" height="180"></canvas>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
           <table id="tabla-detalle-distrito" class="w-full text-left border-collapse">
@@ -742,47 +752,13 @@ function formatoCompactoCorto(valor) {
   return '$' + Math.round(valor);
 }
 
-async function renderizarTendenciaAnual(glosarioMap) {
-  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-  const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
-  const finVentana = rangoDeMes(anioRef, mesRef).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, subtotal, fecha_pago');
-
-  const porMes = {};
-  facturasVentana.forEach((f) => {
-    const clave = f.fecha_pago.slice(0, 7);
-    porMes[clave] = porMes[clave] || [];
-    porMes[clave].push(f);
-  });
-
-  const etiquetas = [];
-  const etiquetasAnioAnterior = [];
-  const datosDirecto = [];
-  const datosOperativo = [];
-  const datosAnioAnterior = [];
-  const datosYoy = [];
-
-  for (let i = 11; i >= 0; i--) {
-    const base = new Date(anioRef, mesRef - i, 1);
-    const claveActual = claveMes(base.getFullYear(), base.getMonth());
-    const claveAnioAnterior = claveMes(base.getFullYear() - 1, base.getMonth());
-
-    const kpisMes = Calc.calcularKPIs(porMes[claveActual] || [], glosarioMap);
-    const kpisMesAnioAnterior = Calc.calcularKPIs(porMes[claveAnioAnterior] || [], glosarioMap);
-
-    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
-    etiquetasAnioAnterior.push(etiquetaMesCorta(base.getFullYear() - 1, base.getMonth()));
-    datosDirecto.push(kpisMes.costoDirecto);
-    datosOperativo.push(kpisMes.gastoOperativo);
-    datosAnioAnterior.push(kpisMesAnioAnterior.totalPagado);
-    datosYoy.push(Calc.calcularVariacionPct(kpisMes.totalPagado, kpisMesAnioAnterior.totalPagado));
-  }
-
+function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
+  const { etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy } = datos;
   const ALTURA_MINIMA_ETIQUETA = 16;
 
-  const ctx = document.getElementById('grafica-composicion-mensual');
-  if (window.graficaComposicion) window.graficaComposicion.destroy();
-  window.graficaComposicion = new Chart(ctx, {
+  const ctx = document.getElementById(canvasId);
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: etiquetas,
@@ -873,6 +849,47 @@ async function renderizarTendenciaAnual(glosarioMap) {
         });
       },
     }],
+  });
+}
+
+async function renderizarTendenciaAnual(glosarioMap) {
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
+  const finVentana = rangoDeMes(anioRef, mesRef).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, subtotal, fecha_pago');
+
+  const porMes = {};
+  facturasVentana.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMes[clave] = porMes[clave] || [];
+    porMes[clave].push(f);
+  });
+
+  const etiquetas = [];
+  const etiquetasAnioAnterior = [];
+  const datosDirecto = [];
+  const datosOperativo = [];
+  const datosAnioAnterior = [];
+  const datosYoy = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const claveActual = claveMes(base.getFullYear(), base.getMonth());
+    const claveAnioAnterior = claveMes(base.getFullYear() - 1, base.getMonth());
+
+    const kpisMes = Calc.calcularKPIs(porMes[claveActual] || [], glosarioMap);
+    const kpisMesAnioAnterior = Calc.calcularKPIs(porMes[claveAnioAnterior] || [], glosarioMap);
+
+    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+    etiquetasAnioAnterior.push(etiquetaMesCorta(base.getFullYear() - 1, base.getMonth()));
+    datosDirecto.push(kpisMes.costoDirecto);
+    datosOperativo.push(kpisMes.gastoOperativo);
+    datosAnioAnterior.push(kpisMesAnioAnterior.totalPagado);
+    datosYoy.push(Calc.calcularVariacionPct(kpisMes.totalPagado, kpisMesAnioAnterior.totalPagado));
+  }
+
+  renderizarGraficaTendencia('grafica-composicion-mensual', 'graficaComposicion', {
+    etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy,
   });
 }
 
@@ -1107,6 +1124,7 @@ async function cargarSinClasificar() {
 }
 
 let distritoActual = null;
+let modoPeriodoDistrito = 'mes';
 
 function claveMes(anio, mes) {
   return anio + '-' + String(mes + 1).padStart(2, '0');
@@ -1128,6 +1146,9 @@ function alternarDetalleFamiliaDistrito(familia) {
 
 async function abrirDetalleDistrito(distrito) {
   distritoActual = distrito;
+  modoPeriodoDistrito = 'mes';
+  const radioMes = document.querySelector('input[name="modo-periodo-distrito"][value="mes"]');
+  if (radioMes) radioMes.checked = true;
   document.getElementById('vista-sucursal').classList.remove('activa');
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
@@ -1139,145 +1160,148 @@ async function abrirDetalleDistrito(distrito) {
   }
 }
 
+async function cambiarModoPeriodoDistrito(modo) {
+  modoPeriodoDistrito = modo;
+  mostrarIndicadorCarga();
+  try {
+    await renderizarDetalleDistrito();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+function renderizarGraficaVariacionesDistrito(variaciones, titulo) {
+  document.getElementById('titulo-variaciones-distrito').textContent = titulo;
+  const labels = variaciones.map((d) => d.familia);
+  const valores = variaciones.map((d) => d.variacion);
+  const colores = valores.map((v) => (v >= 0 ? '#ba1a1a' : '#2ECC71'));
+
+  const ctx = document.getElementById('grafica-top-familias-distrito');
+  if (window.graficaTopFamiliasDistrito) window.graficaTopFamiliasDistrito.destroy();
+  if (variaciones.length === 0) return;
+  window.graficaTopFamiliasDistrito = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Variación', data: valores, backgroundColor: colores, borderRadius: 4, maxBarThickness: 28 }] },
+    options: {
+      indexAxis: 'y',
+      layout: { padding: { left: 56, right: 56 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (ctx2) => (ctx2.parsed.x >= 0 ? '+' : '') + ctx2.parsed.x.toFixed(1) + '%' },
+        },
+      },
+      scales: {
+        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', weight: 'bold' } } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasVariacionesDistrito',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        chart.getDatasetMeta(0).data.forEach((barra, i) => {
+          const valor = valores[i];
+          const texto = (valor >= 0 ? '+' : '') + valor.toFixed(1) + '%';
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = valor >= 0 ? '#ba1a1a' : '#2ECC71';
+          ctxDibujo.font = "bold 11px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = valor >= 0 ? 'left' : 'right';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(texto, barra.x + (valor >= 0 ? 6 : -6), barra.y);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
 async function renderizarDetalleDistrito() {
   const distrito = distritoActual;
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
 
-  const inicioVentana = rangoDeMes(anioRef, mesRef - 5).inicio;
+  const inicioVentana24 = rangoDeMes(anioRef, mesRef - 23).inicio;
   const finVentana = rangoDeMes(anioRef, mesRef).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
+  const facturasVentana24 = await obtenerFacturasEnRango(inicioVentana24, finVentana, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const clasificadas24 = facturasVentana24.map((f) => Calc.clasificarFactura(f, glosarioMap));
 
-  const directasDistrito = facturasVentana
-    .map((f) => Calc.clasificarFactura(f, glosarioMap))
-    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito);
-
-  const totalesPorMes = {};
-  const clavesMeses = [];
-  const etiquetasMeses = [];
-  for (let i = 5; i >= 0; i--) {
-    const base = new Date(anioRef, mesRef - i, 1);
-    const clave = claveMes(base.getFullYear(), base.getMonth());
-    clavesMeses.push(clave);
-    etiquetasMeses.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
-    totalesPorMes[clave] = 0;
-  }
-  directasDistrito.forEach((f) => {
+  const porMesCompania = {};
+  clasificadas24.forEach((f) => {
     const clave = f.fecha_pago.slice(0, 7);
-    if (clave in totalesPorMes) totalesPorMes[clave] += f.monto || 0;
+    porMesCompania[clave] = porMesCompania[clave] || [];
+    porMesCompania[clave].push(f);
   });
 
-  const ctxTendencia = document.getElementById('grafica-tendencia-distrito');
-  if (window.graficaTendenciaDistrito) window.graficaTendenciaDistrito.destroy();
-  window.graficaTendenciaDistrito = new Chart(ctxTendencia, {
-    type: 'line',
-    data: {
-      labels: etiquetasMeses,
-      datasets: [{
-        label: 'Gasto total',
-        data: clavesMeses.map((c) => totalesPorMes[c]),
-        borderColor: '#2DD4BF',
-        backgroundColor: 'rgba(45, 212, 191, 0.1)',
-        fill: true,
-        tension: 0.35,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointBackgroundColor: '#2DD4BF',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointHoverRadius: 6,
-      }],
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 10,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (ctx) => formatoMoneda(ctx.parsed.y) },
-        },
-      },
-      scales: {
-        y: { beginAtZero: true, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
-        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
-      },
-    },
+  const etiquetas = [];
+  const etiquetasAnioAnterior = [];
+  const datosDirecto = [];
+  const datosOperativo = [];
+  const datosAnioAnterior = [];
+  const datosYoyTendencia = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const claveActual = claveMes(base.getFullYear(), base.getMonth());
+    const claveAnioAnt = claveMes(base.getFullYear() - 1, base.getMonth());
+
+    const prorrateoMes = Calc.calcularProrrateo(porMesCompania[claveActual] || [], glosarioMap);
+    const entradaMes = prorrateoMes.distritos.find((d) => d.distrito === distrito);
+    const costoDirectoMes = entradaMes ? entradaMes.costoDirecto : 0;
+    const operativoMes = entradaMes ? entradaMes.gastoOperativoAsignado : 0;
+
+    const prorrateoAnioAnt = Calc.calcularProrrateo(porMesCompania[claveAnioAnt] || [], glosarioMap);
+    const entradaAnioAnt = prorrateoAnioAnt.distritos.find((d) => d.distrito === distrito);
+    const totalAnioAnt = entradaAnioAnt ? entradaAnioAnt.totalProrrateado : 0;
+
+    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+    etiquetasAnioAnterior.push(etiquetaMesCorta(base.getFullYear() - 1, base.getMonth()));
+    datosDirecto.push(costoDirectoMes);
+    datosOperativo.push(operativoMes);
+    datosAnioAnterior.push(totalAnioAnt);
+    datosYoyTendencia.push(Calc.calcularVariacionPct(costoDirectoMes + operativoMes, totalAnioAnt));
+  }
+
+  renderizarGraficaTendencia('grafica-tendencia-distrito', 'graficaTendenciaDistrito', {
+    etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy: datosYoyTendencia,
   });
 
-  const porFamiliaVentana = Calc.agruparPorFamiliaGasto(directasDistrito);
-  const familiasOrdenadas = Object.keys(porFamiliaVentana).sort((a, b) => porFamiliaVentana[b].total - porFamiliaVentana[a].total);
-  const topFamilias = familiasOrdenadas.slice(0, 5);
-  const otrosTotal = familiasOrdenadas.slice(5).reduce((s, f) => s + porFamiliaVentana[f].total, 0);
-  const labelsTop = topFamilias.concat(otrosTotal > 0 ? ['Otros'] : []);
-  const datosTop = topFamilias.map((f) => porFamiliaVentana[f].total).concat(otrosTotal > 0 ? [otrosTotal] : []);
+  let rangoActualPeriodo;
+  let rangoComparacionMoM;
+  let rangoComparacionYoY;
+  if (modoPeriodoDistrito === 'ytd') {
+    rangoActualPeriodo = { inicio: rangoDeMes(anioRef, 0).inicio, fin: rangoDeMes(anioRef, mesRef).fin };
+    rangoComparacionMoM = null;
+    rangoComparacionYoY = { inicio: rangoDeMes(anioRef - 1, 0).inicio, fin: rangoDeMes(anioRef - 1, mesRef).fin };
+  } else {
+    rangoActualPeriodo = rangoDeMes(anioRef, mesRef);
+    rangoComparacionMoM = rangoDeMes(anioRef, mesRef - 1);
+    rangoComparacionYoY = rangoDeMes(anioRef - 1, mesRef);
+  }
 
-  const ctxTop = document.getElementById('grafica-top-familias-distrito');
-  if (window.graficaTopFamiliasDistrito) window.graficaTopFamiliasDistrito.destroy();
-  window.graficaTopFamiliasDistrito = new Chart(ctxTop, {
-    type: 'bar',
-    data: { labels: labelsTop, datasets: [{ label: 'Monto', data: datosTop, backgroundColor: '#2DD4BF', borderRadius: 4, maxBarThickness: 24 }] },
-    options: {
-      indexAxis: 'y',
-      layout: { padding: { right: 56 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 10,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (ctx) => formatoMoneda(ctx.parsed.x) },
-        },
-      },
-      scales: {
-        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', weight: 'bold' } } },
-      },
-    },
-    plugins: [{
-      id: 'etiquetasValorTopFamilias',
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        chart.getDatasetMeta(0).data.forEach((bar, i) => {
-          const valor = chart.data.datasets[0].data[i];
-          ctx.save();
-          ctx.fillStyle = '#1b1b1b';
-          ctx.font = "bold 11px 'Gordita', sans-serif";
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(formatoMoneda(valor), bar.x + 6, bar.y);
-          ctx.restore();
-        });
-      },
-    }],
-  });
+  const esDelDistrito = (f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito;
+  const enRango = (f, rango) => f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
 
-  const rangoMesRef = rangoDeMes(anioRef, mesRef);
-  const rangoMesAnt = rangoDeMes(anioRef, mesRef - 1);
-  const rangoMesAnioAnt = rangoDeMes(anioRef - 1, mesRef);
+  const directasActual = clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoActualPeriodo));
+  const directasMoM = rangoComparacionMoM ? clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoComparacionMoM)) : [];
+  const directasYoY = clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoComparacionYoY));
 
-  const facturasMesAnioAnt = await obtenerFacturasEnRango(rangoMesAnioAnt.inicio, rangoMesAnioAnt.fin, '*');
-  const directasMesAnioAnt = facturasMesAnioAnt
-    .map((f) => Calc.clasificarFactura(f, glosarioMap))
-    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito);
-
-  const directasMesRef = directasDistrito.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);
-  const directasMesAnt = directasDistrito.filter((f) => f.fecha_pago >= rangoMesAnt.inicio && f.fecha_pago <= rangoMesAnt.fin);
-
-  const porFamiliaMesRef = Calc.agruparPorFamiliaGasto(directasMesRef);
-  const porFamiliaMesAnt = Calc.agruparPorFamiliaGasto(directasMesAnt);
-  const porFamiliaMesAnioAnt = Calc.agruparPorFamiliaGasto(directasMesAnioAnt);
+  const porFamiliaActualPeriodo = Calc.agruparPorFamiliaGasto(directasActual);
+  const porFamiliaMoM = Calc.agruparPorFamiliaGasto(directasMoM);
+  const porFamiliaYoY = Calc.agruparPorFamiliaGasto(directasYoY);
 
   const cuerpoDetalle = document.getElementById('tabla-detalle-distrito-body');
   cuerpoDetalle.innerHTML = '';
-  Object.keys(porFamiliaMesRef).sort((a, b) => porFamiliaMesRef[b].total - porFamiliaMesRef[a].total).forEach((familia) => {
-    const montoActual = porFamiliaMesRef[familia].total;
-    const montoAnt = (porFamiliaMesAnt[familia] && porFamiliaMesAnt[familia].total) || 0;
-    const montoAnioAnt = (porFamiliaMesAnioAnt[familia] && porFamiliaMesAnioAnt[familia].total) || 0;
-    const mom = Calc.calcularVariacionPct(montoActual, montoAnt);
-    const yoy = Calc.calcularVariacionPct(montoActual, montoAnioAnt);
+  Object.keys(porFamiliaActualPeriodo).sort((a, b) => porFamiliaActualPeriodo[b].total - porFamiliaActualPeriodo[a].total).forEach((familia) => {
+    const montoActual = porFamiliaActualPeriodo[familia].total;
+    const montoMoM = (porFamiliaMoM[familia] && porFamiliaMoM[familia].total) || 0;
+    const montoYoY = (porFamiliaYoY[familia] && porFamiliaYoY[familia].total) || 0;
+    const mom = Calc.calcularVariacionPct(montoActual, montoMoM);
+    const yoy = Calc.calcularVariacionPct(montoActual, montoYoY);
     const claseColor = (v) => (v === null ? '' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
     const textoVar = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
 
@@ -1288,14 +1312,14 @@ async function renderizarDetalleDistrito() {
     cuerpoDetalle.appendChild(filaFamilia);
 
     const idGrupo = 'detalle-distrito-' + familia.replace(/\s/g, '-');
-    Object.keys(porFamiliaMesRef[familia].porGasto)
-      .sort((a, b) => porFamiliaMesRef[familia].porGasto[b] - porFamiliaMesRef[familia].porGasto[a])
+    Object.keys(porFamiliaActualPeriodo[familia].porGasto)
+      .sort((a, b) => porFamiliaActualPeriodo[familia].porGasto[b] - porFamiliaActualPeriodo[familia].porGasto[a])
       .forEach((gasto) => {
-        const montoGasto = porFamiliaMesRef[familia].porGasto[gasto];
-        const montoGastoAnt = (porFamiliaMesAnt[familia] && porFamiliaMesAnt[familia].porGasto[gasto]) || 0;
-        const montoGastoAnioAnt = (porFamiliaMesAnioAnt[familia] && porFamiliaMesAnioAnt[familia].porGasto[gasto]) || 0;
-        const momGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnt);
-        const yoyGasto = Calc.calcularVariacionPct(montoGasto, montoGastoAnioAnt);
+        const montoGasto = porFamiliaActualPeriodo[familia].porGasto[gasto];
+        const montoGastoMoM = (porFamiliaMoM[familia] && porFamiliaMoM[familia].porGasto[gasto]) || 0;
+        const montoGastoYoY = (porFamiliaYoY[familia] && porFamiliaYoY[familia].porGasto[gasto]) || 0;
+        const momGasto = Calc.calcularVariacionPct(montoGasto, montoGastoMoM);
+        const yoyGasto = Calc.calcularVariacionPct(montoGasto, montoGastoYoY);
 
         const filaGasto = document.createElement('tr');
         filaGasto.setAttribute('data-grupo', idGrupo);
@@ -1306,11 +1330,26 @@ async function renderizarDetalleDistrito() {
       });
   });
 
-  const facturasMesRefTodas = facturasVentana.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);
-  const prorrateoMesRef = Calc.calcularProrrateo(facturasMesRefTodas, glosarioMap);
-  const entradaDistrito = prorrateoMesRef.distritos.find((d) => d.distrito === distrito);
+  const mapaComparacionVariaciones = modoPeriodoDistrito === 'ytd' ? porFamiliaYoY : porFamiliaMoM;
+  const tituloVariaciones = modoPeriodoDistrito === 'ytd' ? 'Mayores Variaciones YTD (% YoY)' : 'Mayores Variaciones (% MoM)';
+  const variacionesFamilias = Object.keys(porFamiliaActualPeriodo)
+    .map((familia) => {
+      const actual = porFamiliaActualPeriodo[familia].total;
+      const anterior = (mapaComparacionVariaciones[familia] && mapaComparacionVariaciones[familia].total) || 0;
+      return { familia, variacion: Calc.calcularVariacionPct(actual, anterior) };
+    })
+    .filter((d) => d.variacion !== null)
+    .sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion))
+    .slice(0, 6)
+    .reverse();
+  renderizarGraficaVariacionesDistrito(variacionesFamilias, tituloVariaciones);
+
+  const facturasPeriodoCompania = clasificadas24.filter((f) => enRango(f, rangoActualPeriodo));
+  const prorrateoPeriodo = Calc.calcularProrrateo(facturasPeriodoCompania, glosarioMap);
+  const entradaDistrito = prorrateoPeriodo.distritos.find((d) => d.distrito === distrito);
   const operativoAsignado = entradaDistrito ? entradaDistrito.gastoOperativoAsignado : 0;
-  document.getElementById('detalle-distrito-operativo').innerHTML = `<span>Gasto Operativo Asignado (${claveMes(anioRef, mesRef)})</span><span>${formatoMoneda(operativoAsignado)}</span>`;
+  const etiquetaPeriodo = modoPeriodoDistrito === 'ytd' ? 'YTD ' + anioRef : claveMes(anioRef, mesRef);
+  document.getElementById('detalle-distrito-operativo').innerHTML = `<span>Gasto Operativo Asignado (${etiquetaPeriodo})</span><span>${formatoMoneda(operativoAsignado)}</span>`;
 }
 
 function mostrarFormularioUsuario() {
