@@ -29,12 +29,14 @@
     const entrada = glosarioMap[factura.sucursal];
     if (!entrada) {
       return Object.assign({}, factura, {
+        monto: factura.subtotal,
         tipo_gasto: 'SIN_CLASIFICAR',
         region: null,
         sucursal_secundaria: null,
       });
     }
     return Object.assign({}, factura, {
+      monto: factura.subtotal,
       tipo_gasto: entrada.tipo_gasto,
       region: entrada.region,
       sucursal_secundaria: entrada.sucursal_secundaria,

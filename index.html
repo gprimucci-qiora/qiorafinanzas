@@ -391,8 +391,9 @@
   </main>
 </div>
 
-<div id="indicador-carga" class="fixed top-4 right-4 bg-primary text-on-primary text-xs font-gordita-bold px-4 py-2 rounded-full shadow-lg z-50 items-center gap-2" style="display:none;">
-  <span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Cargando información...
+<div id="indicador-carga" class="fixed top-0 left-64 right-0 bottom-0 bg-surface/80 backdrop-blur-sm z-50 flex-col items-center justify-center gap-3" style="display:none;">
+  <span class="material-symbols-outlined animate-spin text-primary" style="font-size:32px;">progress_activity</span>
+  <p class="font-gordita-bold text-sm text-primary">Cargando información...</p>
 </div>
 
 <div id="modal-password" class="fixed inset-0 bg-black/40 items-center justify-center z-50" style="display:none;">
@@ -745,7 +746,7 @@ async function renderizarTendenciaAnual(glosarioMap) {
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
   const finVentana = rangoDeMes(anioRef, mesRef).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, fecha_pago');
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, subtotal, fecha_pago');
 
   const porMes = {};
   facturasVentana.forEach((f) => {
@@ -999,7 +1000,7 @@ async function cargarPorTipoGasto() {
   const rangoMesAnioAnt = rangoDeMes(anioRef - 1, mesRef);
 
   const inicioVentana = rangoDeMes(anioRef, mesRef - 12).inicio;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangoMesRef.fin, 'sucursal, familia, gasto, monto, fecha_pago');
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, rangoMesRef.fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
   const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
 
   const facturasMesRef = clasificadas.filter((f) => f.fecha_pago >= rangoMesRef.inicio && f.fecha_pago <= rangoMesRef.fin);

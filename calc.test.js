@@ -25,11 +25,12 @@ test('clasificarFactura asigna tipo_gasto y sucursal_secundaria cuando hay match
       sucursal_secundaria: 'CTA-TPI-INT-XAL XALAPA', tipo_gasto: 'COSTOS DIRECTOS',
     },
   };
-  const factura = { sucursal: 'CTA-TPI-INT-XAL XALAPA', monto: 1000 };
+  const factura = { sucursal: 'CTA-TPI-INT-XAL XALAPA', subtotal: 1000, monto: 9999 };
   const result = Calc.clasificarFactura(factura, glosarioMap);
   assert.strictEqual(result.tipo_gasto, 'COSTOS DIRECTOS');
   assert.strictEqual(result.region, 'ORIENTE');
   assert.strictEqual(result.sucursal_secundaria, 'CTA-TPI-INT-XAL XALAPA');
+  assert.strictEqual(result.monto, 1000);
 });
 
 test('clasificarFactura consolida contratista en su distrito real', () => {
@@ -39,16 +40,22 @@ test('clasificarFactura consolida contratista en su distrito real', () => {
       sucursal_secundaria: 'CTA-TPI-INT-CBA CORDOBA ORIZABA', tipo_gasto: 'COSTOS DIRECTOS',
     },
   };
-  const factura = { sucursal: 'CTA-TPI-DLR-CBA CORDOBA ORIZABA CARLOS MARTINEZ', monto: 500 };
+  const factura = { sucursal: 'CTA-TPI-DLR-CBA CORDOBA ORIZABA CARLOS MARTINEZ', subtotal: 500, monto: 9999 };
   const result = Calc.clasificarFactura(factura, glosarioMap);
   assert.strictEqual(result.sucursal_secundaria, 'CTA-TPI-INT-CBA CORDOBA ORIZABA');
 });
 
 test('clasificarFactura marca SIN_CLASIFICAR cuando la sucursal no está en el glosario', () => {
-  const factura = { sucursal: 'CTA-TPI-INT-GCH GDL CHAPULTEPEC', monto: 200 };
+  const factura = { sucursal: 'CTA-TPI-INT-GCH GDL CHAPULTEPEC', subtotal: 200, monto: 9999 };
   const result = Calc.clasificarFactura(factura, {});
   assert.strictEqual(result.tipo_gasto, 'SIN_CLASIFICAR');
   assert.strictEqual(result.region, null);
+});
+
+test('clasificarFactura usa subtotal como monto, ignorando el monto original (con IVA)', () => {
+  const factura = { sucursal: 'X', subtotal: 100, monto: 116 };
+  const result = Calc.clasificarFactura(factura, {});
+  assert.strictEqual(result.monto, 100);
 });
 
 test('calcularProrrateo reparte una bolsa nacional entre todos los distritos por folios', () => {
@@ -58,11 +65,11 @@ test('calcularProrrateo reparte una bolsa nacional entre todos los distritos por
     'BOLSA-NACIONAL': { region: 'NACIONAL', tipo_gasto: 'GASTOS OPERATIVOS' },
   };
   const facturas = [
-    { sucursal: 'DIST-A', monto: 100 },
-    { sucursal: 'DIST-A', monto: 100 },
-    { sucursal: 'DIST-A', monto: 100 },
-    { sucursal: 'DIST-B', monto: 200 },
-    { sucursal: 'BOLSA-NACIONAL', monto: 400 },
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'DIST-B', subtotal: 200 },
+    { sucursal: 'BOLSA-NACIONAL', subtotal: 400 },
   ];
   const result = Calc.calcularProrrateo(facturas, glosarioMap);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
@@ -83,9 +90,9 @@ test('calcularProrrateo reparte una bolsa regional solo entre distritos de esa r
     'BOLSA-BAJIO': { region: 'BAJIO', tipo_gasto: 'GASTOS OPERATIVOS' },
   };
   const facturas = [
-    { sucursal: 'DIST-A', monto: 100 },
-    { sucursal: 'DIST-B', monto: 100 },
-    { sucursal: 'BOLSA-BAJIO', monto: 500 },
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'DIST-B', subtotal: 100 },
+    { sucursal: 'BOLSA-BAJIO', subtotal: 500 },
   ];
   const result = Calc.calcularProrrateo(facturas, glosarioMap);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
@@ -100,9 +107,9 @@ test('calcularProrrateo cuenta folios como número de renglones, no de FACTURA d
     'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
   };
   const facturas = [
-    { sucursal: 'DIST-A', monto: 100, factura: null },
-    { sucursal: 'DIST-A', monto: 100, factura: null },
-    { sucursal: 'DIST-A', monto: 100, factura: 'F-1' },
+    { sucursal: 'DIST-A', subtotal: 100, factura: null },
+    { sucursal: 'DIST-A', subtotal: 100, factura: null },
+    { sucursal: 'DIST-A', subtotal: 100, factura: 'F-1' },
   ];
   const result = Calc.calcularProrrateo(facturas, glosarioMap);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
@@ -115,8 +122,8 @@ test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos 
     'BOLSA-ORIENTE': { region: 'ORIENTE', tipo_gasto: 'GASTOS OPERATIVOS' },
   };
   const facturas = [
-    { sucursal: 'DIST-A', monto: 100 },
-    { sucursal: 'BOLSA-ORIENTE', monto: 500 },
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'BOLSA-ORIENTE', subtotal: 500 },
   ];
   const result = Calc.calcularProrrateo(facturas, glosarioMap);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
@@ -133,9 +140,9 @@ test('calcularKPIs suma correctamente costo directo, operativo y sin clasificar'
     'BOLSA-X': { region: 'NACIONAL', tipo_gasto: 'GASTOS OPERATIVOS' },
   };
   const facturas = [
-    { sucursal: 'DIST-A', monto: 1000 },
-    { sucursal: 'BOLSA-X', monto: 500 },
-    { sucursal: 'DESCONOCIDA', monto: 50 },
+    { sucursal: 'DIST-A', subtotal: 1000 },
+    { sucursal: 'BOLSA-X', subtotal: 500 },
+    { sucursal: 'DESCONOCIDA', subtotal: 50 },
   ];
   const result = Calc.calcularKPIs(facturas, glosarioMap);
   assert.strictEqual(result.totalPagado, 1550);
