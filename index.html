@@ -65,8 +65,8 @@
 
 <div id="login-screen" class="bg-surface">
   <div id="login-card" class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 w-80">
-    <div class="w-10 h-10 bg-primary flex items-center justify-center rounded mb-4">
-      <span class="material-symbols-outlined text-on-primary">rocket_launch</span>
+    <div class="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center rounded mb-4 p-1.5">
+      <img src="logo-qiora.png" alt="QiORA" class="w-full h-full object-contain">
     </div>
     <h2 class="font-gordita-bold text-2xl text-primary">QiORA Conecta</h2>
     <p class="text-on-surface-variant text-sm mb-6">Auditoría de Gastos</p>
@@ -80,8 +80,8 @@
 <div id="app-shell">
   <aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-white border-r border-outline-variant w-64">
     <div class="p-md flex items-center gap-sm">
-      <div class="w-10 h-10 bg-primary flex items-center justify-center rounded shrink-0">
-        <span class="material-symbols-outlined text-on-primary">rocket_launch</span>
+      <div class="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center rounded shrink-0 p-1.5">
+        <img src="logo-qiora.png" alt="QiORA" class="w-full h-full object-contain">
       </div>
       <div class="overflow-hidden">
         <h1 class="font-gordita-bold text-lg text-primary leading-tight truncate">QiORA Conecta</h1>
@@ -173,7 +173,7 @@
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Costo Directo + Gasto Operativo por mes. % arriba de cada barra: variación vs. el mismo mes del año anterior (rojo = más gasto, verde = menos gasto).</p>
+          <p class="text-xs text-on-surface-variant mb-6">Barra sólida: Costo Directo + Gasto Operativo del mes, con su monto dentro de cada tramo. Barra punteada junto a ella: total del mismo mes hace un año. % arriba: variación vs. ese mes (rojo = más gasto, verde = menos gasto).</p>
           <canvas id="grafica-composicion-mensual" height="90"></canvas>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -657,6 +657,13 @@ async function cargarResumenEjecutivo() {
   await cargarPorTipoGasto();
 }
 
+function formatoCompactoCorto(valor) {
+  const abs = Math.abs(valor);
+  if (abs >= 1e6) return '$' + Math.round(valor / 1e6) + 'M';
+  if (abs >= 1e3) return '$' + Math.round(valor / 1e3) + 'K';
+  return '$' + Math.round(valor);
+}
+
 async function renderizarTendenciaAnual(glosarioMap) {
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
@@ -673,6 +680,7 @@ async function renderizarTendenciaAnual(glosarioMap) {
   const etiquetas = [];
   const datosDirecto = [];
   const datosOperativo = [];
+  const datosAnioAnterior = [];
   const datosYoy = [];
 
   for (let i = 11; i >= 0; i--) {
@@ -686,8 +694,11 @@ async function renderizarTendenciaAnual(glosarioMap) {
     etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
     datosDirecto.push(kpisMes.costoDirecto);
     datosOperativo.push(kpisMes.gastoOperativo);
+    datosAnioAnterior.push(kpisMesAnioAnterior.totalPagado);
     datosYoy.push(Calc.calcularVariacionPct(kpisMes.totalPagado, kpisMesAnioAnterior.totalPagado));
   }
+
+  const ALTURA_MINIMA_ETIQUETA = 16;
 
   const ctx = document.getElementById('grafica-composicion-mensual');
   if (window.graficaComposicion) window.graficaComposicion.destroy();
@@ -696,8 +707,9 @@ async function renderizarTendenciaAnual(glosarioMap) {
     data: {
       labels: etiquetas,
       datasets: [
-        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF', stack: 'gasto', maxBarThickness: 24 },
-        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b', stack: 'gasto', maxBarThickness: 24, borderRadius: 4 },
+        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
+        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95, borderRadius: 4 },
+        { label: 'Año anterior', data: datosAnioAnterior, backgroundColor: 'transparent', borderColor: '#7e7576', borderWidth: 2, borderDash: [4, 3], borderSkipped: false, stack: 'anterior', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
       ],
     },
     options: {
@@ -718,10 +730,46 @@ async function renderizarTendenciaAnual(glosarioMap) {
       },
     },
     plugins: [{
-      id: 'etiquetasYoyTendenciaAnual',
+      id: 'etiquetasTendenciaAnual',
       afterDatasetsDraw(chart) {
         const { ctx: ctxDibujo } = chart;
+        const metaDirecto = chart.getDatasetMeta(0);
         const metaOperativo = chart.getDatasetMeta(1);
+        const metaAnterior = chart.getDatasetMeta(2);
+
+        metaDirecto.data.forEach((barra, i) => {
+          const altura = Math.abs(barra.base - barra.y);
+          if (altura < ALTURA_MINIMA_ETIQUETA || datosDirecto[i] <= 0) return;
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(formatoCompactoCorto(datosDirecto[i]), barra.x, (barra.y + barra.base) / 2);
+          ctxDibujo.restore();
+        });
+
+        metaOperativo.data.forEach((barra, i) => {
+          const altura = Math.abs(barra.base - barra.y);
+          if (altura < ALTURA_MINIMA_ETIQUETA || datosOperativo[i] <= 0) return;
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#ffffff';
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(formatoCompactoCorto(datosOperativo[i]), barra.x, (barra.y + barra.base) / 2);
+          ctxDibujo.restore();
+        });
+
+        metaAnterior.data.forEach((barra, i) => {
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#7e7576';
+          ctxDibujo.font = "10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.fillText(formatoCompactoCorto(datosAnioAnterior[i]), barra.x, barra.y - 6);
+          ctxDibujo.restore();
+        });
+
         metaOperativo.data.forEach((barra, i) => {
           const yoy = datosYoy[i];
           if (yoy === null || yoy === undefined) return;
@@ -730,7 +778,7 @@ async function renderizarTendenciaAnual(glosarioMap) {
           ctxDibujo.fillStyle = yoy >= 0 ? '#ba1a1a' : '#2ECC71';
           ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
           ctxDibujo.textAlign = 'center';
-          ctxDibujo.fillText(texto, barra.x, barra.y - 8);
+          ctxDibujo.fillText(texto, barra.x, barra.y - 20);
           ctxDibujo.restore();
         });
       },
