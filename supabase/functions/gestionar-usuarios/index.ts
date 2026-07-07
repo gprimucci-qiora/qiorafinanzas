@@ -5,7 +5,28 @@ const SERVICE_ROLE_KEY = Deno.env.get(
   "SERVICE_ROLE_KEY",
 )!
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+}
+
+function jsonResponse(body, status) {
+  const headers = {
+    ...corsHeaders,
+    "Content-Type": "application/json",
+  }
+  return new Response(
+    JSON.stringify(body),
+    { status, headers },
+  )
+}
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
+  }
+
   try {
     const authHeader = req.headers.get("Authorization") || ""
     const jwt = authHeader.replace("Bearer ", "")
@@ -19,10 +40,7 @@ Deno.serve(async (req) => {
     const userError = authResult.error
     if (userError || !userData.user) {
       const msg = "No autenticado"
-      return new Response(
-        JSON.stringify({ error: msg }),
-        { status: 401 },
-      )
+      return jsonResponse({ error: msg }, 401)
     }
 
     const perfilResult = await supabaseAdmin
@@ -37,10 +55,7 @@ Deno.serve(async (req) => {
         + " puede"
         + " gestionar"
         + " usuarios"
-      return new Response(
-        JSON.stringify({ error: msg }),
-        { status: 403 },
-      )
+      return jsonResponse({ error: msg }, 403)
     }
 
     const body = await req.json()
@@ -54,10 +69,7 @@ Deno.serve(async (req) => {
       const nuevoUsuario = crearResult.data
       const crearError = crearResult.error
       if (crearError) {
-        return new Response(
-          JSON.stringify({ error: crearError.message }),
-          { status: 400 },
-        )
+        return jsonResponse({ error: crearError.message }, 400)
       }
       const insertResult = await supabaseAdmin
         .from("usuarios")
@@ -69,15 +81,9 @@ Deno.serve(async (req) => {
         })
       const insertError = insertResult.error
       if (insertError) {
-        return new Response(
-          JSON.stringify({ error: insertError.message }),
-          { status: 400 },
-        )
+        return jsonResponse({ error: insertError.message }, 400)
       }
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200 },
-      )
+      return jsonResponse({ success: true }, 200)
     }
 
     if (body.accion === "desactivar") {
@@ -86,19 +92,13 @@ Deno.serve(async (req) => {
         { ban_duration: "876000h" },
       )
       if (result.error) {
-        return new Response(
-          JSON.stringify({ error: result.error.message }),
-          { status: 400 },
-        )
+        return jsonResponse({ error: result.error.message }, 400)
       }
       await supabaseAdmin
         .from("usuarios")
         .update({ activo: false })
         .eq("id", body.id)
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200 },
-      )
+      return jsonResponse({ success: true }, 200)
     }
 
     if (body.accion === "reactivar") {
@@ -107,35 +107,23 @@ Deno.serve(async (req) => {
         { ban_duration: "none" },
       )
       if (result.error) {
-        return new Response(
-          JSON.stringify({ error: result.error.message }),
-          { status: 400 },
-        )
+        return jsonResponse({ error: result.error.message }, 400)
       }
       await supabaseAdmin
         .from("usuarios")
         .update({ activo: true })
         .eq("id", body.id)
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200 },
-      )
+      return jsonResponse({ success: true }, 200)
     }
 
     const msg = "Accion"
       + " no"
       + " reconocida"
-    return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 400 },
-    )
+    return jsonResponse({ error: msg }, 400)
   } catch (e) {
     const msg = e instanceof Error
       ? e.message
       : "Error desconocido"
-    return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500 },
-    )
+    return jsonResponse({ error: msg }, 500)
   }
 })
