@@ -108,9 +108,15 @@
         <li><button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">upload_file</span><span class="text-sm">Cargar Datos</span>
         </button></li>
+        <li><button data-vista="usuarios" id="nav-usuarios" onclick="mostrarVista('usuarios')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">group</span><span class="text-sm">Gestión de Usuarios</span>
+        </button></li>
       </ul>
     </nav>
     <div class="p-md border-t border-outline-variant">
+      <button onclick="mostrarFormularioPassword()" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors text-left">
+        <span class="material-symbols-outlined">lock_reset</span><span class="text-sm">Cambiar contraseña</span>
+      </button>
       <button onclick="cerrarSesion()" class="w-full flex items-center gap-sm p-sm rounded-lg text-error hover:bg-error/5 transition-colors text-left">
         <span class="material-symbols-outlined">logout</span><span class="text-sm font-gordita-bold">Cerrar sesión</span>
       </button>
@@ -299,6 +305,43 @@
         </div>
       </div>
 
+      <div class="vista" id="vista-usuarios">
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Gestión de Usuarios</h1>
+          </div>
+          <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add</span> Agregar Usuario
+          </button>
+        </div>
+        <div id="form-usuario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
+          <input id="usuario-nombre" placeholder="Nombre completo" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+          <input id="usuario-correo" type="email" placeholder="Correo" class="px-3 py-2 border border-outline-variant rounded text-sm">
+          <input id="usuario-password" type="password" placeholder="Contraseña inicial" class="px-3 py-2 border border-outline-variant rounded text-sm">
+          <select id="usuario-rol" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <option value="finanzas">finanzas</option>
+            <option value="admin">admin</option>
+          </select>
+          <button onclick="crearUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Crear</button>
+        </div>
+        <p id="estado-usuario" class="text-sm font-gordita-bold text-secondary mb-4"></p>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-usuarios" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Nombre</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
+                <th class="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
       <div class="vista" id="vista-detalle-distrito">
         <button onclick="mostrarVista('sucursal')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver
@@ -335,6 +378,19 @@
 
     </div>
   </main>
+</div>
+
+<div id="modal-password" class="fixed inset-0 bg-black/40 items-center justify-center z-50" style="display:none;">
+  <div class="bg-white rounded-xl p-6 w-80 shadow-xl">
+    <h3 class="font-gordita-bold text-lg text-primary mb-4">Cambiar contraseña</h3>
+    <input id="password-nueva" type="password" placeholder="Nueva contraseña" class="w-full mb-3 px-3 py-2 border border-outline-variant rounded text-sm">
+    <input id="password-confirmar" type="password" placeholder="Confirmar contraseña" class="w-full mb-4 px-3 py-2 border border-outline-variant rounded text-sm">
+    <p id="estado-password" class="text-xs text-error mb-3"></p>
+    <div class="flex gap-2">
+      <button onclick="guardarNuevaPassword()" class="flex-1 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Guardar</button>
+      <button onclick="cerrarFormularioPassword()" class="flex-1 py-2 border border-outline-variant font-gordita-bold text-xs uppercase tracking-widest rounded hover:bg-surface-container transition-colors">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -384,6 +440,7 @@ async function cargarSesion() {
   document.getElementById('app-shell').style.display = 'block';
   if (perfil.rol !== 'admin') {
     document.getElementById('nav-cargar').style.display = 'none';
+    document.getElementById('nav-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   }
   mesGlobalSeleccionado = await obtenerUltimoMesConDatos();
@@ -402,6 +459,7 @@ function mostrarVista(nombre) {
   if (nombre === 'sucursal') cargarPorSucursal();
   if (nombre === 'tipo-gasto') cargarPorTipoGasto();
   if (nombre === 'sin-clasificar') cargarSinClasificar();
+  if (nombre === 'usuarios') cargarUsuarios();
 }
 
 let filasParaCargar = null;
@@ -1005,6 +1063,115 @@ async function renderizarDetalleDistrito() {
   const entradaDistrito = prorrateoMesRef.distritos.find((d) => d.distrito === distrito);
   const operativoAsignado = entradaDistrito ? entradaDistrito.gastoOperativoAsignado : 0;
   document.getElementById('detalle-distrito-operativo').innerHTML = `<span>Gasto Operativo Asignado (${claveMes(anioRef, mesRef)})</span><span>${formatoMoneda(operativoAsignado)}</span>`;
+}
+
+function mostrarFormularioUsuario() {
+  document.getElementById('form-usuario').style.display = 'grid';
+  document.getElementById('usuario-nombre').value = '';
+  document.getElementById('usuario-correo').value = '';
+  document.getElementById('usuario-password').value = '';
+  document.getElementById('usuario-rol').value = 'finanzas';
+  document.getElementById('estado-usuario').textContent = '';
+}
+
+async function crearUsuario() {
+  const nombre = document.getElementById('usuario-nombre').value;
+  const correo = document.getElementById('usuario-correo').value;
+  const password = document.getElementById('usuario-password').value;
+  const rol = document.getElementById('usuario-rol').value;
+  if (!nombre || !correo || !password) {
+    document.getElementById('estado-usuario').textContent = 'Completa nombre, correo y contraseña.';
+    return;
+  }
+  document.getElementById('estado-usuario').textContent = 'Creando...';
+  const { data, error } = await supabaseClient.functions.invoke('gestionar-usuarios', {
+    body: { accion: 'crear', nombre, correo, password, rol },
+  });
+  if (error || (data && data.error)) {
+    document.getElementById('estado-usuario').textContent = 'Error: ' + (data && data.error ? data.error : error.message);
+    return;
+  }
+  document.getElementById('estado-usuario').textContent = 'Usuario creado.';
+  document.getElementById('form-usuario').style.display = 'none';
+  await cargarUsuarios();
+}
+
+async function cambiarRolUsuario(id, rol) {
+  const { error } = await supabaseClient.from('usuarios').update({ rol }).eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  await cargarUsuarios();
+}
+
+async function desactivarUsuario(id) {
+  document.getElementById('estado-usuario').textContent = 'Desactivando...';
+  const { data, error } = await supabaseClient.functions.invoke('gestionar-usuarios', {
+    body: { accion: 'desactivar', id },
+  });
+  if (error || (data && data.error)) {
+    document.getElementById('estado-usuario').textContent = 'Error: ' + (data && data.error ? data.error : error.message);
+    return;
+  }
+  document.getElementById('estado-usuario').textContent = '';
+  await cargarUsuarios();
+}
+
+async function reactivarUsuario(id) {
+  document.getElementById('estado-usuario').textContent = 'Reactivando...';
+  const { data, error } = await supabaseClient.functions.invoke('gestionar-usuarios', {
+    body: { accion: 'reactivar', id },
+  });
+  if (error || (data && data.error)) {
+    document.getElementById('estado-usuario').textContent = 'Error: ' + (data && data.error ? data.error : error.message);
+    return;
+  }
+  document.getElementById('estado-usuario').textContent = '';
+  await cargarUsuarios();
+}
+
+async function cargarUsuarios() {
+  const { data, error } = await supabaseClient.from('usuarios').select('*').order('nombre');
+  if (error) { console.error(error); return; }
+  const cuerpo = document.getElementById('tabla-usuarios-body');
+  cuerpo.innerHTML = '';
+  data.forEach((u) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
+    const accionBoton = u.activo
+      ? `<button onclick="desactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-error hover:underline">Desactivar</button>`
+      : `<button onclick="reactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-qiora-green hover:underline">Reactivar</button>`;
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4">${accionBoton}</td>`;
+    cuerpo.appendChild(tr);
+  });
+}
+
+function mostrarFormularioPassword() {
+  document.getElementById('password-nueva').value = '';
+  document.getElementById('password-confirmar').value = '';
+  document.getElementById('estado-password').textContent = '';
+  document.getElementById('modal-password').style.display = 'flex';
+}
+
+function cerrarFormularioPassword() {
+  document.getElementById('modal-password').style.display = 'none';
+}
+
+async function guardarNuevaPassword() {
+  const nueva = document.getElementById('password-nueva').value;
+  const confirmar = document.getElementById('password-confirmar').value;
+  if (nueva.length < 6) {
+    document.getElementById('estado-password').textContent = 'Mínimo 6 caracteres.';
+    return;
+  }
+  if (nueva !== confirmar) {
+    document.getElementById('estado-password').textContent = 'Las contraseñas no coinciden.';
+    return;
+  }
+  const { error } = await supabaseClient.auth.updateUser({ password: nueva });
+  if (error) {
+    document.getElementById('estado-password').textContent = 'Error: ' + error.message;
+    return;
+  }
+  cerrarFormularioPassword();
 }
 
 cargarSesion();
