@@ -2469,23 +2469,23 @@ function filaSeccionPnL(grupo, texto, numColumnas) {
 function filaValoresPnL(nombre, valores, opciones) {
   opciones = opciones || {};
   const esTotal = !!opciones.bold;
-  const clase = esTotal ? 'font-gordita-bold text-xs' : 'text-xs text-on-surface-variant';
+  const clase = esTotal ? 'font-gordita-bold text-[10px]' : 'text-[10px] text-on-surface-variant';
   const indent = opciones.indent ? 'pl-8' : 'px-4';
   const bgFondo = esTotal ? 'bg-surface-container-low' : 'bg-white';
   const total = totalAnualPnL(valores);
   const atributoGrupo = opciones.grupo ? ` data-grupo-pnl="${opciones.grupo}"` : '';
   const estiloInicial = opciones.grupo && pnlColapsado[opciones.grupo] ? ' style="display:none;"' : '';
   return `<tr class="${bgFondo}"${atributoGrupo}${estiloInicial}><td class="${indent} py-1.5 ${clase} sticky left-0 ${bgFondo} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v) => `<td class="px-2 py-1.5 text-right ${clase}">${formatoCompactoCorto(v)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold bg-surface-container-high">${formatoCompactoCorto(total)}</td></tr>`;
+    valores.map((v) => `<td class="px-2 py-1.5 text-right ${clase}">${formatoMoneda(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
 }
 
 function filaUtilidadPnL(nombre, valores) {
   const claseSigno = (v) => (v >= 0 ? 'text-qiora-green' : 'text-error');
   const total = totalAnualPnL(valores);
-  return `<tr class="${PNL_BG_UTILIDAD}"><td class="px-4 py-1.5 font-gordita-bold text-xs sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v) => `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold ${claseSigno(v)}">${formatoCompactoCorto(v)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoCompactoCorto(total)}</td></tr>`;
+  return `<tr class="${PNL_BG_UTILIDAD}"><td class="px-4 py-1.5 font-gordita-bold text-[10px] sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
+    valores.map((v) => `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(v)}">${formatoMoneda(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
 }
 
 function filaMargenPnL(nombre, valores, totalIngresos) {
