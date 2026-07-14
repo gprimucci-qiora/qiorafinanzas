@@ -2390,15 +2390,24 @@ function renderizarPnL() {
     };
   });
 
+  const totalAnualFamilia = (porFamiliaKey, familia) => porMesDatos.reduce(
+    (s, m) => s + ((m[porFamiliaKey][familia] && m[porFamiliaKey][familia].total) || 0),
+    0,
+  );
+
   const familiasCD = new Set();
   porMesDatos.forEach((m) => Object.keys(m.porFamiliaCD).forEach((f) => familiasCD.add(f)));
-  const listaFamiliasCD = Array.from(familiasCD).sort();
+  const listaFamiliasCD = Array.from(familiasCD).sort(
+    (a, b) => totalAnualFamilia('porFamiliaCD', b) - totalAnualFamilia('porFamiliaCD', a),
+  );
 
   let listaFamiliasGO = [];
   if (scope === 'GENERAL') {
     const familiasGO = new Set();
     porMesDatos.forEach((m) => Object.keys(m.porFamiliaGO).forEach((f) => familiasGO.add(f)));
-    listaFamiliasGO = Array.from(familiasGO).sort();
+    listaFamiliasGO = Array.from(familiasGO).sort(
+      (a, b) => totalAnualFamilia('porFamiliaGO', b) - totalAnualFamilia('porFamiliaGO', a),
+    );
   }
 
   renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope);
