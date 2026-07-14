@@ -2142,6 +2142,7 @@ function renderizarMatricesIngresos() {
   const textoONumero = (v) => (v === null || v === undefined ? '—' : v.toLocaleString('es-MX'));
 
   const filas = matrizIngresos.slice().sort((a, b) => a.distrito.localeCompare(b.distrito));
+  const sumar = (campo) => filas.reduce((acc, d) => acc + (d[campo] || 0), 0);
 
   const cuerpoPrecios = document.getElementById('tabla-matriz-precios-body');
   cuerpoPrecios.innerHTML = '';
@@ -2150,6 +2151,10 @@ function renderizarMatricesIngresos() {
     tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioPlantaInterna)}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioRecolecciones)}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioMultidistrito)}</td>`;
     cuerpoPrecios.appendChild(tr);
   });
+  const totalPrecios = document.createElement('tr');
+  totalPrecios.className = 'bg-surface-container-low font-gordita-bold';
+  totalPrecios.innerHTML = `<td class="px-8 py-4">Total</td><td class="px-6 py-4 text-right">${formatoMoneda(sumar('precioPlantaInterna'))}</td><td class="px-6 py-4 text-right">${formatoMoneda(sumar('precioRecolecciones'))}</td><td class="px-6 py-4 text-right">${formatoMoneda(sumar('precioMultidistrito'))}</td>`;
+  cuerpoPrecios.appendChild(totalPrecios);
 
   const cuerpoOrdenes = document.getElementById('tabla-matriz-ordenes-body');
   cuerpoOrdenes.innerHTML = '';
@@ -2158,6 +2163,10 @@ function renderizarMatricesIngresos() {
     tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesPlantaInterna)}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesRecolecciones)}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesMultidistrito)}</td>`;
     cuerpoOrdenes.appendChild(tr);
   });
+  const totalOrdenes = document.createElement('tr');
+  totalOrdenes.className = 'bg-surface-container-low font-gordita-bold';
+  totalOrdenes.innerHTML = `<td class="px-8 py-4">Total</td><td class="px-6 py-4 text-right">${sumar('ordenesPlantaInterna').toLocaleString('es-MX')}</td><td class="px-6 py-4 text-right">${sumar('ordenesRecolecciones').toLocaleString('es-MX')}</td><td class="px-6 py-4 text-right">${sumar('ordenesMultidistrito').toLocaleString('es-MX')}</td>`;
+  cuerpoOrdenes.appendChild(totalOrdenes);
 }
 
 async function guardarParametroPoliza() {
