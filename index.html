@@ -918,6 +918,24 @@ function formatoCompacto(valor) {
   return '$' + valor;
 }
 
+async function obtenerTablaCompleta(nombreTabla) {
+  const TAMANO_PAGINA = 1000;
+  let todas = [];
+  let desde = 0;
+  while (true) {
+    const { data, error } = await supabaseClient
+      .from(nombreTabla)
+      .select('*')
+      .order('id')
+      .range(desde, desde + TAMANO_PAGINA - 1);
+    if (error) throw error;
+    todas = todas.concat(data || []);
+    if (!data || data.length < TAMANO_PAGINA) break;
+    desde += TAMANO_PAGINA;
+  }
+  return todas;
+}
+
 async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
   const TAMANO_PAGINA = 1000;
   let todas = [];
@@ -1998,15 +2016,15 @@ async function cargarIngresos() {
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
-  const [{ data: polizaParametros }, { data: multidistritoBolsas }, { data: multidistritoAsignacion }] = await Promise.all([
-    supabaseClient.from('poliza_parametros').select('*'),
-    supabaseClient.from('multidistrito_bolsas').select('*'),
-    supabaseClient.from('multidistrito_asignacion').select('*'),
+  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+    obtenerTablaCompleta('poliza_parametros'),
+    obtenerTablaCompleta('multidistrito_bolsas'),
+    obtenerTablaCompleta('multidistrito_asignacion'),
   ]);
   const datos = {
-    polizaParametros: polizaParametros || [],
-    multidistritoBolsas: multidistritoBolsas || [],
-    multidistritoAsignacion: multidistritoAsignacion || [],
+    polizaParametros,
+    multidistritoBolsas,
+    multidistritoAsignacion,
   };
 
   const distritos = new Set();
