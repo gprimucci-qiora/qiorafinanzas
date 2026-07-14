@@ -473,6 +473,36 @@
   </div>
 </div>
 
+<div id="modal-drilldown-gasto" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p id="drilldown-subtitulo" class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">-</p>
+        <h3 id="drilldown-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownGasto()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <h4 class="font-gordita-bold text-sm text-primary mb-3">Tendencia (últimos 12 meses)</h4>
+      <div style="height: 180px;" class="mb-8">
+        <canvas id="grafica-drilldown-tendencia"></canvas>
+      </div>
+      <h4 class="font-gordita-bold text-sm text-primary mb-3">Proveedores y facturas (periodo actual)</h4>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Proveedor / Factura</th>
+            <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-drilldown-proveedores-body" class="text-sm divide-y divide-outline-variant"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://fnatpzeccnkurzqbhyfq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYXRwemVjY25rdXJ6cWJoeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjExMjEsImV4cCI6MjA5ODkzNzEyMX0.Ucc_4EmEGMZuSAOjdK3Q0fvvXi9Mga0F7heAIrLSqaA';
@@ -1393,6 +1423,8 @@ async function cargarSinClasificar() {
 }
 
 let distritoActual = null;
+let directasDistritoVentana24 = [];
+let rangoActualPeriodoDistrito = null;
 let filtroVariacionesDistrito = 'todos';
 
 async function cambiarFiltroVariacionesDistrito(filtro) {
@@ -1457,7 +1489,7 @@ async function renderizarDetalleDistrito() {
 
   const inicioVentana24 = rangoDeMes(anioRef, mesRef - 23).inicio;
   const finVentana = rangoDeMes(anioRef, mesRef).fin;
-  const facturasVentana24 = await obtenerFacturasEnRango(inicioVentana24, finVentana, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const facturasVentana24 = await obtenerFacturasEnRango(inicioVentana24, finVentana, 'sucursal, familia, gasto, proveedor, factura, monto, subtotal, fecha_pago');
   const clasificadas24 = facturasVentana24.map((f) => Calc.clasificarFactura(f, glosarioMap));
 
   const porMesCompania = {};
@@ -1508,6 +1540,9 @@ async function renderizarDetalleDistrito() {
   const esDelDistrito = (f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito;
   const enRango = (f, rango) => f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
 
+  directasDistritoVentana24 = clasificadas24.filter((f) => esDelDistrito(f));
+  rangoActualPeriodoDistrito = rangoActualPeriodo;
+
   const directasActual = clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoActualPeriodo));
   const directasMoM = rangoComparacionMoM ? clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoComparacionMoM)) : [];
   const directasYoY = clasificadas24.filter((f) => esDelDistrito(f) && enRango(f, rangoComparacionYoY));
@@ -1545,9 +1580,13 @@ async function renderizarDetalleDistrito() {
 
         const filaGasto = document.createElement('tr');
         filaGasto.setAttribute('data-grupo', idGrupo);
-        filaGasto.className = 'bg-surface-container-low/50';
+        filaGasto.className = 'bg-surface-container-low/50 cursor-pointer hover:bg-surface-container-low transition-colors';
         filaGasto.style.display = 'none';
-        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant">${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-xs">search</span>${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        filaGasto.onclick = (evento) => {
+          evento.stopPropagation();
+          abrirDrillDownGasto(familia, gasto);
+        };
         cuerpoDetalle.appendChild(filaGasto);
       });
   });
@@ -1583,6 +1622,134 @@ async function renderizarDetalleDistrito() {
   const operativoAsignado = entradaDistrito ? entradaDistrito.gastoOperativoAsignado : 0;
   const etiquetaPeriodo = modoPeriodoGlobal === 'ytd' ? 'YTD ' + anioRef : claveMes(anioRef, mesRef);
   document.getElementById('detalle-distrito-operativo').innerHTML = `<span>Gasto Operativo Asignado (${etiquetaPeriodo})</span><span>${formatoMoneda(operativoAsignado)}</span>`;
+}
+
+function renderizarGraficaTendenciaSimple(canvasId, refGrafica, etiquetas, series) {
+  const ctx = document.getElementById(canvasId);
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: etiquetas,
+      datasets: series.map((serie) => ({
+        label: serie.label,
+        data: serie.datos,
+        borderColor: serie.color,
+        backgroundColor: serie.color + '1a',
+        fill: series.length === 1,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: serie.color,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+      })),
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: series.length > 1, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (ctxTooltip) => ctxTooltip.dataset.label + ': ' + formatoMoneda(ctxTooltip.parsed.y) },
+        },
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+      },
+    },
+  });
+}
+
+function alternarProveedorDrillDown(idGrupo) {
+  document.querySelectorAll('tr[data-grupo="' + idGrupo + '"]').forEach((fila) => {
+    fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+  });
+}
+
+function renderizarProveedoresDrillDown(facturas) {
+  const porProveedor = {};
+  facturas.forEach((f) => {
+    const clave = f.proveedor || 'Sin proveedor';
+    porProveedor[clave] = porProveedor[clave] || { total: 0, facturas: [] };
+    porProveedor[clave].total += f.monto || 0;
+    porProveedor[clave].facturas.push(f);
+  });
+
+  const cuerpo = document.getElementById('tabla-drilldown-proveedores-body');
+  cuerpo.innerHTML = '';
+  Object.keys(porProveedor)
+    .sort((a, b) => porProveedor[b].total - porProveedor[a].total)
+    .forEach((proveedor, indice) => {
+      const idGrupo = 'drilldown-proveedor-' + indice;
+
+      const filaProveedor = document.createElement('tr');
+      filaProveedor.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
+      filaProveedor.innerHTML = `<td class="px-6 py-3 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${proveedor}</td><td class="px-6 py-3 text-right font-gordita-bold">${formatoMoneda(porProveedor[proveedor].total)}</td>`;
+      filaProveedor.onclick = () => alternarProveedorDrillDown(idGrupo);
+      cuerpo.appendChild(filaProveedor);
+
+      porProveedor[proveedor].facturas
+        .sort((a, b) => (b.fecha_pago || '').localeCompare(a.fecha_pago || ''))
+        .forEach((f) => {
+          const filaFactura = document.createElement('tr');
+          filaFactura.setAttribute('data-grupo', idGrupo);
+          filaFactura.className = 'bg-surface-container-low/50';
+          filaFactura.style.display = 'none';
+          filaFactura.innerHTML = `<td class="pl-12 pr-6 py-2 text-xs text-on-surface-variant">${f.fecha_pago} · Factura ${f.factura || '—'}</td><td class="px-6 py-2 text-right text-xs">${formatoMoneda(f.monto)}</td>`;
+          cuerpo.appendChild(filaFactura);
+        });
+    });
+}
+
+function abrirDrillDownGasto(familia, gasto) {
+  document.getElementById('drilldown-subtitulo').textContent = distritoActual + ' — ' + familia;
+  document.getElementById('drilldown-titulo').textContent = gasto;
+
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const facturasGastoVentana = directasDistritoVentana24.filter((f) => f.familia === familia && f.gasto === gasto);
+  const facturasFamiliaVentana = directasDistritoVentana24.filter((f) => f.familia === familia);
+
+  const sumarPorMes = (filas) => {
+    const porMes = {};
+    filas.forEach((f) => {
+      const clave = f.fecha_pago.slice(0, 7);
+      porMes[clave] = (porMes[clave] || 0) + (f.monto || 0);
+    });
+    return porMes;
+  };
+  const porMesGasto = sumarPorMes(facturasGastoVentana);
+  const porMesFamilia = sumarPorMes(facturasFamiliaVentana);
+
+  const etiquetas = [];
+  const datosGasto = [];
+  const datosFamilia = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const clave = claveMes(base.getFullYear(), base.getMonth());
+    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+    datosGasto.push(porMesGasto[clave] || 0);
+    datosFamilia.push(porMesFamilia[clave] || 0);
+  }
+  renderizarGraficaTendenciaSimple('grafica-drilldown-tendencia', 'graficaDrilldownTendencia', etiquetas, [
+    { label: gasto, datos: datosGasto, color: '#2DD4BF' },
+    { label: familia + ' (total)', datos: datosFamilia, color: '#7e7576' },
+  ]);
+
+  const facturasPeriodoActual = facturasGastoVentana.filter((f) =>
+    f.fecha_pago >= rangoActualPeriodoDistrito.inicio && f.fecha_pago <= rangoActualPeriodoDistrito.fin
+  );
+  renderizarProveedoresDrillDown(facturasPeriodoActual);
+
+  document.getElementById('modal-drilldown-gasto').style.display = 'flex';
+}
+
+function cerrarDrillDownGasto() {
+  document.getElementById('modal-drilldown-gasto').style.display = 'none';
 }
 
 function mostrarFormularioUsuario() {
