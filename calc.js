@@ -130,6 +130,69 @@
     return porFamilia;
   }
 
+  function obtenerParametroVigente(registros, mesISO) {
+    const candidatos = registros.filter((r) => r.vigente_desde <= mesISO);
+    if (candidatos.length === 0) return null;
+    return candidatos.reduce((mejor, r) => (r.vigente_desde > mejor.vigente_desde ? r : mejor));
+  }
+
+  function bolsaMultidistritoDeRegion(region) {
+    if (region === 'GUADALAJARA') return 'OCCIDENTE';
+    if (region === 'NORTE') return null;
+    return region;
+  }
+
+  function obtenerRegionPorDistrito(glosarioMap) {
+    const mapa = {};
+    Object.values(glosarioMap).forEach((entrada) => {
+      if (entrada.sucursal_secundaria && !mapa[entrada.sucursal_secundaria]) {
+        mapa[entrada.sucursal_secundaria] = entrada.region;
+      }
+    });
+    return mapa;
+  }
+
+  function calcularIngresoPolizaDistrito(polizaParametros, poliza, distrito, mesISO) {
+    const candidatos = polizaParametros.filter((p) => p.poliza === poliza && p.distrito === distrito);
+    const vigente = obtenerParametroVigente(candidatos, mesISO);
+    if (!vigente) return 0;
+    return vigente.precio_por_orden * vigente.ordenes_dimensionadas;
+  }
+
+  function calcularIngresoMultidistritoDistrito(asignaciones, bolsas, distrito, region, mesISO) {
+    const regionBolsa = bolsaMultidistritoDeRegion(region);
+    if (!regionBolsa) return 0;
+    const vigenteAsignacion = obtenerParametroVigente(
+      asignaciones.filter((a) => a.distrito === distrito),
+      mesISO,
+    );
+    if (!vigenteAsignacion) return 0;
+    const vigenteBolsa = obtenerParametroVigente(
+      bolsas.filter((b) => b.region_bolsa === regionBolsa),
+      mesISO,
+    );
+    if (!vigenteBolsa) return 0;
+    return vigenteAsignacion.ordenes_asignadas * vigenteBolsa.precio_por_orden;
+  }
+
+  function calcularIngresosDistrito(datos, distrito, region, mesISO) {
+    const plantaInterna = calcularIngresoPolizaDistrito(datos.polizaParametros, 'PLANTA INTERNA', distrito, mesISO);
+    const recolecciones = calcularIngresoPolizaDistrito(datos.polizaParametros, 'RECOLECCIONES', distrito, mesISO);
+    const multidistrito = calcularIngresoMultidistritoDistrito(
+      datos.multidistritoAsignacion,
+      datos.multidistritoBolsas,
+      distrito,
+      region,
+      mesISO,
+    );
+    return {
+      plantaInterna,
+      recolecciones,
+      multidistrito,
+      total: plantaInterna + recolecciones + multidistrito,
+    };
+  }
+
   return {
     computeVentana,
     clasificarFactura,
@@ -137,5 +200,11 @@
     calcularKPIs,
     calcularVariacionPct,
     agruparPorFamiliaGasto,
+    obtenerParametroVigente,
+    bolsaMultidistritoDeRegion,
+    obtenerRegionPorDistrito,
+    calcularIngresoPolizaDistrito,
+    calcularIngresoMultidistritoDistrito,
+    calcularIngresosDistrito,
   };
 });

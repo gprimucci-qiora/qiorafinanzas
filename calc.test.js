@@ -172,3 +172,92 @@ test('agruparPorFamiliaGasto agrega correctamente por familia y por gasto', () =
   assert.strictEqual(resultado['RENTAS'].total, 200);
   assert.strictEqual(resultado['RENTAS'].porGasto['RENTA LOCALES'], 200);
 });
+
+test('obtenerParametroVigente regresa la fila con vigente_desde mas reciente <= el mes dado', () => {
+  const registros = [
+    { valor: 'A', vigente_desde: '2026-01-01' },
+    { valor: 'B', vigente_desde: '2026-03-01' },
+    { valor: 'C', vigente_desde: '2026-06-01' },
+  ];
+  const resultado = Calc.obtenerParametroVigente(registros, '2026-04-01');
+  assert.strictEqual(resultado.valor, 'B');
+});
+
+test('obtenerParametroVigente regresa null si no hay ninguna fila vigente para ese mes', () => {
+  const registros = [{ valor: 'A', vigente_desde: '2026-06-01' }];
+  const resultado = Calc.obtenerParametroVigente(registros, '2026-01-01');
+  assert.strictEqual(resultado, null);
+});
+
+test('bolsaMultidistritoDeRegion mapea GUADALAJARA a OCCIDENTE', () => {
+  assert.strictEqual(Calc.bolsaMultidistritoDeRegion('GUADALAJARA'), 'OCCIDENTE');
+});
+
+test('bolsaMultidistritoDeRegion regresa null para NORTE (no participa)', () => {
+  assert.strictEqual(Calc.bolsaMultidistritoDeRegion('NORTE'), null);
+});
+
+test('bolsaMultidistritoDeRegion deja pasar las demas regiones tal cual', () => {
+  assert.strictEqual(Calc.bolsaMultidistritoDeRegion('ORIENTE'), 'ORIENTE');
+  assert.strictEqual(Calc.bolsaMultidistritoDeRegion('SURESTE'), 'SURESTE');
+  assert.strictEqual(Calc.bolsaMultidistritoDeRegion('BAJIO'), 'BAJIO');
+});
+
+test('obtenerRegionPorDistrito construye distrito -> region desde el glosarioMap', () => {
+  const glosarioMap = {
+    'CTA-TPI-INT-LON LEON': { region: 'BAJIO', sucursal_secundaria: 'CTA-TPI-INT-LON LEON' },
+    'CTA-TPI-DLR-LON LEON CONTRATISTA': { region: 'BAJIO', sucursal_secundaria: 'CTA-TPI-INT-LON LEON' },
+  };
+  const resultado = Calc.obtenerRegionPorDistrito(glosarioMap);
+  assert.strictEqual(resultado['CTA-TPI-INT-LON LEON'], 'BAJIO');
+});
+
+test('calcularIngresoPolizaDistrito multiplica precio vigente por ordenes vigentes', () => {
+  const parametros = [
+    { poliza: 'PLANTA INTERNA', distrito: 'LEON', precio_por_orden: 475, ordenes_dimensionadas: 4245, vigente_desde: '2026-01-01' },
+    { poliza: 'RECOLECCIONES', distrito: 'LEON', precio_por_orden: 250, ordenes_dimensionadas: 100, vigente_desde: '2026-01-01' },
+  ];
+  const resultado = Calc.calcularIngresoPolizaDistrito(parametros, 'PLANTA INTERNA', 'LEON', '2026-03-01');
+  assert.strictEqual(resultado, 475 * 4245);
+});
+
+test('calcularIngresoPolizaDistrito regresa 0 si no hay parametro vigente', () => {
+  const resultado = Calc.calcularIngresoPolizaDistrito([], 'PLANTA INTERNA', 'LEON', '2026-03-01');
+  assert.strictEqual(resultado, 0);
+});
+
+test('calcularIngresoMultidistritoDistrito multiplica ordenes asignadas del distrito por precio de su bolsa', () => {
+  const asignaciones = [
+    { distrito: 'LEON', ordenes_asignadas: 2107, porcentaje: 0.75, vigente_desde: '2025-03-01' },
+  ];
+  const bolsas = [
+    { region_bolsa: 'BAJIO', precio_por_orden: 613, ordenes_dimensionadas: 2107, vigente_desde: '2025-03-01' },
+  ];
+  const resultado = Calc.calcularIngresoMultidistritoDistrito(asignaciones, bolsas, 'LEON', 'BAJIO', '2025-06-01');
+  assert.strictEqual(resultado, 2107 * 613);
+});
+
+test('calcularIngresoMultidistritoDistrito regresa 0 si la region es null (no participa)', () => {
+  const resultado = Calc.calcularIngresoMultidistritoDistrito([], [], 'MONTERREY', null, '2025-06-01');
+  assert.strictEqual(resultado, 0);
+});
+
+test('calcularIngresosDistrito suma las 3 polizas en un solo objeto', () => {
+  const datos = {
+    polizaParametros: [
+      { poliza: 'PLANTA INTERNA', distrito: 'LEON', precio_por_orden: 475, ordenes_dimensionadas: 4245, vigente_desde: '2026-01-01' },
+      { poliza: 'RECOLECCIONES', distrito: 'LEON', precio_por_orden: 250, ordenes_dimensionadas: 100, vigente_desde: '2026-01-01' },
+    ],
+    multidistritoBolsas: [
+      { region_bolsa: 'BAJIO', precio_por_orden: 613, ordenes_dimensionadas: 2107, vigente_desde: '2025-03-01' },
+    ],
+    multidistritoAsignacion: [
+      { distrito: 'LEON', ordenes_asignadas: 2107, porcentaje: 0.75, vigente_desde: '2025-03-01' },
+    ],
+  };
+  const resultado = Calc.calcularIngresosDistrito(datos, 'LEON', 'BAJIO', '2026-03-01');
+  assert.strictEqual(resultado.plantaInterna, 475 * 4245);
+  assert.strictEqual(resultado.recolecciones, 250 * 100);
+  assert.strictEqual(resultado.multidistrito, 2107 * 613);
+  assert.strictEqual(resultado.total, 475 * 4245 + 250 * 100 + 2107 * 613);
+});
