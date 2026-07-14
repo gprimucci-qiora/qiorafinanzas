@@ -97,11 +97,8 @@
         <li><button data-vista="sucursal" onclick="mostrarVista('sucursal')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">location_city</span><span class="text-sm">Por Sucursal/Distrito</span>
         </button></li>
-        <li><button data-vista="sin-clasificar" onclick="mostrarVista('sin-clasificar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">warning</span><span class="text-sm">Sin Clasificar</span>
-        </button></li>
-        <li><button data-vista="glosario" onclick="mostrarVista('glosario')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">menu_book</span><span class="text-sm">Glosario de Sucursales</span>
+        <li><button data-vista="proveedor" onclick="mostrarVista('proveedor')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">local_shipping</span><span class="text-sm">Análisis por Proveedor</span>
         </button></li>
         <li><button data-vista="ingresos" onclick="mostrarVista('ingresos')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">payments</span><span class="text-sm">Ingresos</span>
@@ -109,11 +106,8 @@
         <li><button data-vista="pnl" onclick="mostrarVista('pnl')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">query_stats</span><span class="text-sm">P&amp;L</span>
         </button></li>
-        <li><button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">upload_file</span><span class="text-sm">Cargar Datos</span>
-        </button></li>
-        <li><button data-vista="usuarios" id="nav-usuarios" onclick="mostrarVista('usuarios')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">group</span><span class="text-sm">Gestión de Usuarios</span>
+        <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">settings</span><span class="text-sm">Configuración</span>
         </button></li>
       </ul>
     </nav>
@@ -295,24 +289,11 @@
         </section>
       </div>
 
-      <div class="vista" id="vista-sin-clasificar">
+      <div class="vista" id="vista-proveedor">
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Sin Clasificar</h1>
-          <p class="text-on-surface-variant text-sm mt-2">Sucursales que aparecen en las facturas pero no están en el glosario. Agrégalas desde "Glosario de Sucursales".</p>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Análisis por Proveedor</h1>
         </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table id="tabla-sin-clasificar" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Sucursal</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Facturas</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-sin-clasificar-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
       </div>
 
       <div class="vista" id="vista-ingresos">
@@ -459,97 +440,97 @@
         </section>
       </div>
 
-      <div class="vista" id="vista-glosario">
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Glosario de Sucursales</h1>
-          </div>
-          <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">add</span> Agregar sucursal
-          </button>
-        </div>
-        <div id="form-glosario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
-          <input id="glosario-sucursal" placeholder="Sucursal (código completo)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
-          <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal" class="px-3 py-2 border border-outline-variant rounded text-sm">
-          <input id="glosario-region" placeholder="Región" class="px-3 py-2 border border-outline-variant rounded text-sm">
-          <input id="glosario-sucursal-secundaria" placeholder="Sucursal secundaria (distrito real)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
-          <select id="glosario-tipo-gasto" class="px-3 py-2 border border-outline-variant rounded text-sm">
-            <option value="COSTOS DIRECTOS">COSTOS DIRECTOS</option>
-            <option value="GASTOS OPERATIVOS">GASTOS OPERATIVOS</option>
-          </select>
-          <button onclick="guardarGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Guardar</button>
-        </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table id="tabla-glosario" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Sucursal</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Región</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Sucursal secundaria</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo de gasto</th>
-                <th class="px-6 py-4"></th>
-              </tr>
-            </thead>
-            <tbody id="tabla-glosario-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <div class="vista" id="vista-cargar">
+      <div class="vista" id="vista-config">
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Cargar Datos</h1>
-          <p class="text-on-surface-variant text-sm mt-2">Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Configuración</h1>
         </div>
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-          <input type="file" id="input-excel" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
-          <div id="preview-carga" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
-            <p class="text-sm mb-1">Rango detectado: <strong id="preview-rango" class="font-gordita-bold text-primary"></strong></p>
-            <p class="text-sm mb-3">Filas a cargar: <strong id="preview-filas" class="font-gordita-bold text-primary"></strong></p>
-            <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará todas las facturas existentes con fecha de pago en ese rango.</p>
-            <button onclick="confirmarCarga()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
-          </div>
-          <p id="estado-carga" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+        <div class="bg-white p-1 rounded-lg border border-outline-variant flex w-fit mb-8">
+          <button id="config-tab-glosario" onclick="mostrarSubConfig('glosario')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Glosario de Sucursales</button>
+          <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
+          <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
-      </div>
 
-      <div class="vista" id="vista-usuarios">
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Gestión de Usuarios</h1>
+        <div id="config-sub-glosario" class="config-sub">
+          <div class="mb-6 flex justify-end">
+            <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">add</span> Agregar sucursal
+            </button>
           </div>
-          <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">add</span> Agregar Usuario
-          </button>
+          <div id="form-glosario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
+            <input id="glosario-sucursal" placeholder="Sucursal (código completo)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+            <input id="glosario-tipo-sucursal" placeholder="Tipo de sucursal" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <input id="glosario-region" placeholder="Región" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <input id="glosario-sucursal-secundaria" placeholder="Sucursal secundaria (distrito real)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+            <select id="glosario-tipo-gasto" class="px-3 py-2 border border-outline-variant rounded text-sm">
+              <option value="COSTOS DIRECTOS">COSTOS DIRECTOS</option>
+              <option value="GASTOS OPERATIVOS">GASTOS OPERATIVOS</option>
+            </select>
+            <button onclick="guardarGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Guardar</button>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <table id="tabla-glosario" class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Región</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Sucursal secundaria</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Tipo de gasto</th>
+                  <th class="px-6 py-4"></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-glosario-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
         </div>
-        <div id="form-usuario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
-          <input id="usuario-nombre" placeholder="Nombre completo" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
-          <input id="usuario-correo" type="email" placeholder="Correo" class="px-3 py-2 border border-outline-variant rounded text-sm">
-          <input id="usuario-password" type="password" placeholder="Contraseña inicial" class="px-3 py-2 border border-outline-variant rounded text-sm">
-          <select id="usuario-rol" class="px-3 py-2 border border-outline-variant rounded text-sm">
-            <option value="finanzas">finanzas</option>
-            <option value="admin">admin</option>
-          </select>
-          <button onclick="crearUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Crear</button>
+
+        <div id="config-sub-cargar" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <input type="file" id="input-excel" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-1">Rango detectado: <strong id="preview-rango" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-sm mb-3">Filas a cargar: <strong id="preview-filas" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará todas las facturas existentes con fecha de pago en ese rango.</p>
+              <button onclick="confirmarCarga()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
         </div>
-        <p id="estado-usuario" class="text-sm font-gordita-bold text-secondary mb-4"></p>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table id="tabla-usuarios" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Nombre</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
-                <th class="px-6 py-4"></th>
-              </tr>
-            </thead>
-            <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
+
+        <div id="config-sub-usuarios" class="config-sub" style="display:none;">
+          <div class="mb-6 flex justify-end">
+            <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">add</span> Agregar Usuario
+            </button>
+          </div>
+          <div id="form-usuario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
+            <input id="usuario-nombre" placeholder="Nombre completo" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+            <input id="usuario-correo" type="email" placeholder="Correo" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <input id="usuario-password" type="password" placeholder="Contraseña inicial" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <select id="usuario-rol" class="px-3 py-2 border border-outline-variant rounded text-sm">
+              <option value="finanzas">finanzas</option>
+              <option value="admin">admin</option>
+            </select>
+            <button onclick="crearUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Crear</button>
+          </div>
+          <p id="estado-usuario" class="text-sm font-gordita-bold text-secondary mb-4"></p>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <table id="tabla-usuarios" class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Nombre</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
+                  <th class="px-6 py-4"></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+        </div>
       </div>
 
       <div class="vista" id="vista-detalle-distrito">
@@ -701,8 +682,8 @@ async function cargarSesion() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
   if (perfil.rol !== 'admin') {
-    document.getElementById('nav-cargar').style.display = 'none';
-    document.getElementById('nav-usuarios').style.display = 'none';
+    document.getElementById('config-tab-cargar').style.display = 'none';
+    document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   } else {
     const seccionAdminIngresos = document.getElementById('admin-ingresos');
@@ -732,10 +713,9 @@ async function mostrarVista(nombre) {
   const cargadores = {
     resumen: cargarResumenEjecutivo,
     sucursal: cargarPorSucursal,
-    'sin-clasificar': cargarSinClasificar,
-    usuarios: cargarUsuarios,
     ingresos: cargarIngresos,
     pnl: cargarPnL,
+    config: cargarConfig,
   };
   const cargador = cargadores[nombre];
   if (!cargador) return;
@@ -744,6 +724,22 @@ async function mostrarVista(nombre) {
     await cargador();
   } finally {
     ocultarIndicadorCarga();
+  }
+}
+
+function mostrarSubConfig(nombre) {
+  ['glosario', 'cargar', 'usuarios'].forEach((n) => {
+    document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
+    const tab = document.getElementById('config-tab-' + n);
+    tab.classList.toggle('bg-primary', n === nombre);
+    tab.classList.toggle('text-on-primary', n === nombre);
+    tab.classList.toggle('text-on-surface-variant', n !== nombre);
+  });
+}
+
+async function cargarConfig() {
+  if (usuarioActual && usuarioActual.rol === 'admin') {
+    await cargarUsuarios();
   }
 }
 
@@ -1573,30 +1569,6 @@ function alternarDetalleGasto(familia) {
   const idGrupo = 'tipogasto-' + familia.replace(/\s/g, '-');
   document.querySelectorAll('tr[data-grupo="' + idGrupo + '"]').forEach((fila) => {
     fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
-  });
-}
-
-async function cargarSinClasificar() {
-  const glosarioMap = obtenerGlosarioMap();
-  const mesActual = obtenerRangoActivo();
-  const facturas = await obtenerFacturasEnRango(mesActual.inicio, mesActual.fin, '*');
-
-  const porSucursal = {};
-  facturas.forEach((raw) => {
-    const f = Calc.clasificarFactura(raw, glosarioMap);
-    if (f.tipo_gasto !== 'SIN_CLASIFICAR') return;
-    porSucursal[f.sucursal] = porSucursal[f.sucursal] || { count: 0, monto: 0 };
-    porSucursal[f.sucursal].count += 1;
-    porSucursal[f.sucursal].monto += f.monto || 0;
-  });
-
-  const cuerpo = document.getElementById('tabla-sin-clasificar-body');
-  cuerpo.innerHTML = '';
-  Object.keys(porSucursal).sort((a, b) => porSucursal[b].monto - porSucursal[a].monto).forEach((sucursal) => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
-    tr.innerHTML = `<td class="px-8 py-4">${sucursal}</td><td class="px-6 py-4 text-right">${porSucursal[sucursal].count}</td><td class="px-6 py-4 text-right font-gordita-bold text-error">${formatoMoneda(porSucursal[sucursal].monto)}</td>`;
-    cuerpo.appendChild(tr);
   });
 }
 
