@@ -2434,6 +2434,8 @@ function alternarSeccionPnL(grupo) {
   if (icono) icono.textContent = pnlColapsado[grupo] ? 'chevron_right' : 'expand_more';
 }
 
+const PNL_BG_UTILIDAD = 'bg-[#EAF8F0]';
+
 function llenarEncabezadosPnL(porMesDatos) {
   const gruposAnio = [];
   porMesDatos.forEach((m) => {
@@ -2446,44 +2448,44 @@ function llenarEncabezadosPnL(porMesDatos) {
   });
 
   document.getElementById('tabla-pnl-encabezado-anio').innerHTML =
-    '<th class="px-6 py-1 sticky left-0 bg-surface-container-low z-10"></th>' +
-    gruposAnio.map((g) => `<th colspan="${g.cantidad}" class="px-4 py-1 font-gordita-bold text-center text-[10px]">${g.anio}</th>`).join('') +
-    '<th class="px-4 py-1 bg-surface-container-high"></th>';
+    '<th class="px-4 py-1 sticky left-0 bg-surface-container-low z-10"></th>' +
+    gruposAnio.map((g) => `<th colspan="${g.cantidad}" class="px-2 py-1 font-gordita-bold text-center text-[9px]">${g.anio}</th>`).join('') +
+    '<th class="px-2 py-1 bg-surface-container-high"></th>';
 
   document.getElementById('tabla-pnl-encabezado').innerHTML =
-    '<th class="px-6 py-3 font-gordita-bold uppercase tracking-widest sticky left-0 bg-surface-container-low z-10">Cuenta</th>' +
-    porMesDatos.map((m) => `<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('') +
-    '<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right bg-surface-container-high">Total</th>';
+    '<th class="px-4 py-2 font-gordita-bold uppercase tracking-widest text-[10px] sticky left-0 bg-surface-container-low z-10">Cuenta</th>' +
+    porMesDatos.map((m) => `<th class="px-2 py-2 font-gordita-bold uppercase tracking-widest text-[10px] text-right">${m.etiqueta}</th>`).join('') +
+    '<th class="px-2 py-2 font-gordita-bold uppercase tracking-widest text-[10px] text-right bg-surface-container-high">Total</th>';
 }
 
 function filaSeccionPnL(grupo, texto, numColumnas) {
   const colapsado = pnlColapsado[grupo];
   const icono = colapsado ? 'chevron_right' : 'expand_more';
   return `<tr class="bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors" onclick="alternarSeccionPnL('${grupo}')">` +
-    `<td class="px-6 py-2 font-gordita-bold sticky left-0 bg-surface-container-low z-10 flex items-center gap-1" colspan="${numColumnas}">` +
-    `<span id="pnl-icono-${grupo}" class="material-symbols-outlined text-sm">${icono}</span>${texto}</td></tr>`;
+    `<td class="px-4 py-1.5 text-xs font-gordita-bold sticky left-0 bg-surface-container-low z-10 flex items-center gap-1" colspan="${numColumnas}">` +
+    `<span id="pnl-icono-${grupo}" class="material-symbols-outlined text-xs">${icono}</span>${texto}</td></tr>`;
 }
 
 function filaValoresPnL(nombre, valores, opciones) {
   opciones = opciones || {};
   const esTotal = !!opciones.bold;
-  const clase = esTotal ? 'font-gordita-bold text-sm' : 'text-sm text-on-surface-variant';
-  const indent = opciones.indent ? 'pl-10' : 'px-6';
+  const clase = esTotal ? 'font-gordita-bold text-xs' : 'text-xs text-on-surface-variant';
+  const indent = opciones.indent ? 'pl-8' : 'px-4';
   const bgFondo = esTotal ? 'bg-surface-container-low' : 'bg-white';
   const total = totalAnualPnL(valores);
   const atributoGrupo = opciones.grupo ? ` data-grupo-pnl="${opciones.grupo}"` : '';
   const estiloInicial = opciones.grupo && pnlColapsado[opciones.grupo] ? ' style="display:none;"' : '';
-  return `<tr class="${bgFondo}"${atributoGrupo}${estiloInicial}><td class="${indent} py-2 ${clase} sticky left-0 ${bgFondo} z-10">${nombre}</td>` +
-    valores.map((v) => `<td class="px-4 py-2 text-right ${clase}">${formatoMoneda(v)}</td>`).join('') +
-    `<td class="px-4 py-2 text-right text-sm font-gordita-bold bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
+  return `<tr class="${bgFondo}"${atributoGrupo}${estiloInicial}><td class="${indent} py-1.5 ${clase} sticky left-0 ${bgFondo} z-10 whitespace-nowrap">${nombre}</td>` +
+    valores.map((v) => `<td class="px-2 py-1.5 text-right ${clase}">${formatoCompactoCorto(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold bg-surface-container-high">${formatoCompactoCorto(total)}</td></tr>`;
 }
 
 function filaUtilidadPnL(nombre, valores) {
   const claseSigno = (v) => (v >= 0 ? 'text-qiora-green' : 'text-error');
   const total = totalAnualPnL(valores);
-  return `<tr class="bg-qiora-green/5"><td class="px-6 py-2 font-gordita-bold text-sm sticky left-0 bg-qiora-green/5 z-10">${nombre}</td>` +
-    valores.map((v) => `<td class="px-4 py-2 text-right text-sm font-gordita-bold ${claseSigno(v)}">${formatoMoneda(v)}</td>`).join('') +
-    `<td class="px-4 py-2 text-right text-sm font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
+  return `<tr class="${PNL_BG_UTILIDAD}"><td class="px-4 py-1.5 font-gordita-bold text-xs sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
+    valores.map((v) => `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold ${claseSigno(v)}">${formatoCompactoCorto(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-xs font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoCompactoCorto(total)}</td></tr>`;
 }
 
 function filaMargenPnL(nombre, valores, totalIngresos) {
@@ -2492,9 +2494,9 @@ function filaMargenPnL(nombre, valores, totalIngresos) {
   const ingresoTotal = totalAnualPnL(totalIngresos);
   const utilidadPesosAnual = totalAnualPnL(valores.map((v, i) => (v === null ? 0 : (v / 100) * totalIngresos[i])));
   const margenTotal = ingresoTotal > 0 ? (utilidadPesosAnual / ingresoTotal) * 100 : null;
-  return `<tr class="bg-qiora-green/5 text-xs"><td class="pl-10 py-2 sticky left-0 bg-qiora-green/5 z-10">${nombre}</td>` +
-    valores.map((v) => `<td class="px-4 py-2 text-right ${claseSigno(v)}">${textoPct(v)}</td>`).join('') +
-    `<td class="px-4 py-2 text-right font-gordita-bold ${claseSigno(margenTotal)} bg-surface-container-high">${textoPct(margenTotal)}</td></tr>`;
+  return `<tr class="${PNL_BG_UTILIDAD} text-[10px]"><td class="pl-8 py-1.5 sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
+    valores.map((v) => `<td class="px-2 py-1.5 text-right ${claseSigno(v)}">${textoPct(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right font-gordita-bold ${claseSigno(margenTotal)} bg-surface-container-high">${textoPct(margenTotal)}</td></tr>`;
 }
 
 function renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope) {
