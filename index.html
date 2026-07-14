@@ -216,8 +216,8 @@
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
                 <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarTipoGasto('familia')">Familia <span id="orden-tipogasto-familia"></span></th>
                 <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarTipoGasto('monto')">Monto <span id="orden-tipogasto-monto"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% MoM</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% YoY</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">MoM</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">YoY</th>
               </tr>
             </thead>
             <tbody id="tabla-tipo-gasto-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -591,8 +591,8 @@
               <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
                 <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia</th>
                 <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% MoM</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">% YoY</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">MoM</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">YoY</th>
               </tr>
             </thead>
             <tbody id="tabla-detalle-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
@@ -937,6 +937,11 @@ async function cambiarModoPeriodoGlobal(modo) {
 
 function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
+}
+
+function formatoDifMoneda(variacionPct, dif) {
+  if (variacionPct === null) return '—';
+  return (dif > 0 ? '+' : '') + formatoMoneda(dif);
 }
 
 function formatoCompacto(valor) {
@@ -1540,7 +1545,7 @@ function renderizarTipoGasto() {
 
     const filaFamilia = document.createElement('tr');
     filaFamilia.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
-    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}<span class="text-[9px] font-gordita-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-container-low text-on-surface-variant">${etiquetaTipoGasto(familia)}</span></span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(montoActual)}</td><td class="px-6 py-4 text-right ${claseColor(mom)}">${textoVar(mom)}</td><td class="px-6 py-4 text-right ${claseColor(yoy)}">${textoVar(yoy)}</td>`;
+    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}<span class="text-[9px] font-gordita-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-container-low text-on-surface-variant">${etiquetaTipoGasto(familia)}</span></span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(montoActual)}</td><td class="px-6 py-4 text-right"><div class="font-gordita-bold ${claseColor(mom)}">${textoVar(mom)}</div><div class="text-[10px] ${claseColor(mom)}">${formatoDifMoneda(mom, montoActual - montoAnt)}</div></td><td class="px-6 py-4 text-right"><div class="font-gordita-bold ${claseColor(yoy)}">${textoVar(yoy)}</div><div class="text-[10px] ${claseColor(yoy)}">${formatoDifMoneda(yoy, montoActual - montoAnioAnt)}</div></td>`;
     filaFamilia.onclick = () => alternarDetalleGasto(familia);
     cuerpo.appendChild(filaFamilia);
 
@@ -1558,7 +1563,7 @@ function renderizarTipoGasto() {
         filaGasto.setAttribute('data-grupo', idGrupo);
         filaGasto.className = 'bg-surface-container-low/50';
         filaGasto.style.display = 'none';
-        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant">${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant">${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs"><div class="${claseColor(momGasto)}">${textoVar(momGasto)}</div><div class="text-[10px] ${claseColor(momGasto)}">${formatoDifMoneda(momGasto, montoGasto - montoGastoAnt)}</div></td><td class="px-6 py-2 text-right text-xs"><div class="${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</div><div class="text-[10px] ${claseColor(yoyGasto)}">${formatoDifMoneda(yoyGasto, montoGasto - montoGastoAnioAnt)}</div></td>`;
         cuerpo.appendChild(filaGasto);
       });
   });
@@ -1737,7 +1742,7 @@ async function renderizarDetalleDistrito() {
 
     const filaFamilia = document.createElement('tr');
     filaFamilia.className = 'cursor-pointer hover:bg-surface-container-low/50 transition-colors';
-    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(montoActual)}</td><td class="px-6 py-4 text-right ${claseColor(mom)}">${textoVar(mom)}</td><td class="px-6 py-4 text-right ${claseColor(yoy)}">${textoVar(yoy)}</td>`;
+    filaFamilia.innerHTML = `<td class="px-8 py-4 font-gordita-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(montoActual)}</td><td class="px-6 py-4 text-right"><div class="font-gordita-bold ${claseColor(mom)}">${textoVar(mom)}</div><div class="text-[10px] ${claseColor(mom)}">${formatoDifMoneda(mom, montoActual - montoMoM)}</div></td><td class="px-6 py-4 text-right"><div class="font-gordita-bold ${claseColor(yoy)}">${textoVar(yoy)}</div><div class="text-[10px] ${claseColor(yoy)}">${formatoDifMoneda(yoy, montoActual - montoYoY)}</div></td>`;
     filaFamilia.onclick = () => alternarDetalleFamiliaDistrito(familia);
     cuerpoDetalle.appendChild(filaFamilia);
 
@@ -1755,7 +1760,7 @@ async function renderizarDetalleDistrito() {
         filaGasto.setAttribute('data-grupo', idGrupo);
         filaGasto.className = 'bg-surface-container-low/50 cursor-pointer hover:bg-surface-container-low transition-colors';
         filaGasto.style.display = 'none';
-        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-xs">search</span>${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(momGasto)}">${textoVar(momGasto)}</td><td class="px-6 py-2 text-right text-xs ${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</td>`;
+        filaGasto.innerHTML = `<td class="pl-14 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-xs">search</span>${gasto}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(montoGasto)}</td><td class="px-6 py-2 text-right text-xs"><div class="${claseColor(momGasto)}">${textoVar(momGasto)}</div><div class="text-[10px] ${claseColor(momGasto)}">${formatoDifMoneda(momGasto, montoGasto - montoGastoMoM)}</div></td><td class="px-6 py-2 text-right text-xs"><div class="${claseColor(yoyGasto)}">${textoVar(yoyGasto)}</div><div class="text-[10px] ${claseColor(yoyGasto)}">${formatoDifMoneda(yoyGasto, montoGasto - montoGastoYoY)}</div></td>`;
         filaGasto.onclick = (evento) => {
           evento.stopPropagation();
           abrirDrillDownGasto(familia, gasto);
