@@ -362,6 +362,40 @@
           </table>
         </section>
 
+        <div class="mt-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Matriz de Precios</h3>
+          <p class="text-xs text-on-surface-variant mb-4">Precio por orden vigente en el mes seleccionado (<span id="matriz-precios-mes"></span>). Multidistrito muestra el precio de la bolsa regional de ese distrito.</p>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Planta Interna</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Recolecciones</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Multidistrito</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-matriz-precios-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Matriz de Órdenes Dimensionadas</h3>
+          <p class="text-xs text-on-surface-variant mb-4">Órdenes dimensionadas vigentes en el mes seleccionado (<span id="matriz-ordenes-mes"></span>). Multidistrito muestra las órdenes asignadas a ese distrito.</p>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Planta Interna</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Recolecciones</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Multidistrito</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-matriz-ordenes-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+        </div>
+
         <div id="admin-ingresos" class="mt-lg" style="display:none;">
           <h3 class="font-gordita-bold text-lg text-primary mb-4">Actualizar Parámetros</h3>
           <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
@@ -1956,6 +1990,7 @@ async function guardarNuevaPassword() {
 
 let ingresosPorDistrito = [];
 let ordenIngresos = { columna: 'total', direccion: 'desc' };
+let matrizIngresos = [];
 
 async function cargarIngresos() {
   const glosarioMap = obtenerGlosarioMap();
@@ -2000,7 +2035,43 @@ async function cargarIngresos() {
     return { distrito, ...acumulado };
   });
 
+  const mesVigenteISO = claveMes(anioRef, mesRef) + '-01';
+  matrizIngresos = Array.from(distritos).map((distrito) => {
+    const region = regionPorDistrito[distrito];
+    const regionBolsa = Calc.bolsaMultidistritoDeRegion(region);
+
+    const vigentePI = Calc.obtenerParametroVigente(
+      datos.polizaParametros.filter((p) => p.poliza === 'PLANTA INTERNA' && p.distrito === distrito),
+      mesVigenteISO,
+    );
+    const vigenteRec = Calc.obtenerParametroVigente(
+      datos.polizaParametros.filter((p) => p.poliza === 'RECOLECCIONES' && p.distrito === distrito),
+      mesVigenteISO,
+    );
+    const vigenteBolsa = regionBolsa
+      ? Calc.obtenerParametroVigente(
+          datos.multidistritoBolsas.filter((b) => b.region_bolsa === regionBolsa),
+          mesVigenteISO,
+        )
+      : null;
+    const vigenteAsignacion = Calc.obtenerParametroVigente(
+      datos.multidistritoAsignacion.filter((a) => a.distrito === distrito),
+      mesVigenteISO,
+    );
+
+    return {
+      distrito,
+      precioPlantaInterna: vigentePI ? vigentePI.precio_por_orden : null,
+      ordenesPlantaInterna: vigentePI ? vigentePI.ordenes_dimensionadas : null,
+      precioRecolecciones: vigenteRec ? vigenteRec.precio_por_orden : null,
+      ordenesRecolecciones: vigenteRec ? vigenteRec.ordenes_dimensionadas : null,
+      precioMultidistrito: vigenteBolsa ? vigenteBolsa.precio_por_orden : null,
+      ordenesMultidistrito: vigenteAsignacion ? vigenteAsignacion.ordenes_asignadas : null,
+    };
+  });
+
   renderizarIngresos();
+  renderizarMatricesIngresos();
 }
 
 function ordenarIngresos(columna) {
@@ -2040,6 +2111,34 @@ function renderizarIngresos() {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.plantaInterna)}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.recolecciones)}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.multidistrito)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(d.total)}</td>`;
     cuerpo.appendChild(tr);
+  });
+}
+
+function renderizarMatricesIngresos() {
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const etiquetaMes = MESES_LARGOS[mesRef] + ' ' + anioRef;
+  document.getElementById('matriz-precios-mes').textContent = etiquetaMes;
+  document.getElementById('matriz-ordenes-mes').textContent = etiquetaMes;
+
+  const textoOMoneda = (v) => (v === null || v === undefined ? '—' : formatoMoneda(v));
+  const textoONumero = (v) => (v === null || v === undefined ? '—' : v.toLocaleString('es-MX'));
+
+  const filas = matrizIngresos.slice().sort((a, b) => a.distrito.localeCompare(b.distrito));
+
+  const cuerpoPrecios = document.getElementById('tabla-matriz-precios-body');
+  cuerpoPrecios.innerHTML = '';
+  filas.forEach((d) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioPlantaInterna)}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioRecolecciones)}</td><td class="px-6 py-4 text-right">${textoOMoneda(d.precioMultidistrito)}</td>`;
+    cuerpoPrecios.appendChild(tr);
+  });
+
+  const cuerpoOrdenes = document.getElementById('tabla-matriz-ordenes-body');
+  cuerpoOrdenes.innerHTML = '';
+  filas.forEach((d) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${d.distrito}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesPlantaInterna)}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesRecolecciones)}</td><td class="px-6 py-4 text-right">${textoONumero(d.ordenesMultidistrito)}</td>`;
+    cuerpoOrdenes.appendChild(tr);
   });
 }
 
