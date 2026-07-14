@@ -448,6 +448,7 @@
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto">
           <table id="tabla-pnl" class="w-full text-left border-collapse text-xs whitespace-nowrap">
             <thead>
+              <tr id="tabla-pnl-encabezado-anio" class="bg-surface-container-low text-[10px] text-on-surface-variant"></tr>
               <tr id="tabla-pnl-encabezado" class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant"></tr>
             </thead>
             <tbody id="tabla-pnl-body" class="divide-y divide-outline-variant"></tbody>
@@ -2357,6 +2358,7 @@ function renderizarPnL() {
 
     return {
       etiqueta: mes.etiqueta,
+      anio: mes.clave.slice(0, 4),
       ingresoPlantaInterna, ingresoRecolecciones, ingresoMultidistrito, totalIngresos,
       porFamiliaCD, totalCD,
       porFamiliaGO, totalGO,
@@ -2380,19 +2382,34 @@ function renderizarPnL() {
 }
 
 function renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope) {
+  const gruposAnio = [];
+  porMesDatos.forEach((m) => {
+    const ultimo = gruposAnio[gruposAnio.length - 1];
+    if (ultimo && ultimo.anio === m.anio) {
+      ultimo.cantidad += 1;
+    } else {
+      gruposAnio.push({ anio: m.anio, cantidad: 1 });
+    }
+  });
+
+  const encabezadoAnio = document.getElementById('tabla-pnl-encabezado-anio');
+  encabezadoAnio.innerHTML = '<th class="px-6 py-1 sticky left-0 bg-surface-container-low z-10"></th>' +
+    gruposAnio.map((g) => `<th colspan="${g.cantidad}" class="px-4 py-1 font-gordita-bold text-center">${g.anio}</th>`).join('');
+
   const encabezado = document.getElementById('tabla-pnl-encabezado');
-  encabezado.innerHTML = '<th class="px-6 py-3 font-gordita-bold uppercase tracking-widest sticky left-0 bg-surface-container-low">Cuenta</th>' +
+  encabezado.innerHTML = '<th class="px-6 py-3 font-gordita-bold uppercase tracking-widest sticky left-0 bg-surface-container-low z-10">Cuenta</th>' +
     porMesDatos.map((m) => `<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('');
 
-  const filaSeccion = (texto) => `<tr class="bg-surface-container-low"><td class="px-6 py-2 font-gordita-bold" colspan="${porMesDatos.length + 1}">${texto}</td></tr>`;
+  const filaSeccion = (texto) => `<tr class="bg-surface-container-low"><td class="px-6 py-2 font-gordita-bold sticky left-0 bg-surface-container-low z-10" colspan="${porMesDatos.length + 1}">${texto}</td></tr>`;
   const filaValores = (nombre, valores, opciones) => {
     opciones = opciones || {};
     const clase = opciones.bold ? 'font-gordita-bold' : '';
     const indent = opciones.indent ? 'pl-10' : 'px-6';
-    return `<tr><td class="${indent} py-2 ${clase}">${nombre}</td>` +
+    const bgFondo = opciones.bold ? 'bg-surface-container-low' : 'bg-white';
+    return `<tr><td class="${indent} py-2 ${clase} sticky left-0 ${bgFondo} z-10">${nombre}</td>` +
       valores.map((v) => `<td class="px-4 py-2 text-right ${clase}">${formatoMoneda(v)}</td>`).join('') + '</tr>';
   };
-  const filaPorcentaje = (nombre, valores) => `<tr class="text-on-surface-variant"><td class="pl-10 py-2 text-xs">${nombre}</td>` +
+  const filaPorcentaje = (nombre, valores) => `<tr class="text-on-surface-variant"><td class="pl-10 py-2 text-xs sticky left-0 bg-white z-10">${nombre}</td>` +
     valores.map((v) => `<td class="px-4 py-2 text-right text-xs">${v === null ? '—' : v.toFixed(1) + '%'}</td>`).join('') + '</tr>';
 
   let html = '';
