@@ -106,6 +106,9 @@
         <li><button data-vista="ingresos" onclick="mostrarVista('ingresos')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">payments</span><span class="text-sm">Ingresos</span>
         </button></li>
+        <li><button data-vista="pnl" onclick="mostrarVista('pnl')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">query_stats</span><span class="text-sm">P&amp;L</span>
+        </button></li>
         <li><button data-vista="cargar" id="nav-cargar" onclick="mostrarVista('cargar')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">upload_file</span><span class="text-sm">Cargar Datos</span>
         </button></li>
@@ -432,6 +435,39 @@
         </div>
       </div>
 
+      <div class="vista" id="vista-pnl">
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">P&amp;L</h1>
+          </div>
+          <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
+            <option value="GENERAL">General (toda la empresa)</option>
+          </select>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Ingreso vs. Gasto (últimos 12 meses)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Vista sencilla por ahora — se puede profesionalizar después.</p>
+          <div style="height: 220px;">
+            <canvas id="grafica-pnl"></canvas>
+          </div>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-pnl" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Mes</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Utilidad</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Margen %</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-pnl-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
       <div class="vista" id="vista-glosario">
         <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
           <div>
@@ -708,6 +744,7 @@ async function mostrarVista(nombre) {
     'sin-clasificar': cargarSinClasificar,
     usuarios: cargarUsuarios,
     ingresos: cargarIngresos,
+    pnl: cargarPnL,
   };
   const cargador = cargadores[nombre];
   if (!cargador) return;
@@ -2217,6 +2254,115 @@ async function guardarAsignacionMultidistrito() {
   if (error) { document.getElementById('estado-ingresos-admin').textContent = 'Error: ' + error.message; return; }
   document.getElementById('estado-ingresos-admin').textContent = 'Asignación actualizada.';
   await cargarIngresos();
+}
+
+let datosPnL = null;
+
+async function cargarPnL() {
+  const glosarioMap = obtenerGlosarioMap();
+  const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+
+  const inicioVentana12 = rangoDeMes(anioRef, mesRef - 11).inicio;
+  const finVentana = rangoDeMes(anioRef, mesRef).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana12, finVentana, 'sucursal, monto, subtotal, fecha_pago');
+  const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
+  const porMesFacturas = {};
+  clasificadas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
+  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+    obtenerTablaCompleta('poliza_parametros'),
+    obtenerTablaCompleta('multidistrito_bolsas'),
+    obtenerTablaCompleta('multidistrito_asignacion'),
+  ]);
+  const datosIngresos = { polizaParametros, multidistritoBolsas, multidistritoAsignacion };
+
+  const distritosIngresos = new Set();
+  polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
+  multidistritoAsignacion.forEach((a) => distritosIngresos.add(a.distrito));
+
+  datosPnL = {
+    porMesFacturas,
+    datosIngresos,
+    distritosIngresos: Array.from(distritosIngresos).sort(),
+    glosarioMap,
+    regionPorDistrito,
+  };
+
+  poblarSelectorDistritoPnL();
+  renderizarPnL();
+}
+
+function poblarSelectorDistritoPnL() {
+  const select = document.getElementById('pnl-distrito');
+  const valorPrevio = select.value;
+  select.innerHTML = '<option value="GENERAL">General (toda la empresa)</option>' +
+    datosPnL.distritosIngresos.map((d) => `<option value="${d}">${d}</option>`).join('');
+  if (valorPrevio && [...select.options].some((o) => o.value === valorPrevio)) {
+    select.value = valorPrevio;
+  }
+}
+
+function renderizarPnL() {
+  if (!datosPnL) return;
+  const scope = document.getElementById('pnl-distrito').value;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+
+  const filas = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const clave = claveMes(base.getFullYear(), base.getMonth());
+    const mesISO = clave + '-01';
+    const facturasDelMes = datosPnL.porMesFacturas[clave] || [];
+
+    let ingreso = 0;
+    let gasto = 0;
+
+    if (scope === 'GENERAL') {
+      const kpis = Calc.calcularKPIs(facturasDelMes, datosPnL.glosarioMap);
+      gasto = kpis.totalPagado;
+      datosPnL.distritosIngresos.forEach((distrito) => {
+        const region = datosPnL.regionPorDistrito[distrito];
+        ingreso += Calc.calcularIngresosDistrito(datosPnL.datosIngresos, distrito, region, mesISO).total;
+      });
+    } else {
+      const prorrateo = Calc.calcularProrrateo(facturasDelMes, datosPnL.glosarioMap);
+      const entrada = prorrateo.distritos.find((d) => d.distrito === scope);
+      gasto = entrada ? entrada.totalProrrateado : 0;
+      const region = datosPnL.regionPorDistrito[scope];
+      ingreso = Calc.calcularIngresosDistrito(datosPnL.datosIngresos, scope, region, mesISO).total;
+    }
+
+    const utilidad = ingreso - gasto;
+    const margen = ingreso > 0 ? (utilidad / ingreso) * 100 : null;
+    filas.push({
+      etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()),
+      ingreso,
+      gasto,
+      utilidad,
+      margen,
+    });
+  }
+
+  renderizarGraficaTendenciaSimple('grafica-pnl', 'graficaPnL', filas.map((f) => f.etiqueta), [
+    { label: 'Ingreso', datos: filas.map((f) => f.ingreso), color: '#2DD4BF' },
+    { label: 'Gasto', datos: filas.map((f) => f.gasto), color: '#ba1a1a' },
+  ]);
+
+  const claseColor = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error'));
+  const textoMargen = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+
+  const cuerpo = document.getElementById('tabla-pnl-body');
+  cuerpo.innerHTML = '';
+  filas.forEach((f) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${f.etiqueta}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.ingreso)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.gasto)}</td><td class="px-6 py-4 text-right font-gordita-bold ${claseColor(f.utilidad)}">${formatoMoneda(f.utilidad)}</td><td class="px-6 py-4 text-right ${claseColor(f.utilidad)}">${textoMargen(f.margen)}</td>`;
+    cuerpo.appendChild(tr);
+  });
 }
 
 cargarSesion();
