@@ -441,9 +441,12 @@
             <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
             <h1 class="font-gordita-bold text-4xl text-primary mt-1">P&amp;L</h1>
           </div>
-          <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
-            <option value="GENERAL">General (toda la empresa)</option>
-          </select>
+          <div class="flex gap-3">
+            <select id="pnl-anio" onchange="cambiarAnioPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white"></select>
+            <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
+              <option value="GENERAL">General (toda la empresa)</option>
+            </select>
+          </div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto">
           <table id="tabla-pnl" class="w-full text-left border-collapse whitespace-nowrap">
@@ -2246,21 +2249,11 @@ async function guardarAsignacionMultidistrito() {
 
 let datosPnL = null;
 
+let pnlAnioSeleccionado = null;
+
 async function cargarPnL() {
   const glosarioMap = obtenerGlosarioMap();
   const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
-  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-
-  const inicioVentana12 = rangoDeMes(anioRef, mesRef - 11).inicio;
-  const finVentana = rangoDeMes(anioRef, mesRef).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana12, finVentana, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
-  const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
-  const porMesFacturas = {};
-  clasificadas.forEach((f) => {
-    const clave = f.fecha_pago.slice(0, 7);
-    porMesFacturas[clave] = porMesFacturas[clave] || [];
-    porMesFacturas[clave].push(f);
-  });
 
   const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
     obtenerTablaCompleta('poliza_parametros'),
@@ -2273,12 +2266,31 @@ async function cargarPnL() {
   polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
   multidistritoAsignacion.forEach((a) => distritosIngresos.add(a.distrito));
 
+  const aniosDisponibles = new Set();
+  polizaParametros.forEach((p) => aniosDisponibles.add(p.vigente_desde.slice(0, 4)));
+  aniosDisponibles.add(String(mesGlobalSeleccionado.anio));
+  const listaAnios = Array.from(aniosDisponibles).sort().reverse();
+
+  if (!pnlAnioSeleccionado) {
+    pnlAnioSeleccionado = mesGlobalSeleccionado.anio;
+  }
+
+  const inicioAnio = rangoDeMes(pnlAnioSeleccionado, 0).inicio;
+  const finAnio = rangoDeMes(pnlAnioSeleccionado, 11).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioAnio, finAnio, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
+  const porMesFacturas = {};
+  clasificadas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
   const meses = [];
-  for (let i = 11; i >= 0; i--) {
-    const base = new Date(anioRef, mesRef - i, 1);
+  for (let mes = 0; mes <= 11; mes++) {
     meses.push({
-      clave: claveMes(base.getFullYear(), base.getMonth()),
-      etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()),
+      clave: claveMes(pnlAnioSeleccionado, mes),
+      etiqueta: etiquetaMesCorta(pnlAnioSeleccionado, mes),
     });
   }
 
@@ -2292,6 +2304,7 @@ async function cargarPnL() {
   };
 
   poblarSelectorDistritoPnL();
+  poblarSelectorAnioPnL(listaAnios);
   renderizarPnL();
 }
 
@@ -2302,6 +2315,22 @@ function poblarSelectorDistritoPnL() {
     datosPnL.distritosIngresos.map((d) => `<option value="${d}">${d}</option>`).join('');
   if (valorPrevio && [...select.options].some((o) => o.value === valorPrevio)) {
     select.value = valorPrevio;
+  }
+}
+
+function poblarSelectorAnioPnL(listaAnios) {
+  const select = document.getElementById('pnl-anio');
+  select.innerHTML = listaAnios.map((a) => `<option value="${a}">${a}</option>`).join('');
+  select.value = String(pnlAnioSeleccionado);
+}
+
+async function cambiarAnioPnL() {
+  pnlAnioSeleccionado = parseInt(document.getElementById('pnl-anio').value, 10);
+  mostrarIndicadorCarga();
+  try {
+    await cargarPnL();
+  } finally {
+    ocultarIndicadorCarga();
   }
 }
 
