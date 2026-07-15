@@ -700,7 +700,7 @@
 </div>
 
 <div id="modal-drilldown-rentabilidad" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[85vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <div>
         <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Rentabilidades</p>
@@ -715,23 +715,21 @@
       <div style="height: 220px;" class="mb-8">
         <canvas id="grafica-drilldown-rentabilidad"></canvas>
       </div>
-      <h4 class="font-gordita-bold text-sm text-primary mb-3">Detalle mensual</h4>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse whitespace-nowrap">
-          <thead>
-            <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest">Mes</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Utilidad Bruta</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto Operativo</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Utilidad Operación</th>
-              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Margen Operación</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-drilldown-rentabilidad-body" class="text-sm divide-y divide-outline-variant"></tbody>
-        </table>
-      </div>
+      <h4 class="font-gordita-bold text-sm text-primary mb-3">Detalle mensual (más reciente primero)</h4>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
+            <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest">Mes</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ut. Bruta</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto Oper.</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ut. Operación</th>
+            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Marg. Operación</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-drilldown-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -3002,15 +3000,15 @@ function abrirDrillDownRentabilidad(distrito) {
   const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
   const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
   const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
-  cuerpo.innerHTML = datos.porMes.map((m) =>
+  cuerpo.innerHTML = datos.porMes.slice().reverse().map((m) =>
     `<tr>` +
-    `<td class="px-4 py-2 text-xs font-gordita-bold">${m.etiqueta}</td>` +
-    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalIngresos)}</td>` +
-    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalCD)}</td>` +
-    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.utilidadBruta)}</td>` +
-    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalGO)}</td>` +
-    `<td class="px-4 py-2 text-xs text-right font-gordita-bold">${formatoMoneda(m.utilidadOperacion)}</td>` +
-    `<td class="px-4 py-2 text-xs text-right ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`
+    `<td class="px-3 py-2 font-gordita-bold whitespace-nowrap">${m.etiqueta}</td>` +
+    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalIngresos)}</td>` +
+    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalCD)}</td>` +
+    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.utilidadBruta)}</td>` +
+    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalGO)}</td>` +
+    `<td class="px-2 py-2 text-right font-gordita-bold whitespace-nowrap">${formatoMoneda(m.utilidadOperacion)}</td>` +
+    `<td class="px-2 py-2 text-right whitespace-nowrap ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`
   ).join('');
 
   document.getElementById('modal-drilldown-rentabilidad').style.display = 'flex';
