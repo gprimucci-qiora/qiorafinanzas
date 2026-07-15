@@ -293,7 +293,19 @@
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
           <h1 class="font-gordita-bold text-4xl text-primary mt-1">Análisis por Proveedor</h1>
+          <p class="text-on-surface-variant text-sm mt-2">Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
         </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table id="tabla-analisis-proveedor" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia / Gasto / Proveedor / Sucursal</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-analisis-proveedor-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
       </div>
 
       <div class="vista" id="vista-ingresos">
@@ -713,6 +725,7 @@ async function mostrarVista(nombre) {
   const cargadores = {
     resumen: cargarResumenEjecutivo,
     sucursal: cargarPorSucursal,
+    proveedor: cargarAnalisisProveedor,
     ingresos: cargarIngresos,
     pnl: cargarPnL,
     config: cargarConfig,
@@ -740,6 +753,83 @@ function mostrarSubConfig(nombre) {
 async function cargarConfig() {
   if (usuarioActual && usuarioActual.rol === 'admin') {
     await cargarUsuarios();
+  }
+}
+
+let analisisProveedorDatos = {};
+
+async function cargarAnalisisProveedor() {
+  const glosarioMap = obtenerGlosarioMap();
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const facturas = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, 'sucursal, familia, gasto, proveedor, monto, subtotal, fecha_pago');
+  const clasificadas = facturas
+    .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS');
+
+  const porFamilia = {};
+  clasificadas.forEach((f) => {
+    const familia = f.familia || 'Sin familia';
+    const gasto = f.gasto || 'Sin gasto';
+    const proveedor = f.proveedor || 'Sin proveedor';
+    const sucursal = f.sucursal_secundaria || f.sucursal || 'Sin sucursal';
+    const monto = f.monto || 0;
+
+    porFamilia[familia] = porFamilia[familia] || { total: 0, porGasto: {} };
+    porFamilia[familia].total += monto;
+
+    const nodoGasto = porFamilia[familia].porGasto[gasto] = porFamilia[familia].porGasto[gasto] || { total: 0, porProveedor: {} };
+    nodoGasto.total += monto;
+
+    const nodoProveedor = nodoGasto.porProveedor[proveedor] = nodoGasto.porProveedor[proveedor] || { total: 0, porSucursal: {} };
+    nodoProveedor.total += monto;
+    nodoProveedor.porSucursal[sucursal] = (nodoProveedor.porSucursal[sucursal] || 0) + monto;
+  });
+
+  analisisProveedorDatos = porFamilia;
+  renderizarAnalisisProveedor();
+}
+
+function renderizarAnalisisProveedor() {
+  const filas = [];
+
+  const familias = Object.keys(analisisProveedorDatos).sort((a, b) => analisisProveedorDatos[b].total - analisisProveedorDatos[a].total);
+  familias.forEach((familia, iFamilia) => {
+    const idFamilia = 'ap-' + iFamilia;
+    filas.push(`<tr class="cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="alternarNivelAnalisisProveedor('${idFamilia}')"><td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-sm">chevron_right</span>${familia}</span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(analisisProveedorDatos[familia].total)}</td></tr>`);
+
+    const gastos = Object.keys(analisisProveedorDatos[familia].porGasto).sort((a, b) => analisisProveedorDatos[familia].porGasto[b].total - analisisProveedorDatos[familia].porGasto[a].total);
+    gastos.forEach((gasto, iGasto) => {
+      const idGasto = idFamilia + '-' + iGasto;
+      const nodoGasto = analisisProveedorDatos[familia].porGasto[gasto];
+      filas.push(`<tr data-grupo="${idFamilia}" style="display:none;" class="bg-surface-container-low/30 cursor-pointer hover:bg-surface-container-low transition-colors" onclick="alternarNivelAnalisisProveedor('${idGasto}')"><td class="pl-14 pr-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-xs">chevron_right</span>${gasto}</td><td class="px-6 py-2.5 text-right text-xs font-gordita-bold">${formatoMoneda(nodoGasto.total)}</td></tr>`);
+
+      const proveedores = Object.keys(nodoGasto.porProveedor).sort((a, b) => nodoGasto.porProveedor[b].total - nodoGasto.porProveedor[a].total);
+      proveedores.forEach((proveedor, iProveedor) => {
+        const idProveedor = idGasto + '-' + iProveedor;
+        const nodoProveedor = nodoGasto.porProveedor[proveedor];
+        filas.push(`<tr data-grupo="${idGasto}" style="display:none;" class="bg-surface-container-low/50 cursor-pointer hover:bg-surface-container-low transition-colors" onclick="alternarNivelAnalisisProveedor('${idProveedor}')"><td class="pl-20 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-xs">chevron_right</span>${proveedor}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(nodoProveedor.total)}</td></tr>`);
+
+        const sucursales = Object.keys(nodoProveedor.porSucursal).sort((a, b) => nodoProveedor.porSucursal[b] - nodoProveedor.porSucursal[a]);
+        sucursales.forEach((sucursal, iSucursal) => {
+          filas.push(`<tr data-grupo="${idProveedor}" style="display:none;" class="bg-surface-container-low/70"><td class="pl-28 pr-6 py-1.5 text-[11px] text-on-surface-variant">#${iSucursal + 1} · ${sucursal}</td><td class="px-6 py-1.5 text-right text-[11px]">${formatoMoneda(nodoProveedor.porSucursal[sucursal])}</td></tr>`);
+        });
+      });
+    });
+  });
+
+  document.getElementById('tabla-analisis-proveedor-body').innerHTML = filas.join('');
+}
+
+function alternarNivelAnalisisProveedor(idGrupo) {
+  const filasDirectas = document.querySelectorAll('#tabla-analisis-proveedor-body tr[data-grupo="' + idGrupo + '"]');
+  if (filasDirectas.length === 0) return;
+  const abrir = filasDirectas[0].style.display === 'none';
+  filasDirectas.forEach((fila) => { fila.style.display = abrir ? 'table-row' : 'none'; });
+  if (!abrir) {
+    document.querySelectorAll('#tabla-analisis-proveedor-body tr[data-grupo^="' + idGrupo + '-"]').forEach((fila) => {
+      fila.style.display = 'none';
+    });
   }
 }
 
