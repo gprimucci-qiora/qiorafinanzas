@@ -593,6 +593,7 @@
                   <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
                   <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
                   <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Último acceso</th>
                   <th class="px-6 py-4"></th>
                 </tr>
               </thead>
@@ -789,6 +790,7 @@ async function cargarSesion() {
     return;
   }
   usuarioActual = perfil;
+  supabaseClient.rpc('actualizar_ultimo_acceso').then(({ error }) => { if (error) console.error(error); });
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
   if (perfil.rol !== 'admin') {
@@ -1138,6 +1140,12 @@ async function obtenerUltimoMesConDatos() {
 function formatoFechaLarga(fechaISO) {
   const fecha = new Date(fechaISO + 'T00:00:00');
   return fecha.getDate() + ' de ' + MESES_LARGOS[fecha.getMonth()].toLowerCase() + ' de ' + fecha.getFullYear();
+}
+
+function formatoUltimoAcceso(fechaISO) {
+  if (!fechaISO) return 'Nunca';
+  const fecha = new Date(fechaISO);
+  return fecha.toLocaleString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function actualizarEtiquetaMesGlobal() {
@@ -2224,7 +2232,7 @@ async function cargarUsuarios() {
     const accionBoton = u.activo
       ? `<button onclick="desactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-error hover:underline">Desactivar</button>`
       : `<button onclick="reactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-qiora-green hover:underline">Reactivar</button>`;
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4">${accionBoton}</td>`;
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td><td class="px-6 py-4">${accionBoton}</td>`;
     cuerpo.appendChild(tr);
   });
 }
