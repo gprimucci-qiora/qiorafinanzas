@@ -475,27 +475,32 @@
           <p id="rentabilidad-subtitulo" class="text-on-surface-variant text-sm mt-2">Ranking YTD de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.</p>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación YTD por Distrito</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Ordenado de peor a mejor. Rojo = margen negativo, requiere atención.</p>
-          <div id="grafica-rentabilidad-contenedor" style="height: 400px;">
-            <canvas id="grafica-rentabilidad-distritos"></canvas>
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación por Distrito (últimos 12 meses)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Rojo = margen negativo, verde = margen sano. Un distrito rojo varios meses seguidos es un problema estructural, no ruido — click en cualquier celda para ver el detalle.</p>
+          <div class="overflow-x-auto">
+            <table id="tabla-heatmap-rentabilidad" class="border-collapse">
+              <thead>
+                <tr id="heatmap-rentabilidad-encabezado" class="text-[9px] text-on-surface-variant"></tr>
+              </thead>
+              <tbody id="heatmap-rentabilidad-body" class="text-[10px]"></tbody>
+            </table>
           </div>
         </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto">
-          <table id="tabla-rentabilidad" class="w-full text-left border-collapse whitespace-nowrap">
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm">
+          <table id="tabla-rentabilidad" class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso YTD <span id="orden-rentabilidad-ingreso"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo YTD <span id="orden-rentabilidad-costoDirecto"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Utilidad Bruta YTD <span id="orden-rentabilidad-utilidadBruta"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Margen Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Operativo YTD <span id="orden-rentabilidad-operativo"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Utilidad Operación YTD <span id="orden-rentabilidad-utilidadOperacion"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Margen Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
+              <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso <span id="orden-rentabilidad-ingreso"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo <span id="orden-rentabilidad-costoDirecto"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Ut. Bruta <span id="orden-rentabilidad-utilidadBruta"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Marg. Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Oper. <span id="orden-rentabilidad-operativo"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Ut. Operación <span id="orden-rentabilidad-utilidadOperacion"></span></th>
+                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Marg. Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
               </tr>
             </thead>
-            <tbody id="tabla-rentabilidad-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            <tbody id="tabla-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
           </table>
         </section>
       </div>
@@ -2852,62 +2857,72 @@ function renderizarRentabilidades() {
     const alerta = y.margenOperacion !== null && y.margenOperacion < 0;
     const distritoEscapado = distrito.replace(/'/g, "\\'");
     return `<tr class="cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">` +
-      `<td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2">${distrito}${alerta ? '<span class="text-[9px] font-gordita-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-error/10 text-error">Atención</span>' : ''}</span></td>` +
-      `<td class="px-6 py-4 text-right">${formatoMoneda(y.ingreso)}</td>` +
-      `<td class="px-6 py-4 text-right">${formatoMoneda(y.costoDirecto)}</td>` +
-      `<td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(y.utilidadBruta)}</td>` +
-      `<td class="px-6 py-4 text-right ${claseMargen(y.margenBruto)}">${textoPct(y.margenBruto)}</td>` +
-      `<td class="px-6 py-4 text-right">${formatoMoneda(y.operativo)}</td>` +
-      `<td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(y.utilidadOperacion)}</td>` +
-      `<td class="px-6 py-4 text-right ${claseMargen(y.margenOperacion)}">${textoPct(y.margenOperacion)}</td></tr>`;
+      `<td class="px-3 py-2.5 font-gordita-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5">${alerta ? '<span class="w-1.5 h-1.5 rounded-full bg-error shrink-0"></span>' : ''}${distrito}</span></td>` +
+      `<td class="px-2 py-2.5 text-right">${formatoCompacto(y.ingreso)}</td>` +
+      `<td class="px-2 py-2.5 text-right">${formatoCompacto(y.costoDirecto)}</td>` +
+      `<td class="px-2 py-2.5 text-right font-gordita-bold">${formatoCompacto(y.utilidadBruta)}</td>` +
+      `<td class="px-2 py-2.5 text-right ${claseMargen(y.margenBruto)}">${textoPct(y.margenBruto)}</td>` +
+      `<td class="px-2 py-2.5 text-right">${formatoCompacto(y.operativo)}</td>` +
+      `<td class="px-2 py-2.5 text-right font-gordita-bold">${formatoCompacto(y.utilidadOperacion)}</td>` +
+      `<td class="px-2 py-2.5 text-right ${claseMargen(y.margenOperacion)}">${textoPct(y.margenOperacion)}</td></tr>`;
   }).join('');
 
-  renderizarGraficaRentabilidadDistritos();
+  renderizarHeatmapRentabilidad();
 }
 
-function renderizarGraficaRentabilidadDistritos() {
-  const distritosOrdenChart = Object.keys(rentabilidadPorDistrito)
-    .filter((d) => rentabilidadPorDistrito[d].ytd.margenOperacion !== null)
-    .sort((a, b) => rentabilidadPorDistrito[a].ytd.margenOperacion - rentabilidadPorDistrito[b].ytd.margenOperacion);
+function interpolarColor(c1, c2, t) {
+  const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+  const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+  const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+  return `rgb(${r},${g},${b})`;
+}
 
-  const contenedor = document.getElementById('grafica-rentabilidad-contenedor');
-  contenedor.style.height = Math.max(300, distritosOrdenChart.length * 26) + 'px';
+function colorMargenHeatmap(v) {
+  if (v === null) return 'rgb(238,238,238)';
+  const clamp = Math.max(-30, Math.min(30, v));
+  if (clamp >= 0) return interpolarColor([255, 255, 255], [46, 204, 113], clamp / 30);
+  return interpolarColor([255, 255, 255], [186, 26, 26], -clamp / 30);
+}
 
-  const ctx = document.getElementById('grafica-rentabilidad-distritos');
-  if (window.graficaRentabilidadDistritos) window.graficaRentabilidadDistritos.destroy();
-  if (distritosOrdenChart.length === 0) return;
+function colorTextoParaFondo(rgbString) {
+  const m = rgbString.match(/\d+/g).map(Number);
+  const luminancia = (0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]) / 255;
+  return luminancia > 0.6 ? '#1b1b1b' : '#ffffff';
+}
 
-  const valores = distritosOrdenChart.map((d) => rentabilidadPorDistrito[d].ytd.margenOperacion);
-  window.graficaRentabilidadDistritos = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: distritosOrdenChart,
-      datasets: [{
-        data: valores,
-        backgroundColor: valores.map((v) => (v >= 0 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(186, 26, 26, 0.7)')),
-        borderRadius: 4,
-        barThickness: 14,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 10,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (item) => 'Margen de Operación: ' + (item.raw >= 0 ? '+' : '') + item.raw.toFixed(1) + '%' },
-        },
-      },
-      scales: {
-        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } } },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 10 } } },
-      },
-    },
+function renderizarHeatmapRentabilidad() {
+  const encabezado = document.getElementById('heatmap-rentabilidad-encabezado');
+  const cuerpo = document.getElementById('heatmap-rentabilidad-body');
+  const distritosOrden = Object.keys(rentabilidadPorDistrito).sort((a, b) => {
+    const ma = rentabilidadPorDistrito[a].ytd.margenOperacion;
+    const mb = rentabilidadPorDistrito[b].ytd.margenOperacion;
+    if (ma === null) return 1;
+    if (mb === null) return -1;
+    return ma - mb;
   });
+
+  if (distritosOrden.length === 0) {
+    encabezado.innerHTML = '';
+    cuerpo.innerHTML = '';
+    return;
+  }
+
+  const meses = rentabilidadPorDistrito[distritosOrden[0]].porMes;
+  encabezado.innerHTML = '<th class="px-3 py-2 font-gordita-bold uppercase tracking-widest text-left sticky left-0 bg-white z-10">Distrito</th>' +
+    meses.map((m) => `<th class="px-1 py-2 font-gordita-bold uppercase tracking-widest text-center">${m.etiqueta}</th>`).join('');
+
+  cuerpo.innerHTML = distritosOrden.map((distrito) => {
+    const distritoEscapado = distrito.replace(/'/g, "\\'");
+    const celdas = rentabilidadPorDistrito[distrito].porMes.map((m) => {
+      const color = colorMargenHeatmap(m.margenOperacion);
+      const colorTexto = colorTextoParaFondo(color);
+      const texto = m.margenOperacion === null ? '—' : (m.margenOperacion >= 0 ? '+' : '') + Math.round(m.margenOperacion) + '%';
+      return `<td class="px-1 py-2 text-center cursor-pointer" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
+    }).join('');
+    return `<tr>` +
+      `<td class="px-3 py-2 font-gordita-bold sticky left-0 bg-white z-10 cursor-pointer hover:underline" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${distrito}</td>` +
+      celdas + `</tr>`;
+  }).join('');
 }
 
 function renderizarGraficaTendenciaPct(canvasId, refGrafica, etiquetas, series) {
