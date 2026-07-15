@@ -451,6 +451,10 @@
             <h1 class="font-gordita-bold text-4xl text-primary mt-1">P&amp;L</h1>
           </div>
           <div class="flex gap-3">
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+              <button id="pnl-modo-pesos" onclick="cambiarModoVistaPnL('pesos')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
+              <button id="pnl-modo-porcentaje" onclick="cambiarModoVistaPnL('porcentaje')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
+            </div>
             <select id="pnl-anio" onchange="cambiarAnioPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white"></select>
             <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
               <option value="GENERAL">General (toda la empresa)</option>
@@ -2637,6 +2641,29 @@ function totalAnualPnL(valores) {
 }
 
 let pnlColapsado = { ingresos: true, costos: false, operativos: true };
+let pnlModoVista = 'pesos';
+
+function cambiarModoVistaPnL(modo) {
+  pnlModoVista = modo;
+  const botonPesos = document.getElementById('pnl-modo-pesos');
+  const botonPorcentaje = document.getElementById('pnl-modo-porcentaje');
+  botonPesos.classList.toggle('bg-primary', modo === 'pesos');
+  botonPesos.classList.toggle('text-on-primary', modo === 'pesos');
+  botonPesos.classList.toggle('text-on-surface-variant', modo !== 'pesos');
+  botonPorcentaje.classList.toggle('bg-primary', modo === 'porcentaje');
+  botonPorcentaje.classList.toggle('text-on-primary', modo === 'porcentaje');
+  botonPorcentaje.classList.toggle('text-on-surface-variant', modo !== 'porcentaje');
+  renderizarPnL();
+}
+
+function formatoValorPnL(valor, ingresoRef, signado) {
+  if (pnlModoVista === 'porcentaje') {
+    if (!ingresoRef) return '—';
+    const pct = (valor / ingresoRef) * 100;
+    return (signado && pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+  }
+  return formatoMoneda(valor);
+}
 
 function alternarSeccionPnL(grupo) {
   pnlColapsado[grupo] = !pnlColapsado[grupo];
@@ -2679,26 +2706,28 @@ function filaSeccionPnL(grupo, texto, numColumnas) {
     `<span id="pnl-icono-${grupo}" class="material-symbols-outlined text-xs">${icono}</span>${texto}</td></tr>`;
 }
 
-function filaValoresPnL(nombre, valores, opciones) {
+function filaValoresPnL(nombre, valores, opciones, totalIngresosPorMes) {
   opciones = opciones || {};
   const esTotal = !!opciones.bold;
   const clase = esTotal ? 'font-gordita-bold text-[10px]' : 'text-[10px] text-on-surface-variant';
   const indent = opciones.indent ? 'pl-8' : 'px-4';
   const bgFondo = esTotal ? 'bg-surface-container-low' : 'bg-white';
   const total = totalAnualPnL(valores);
+  const totalIngreso = totalIngresosPorMes ? totalAnualPnL(totalIngresosPorMes) : 0;
   const atributoGrupo = opciones.grupo ? ` data-grupo-pnl="${opciones.grupo}"` : '';
   const estiloInicial = opciones.grupo && pnlColapsado[opciones.grupo] ? ' style="display:none;"' : '';
   return `<tr class="${bgFondo}"${atributoGrupo}${estiloInicial}><td class="${indent} py-1.5 ${clase} sticky left-0 ${bgFondo} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v) => `<td class="px-2 py-1.5 text-right ${clase}">${formatoMoneda(v)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
+    valores.map((v, i) => `<td class="px-2 py-1.5 text-right ${clase}">${formatoValorPnL(v, totalIngresosPorMes ? totalIngresosPorMes[i] : 0, false)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold bg-surface-container-high">${formatoValorPnL(total, totalIngreso, false)}</td></tr>`;
 }
 
-function filaUtilidadPnL(nombre, valores) {
+function filaUtilidadPnL(nombre, valores, totalIngresosPorMes) {
   const claseSigno = (v) => (v >= 0 ? 'text-qiora-green' : 'text-error');
   const total = totalAnualPnL(valores);
+  const totalIngreso = totalIngresosPorMes ? totalAnualPnL(totalIngresosPorMes) : 0;
   return `<tr class="${PNL_BG_UTILIDAD}"><td class="px-4 py-1.5 font-gordita-bold text-[10px] sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v) => `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(v)}">${formatoMoneda(v)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoMoneda(total)}</td></tr>`;
+    valores.map((v, i) => `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(v)}">${formatoValorPnL(v, totalIngresosPorMes[i], true)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoValorPnL(total, totalIngreso, true)}</td></tr>`;
 }
 
 function filaMargenPnL(nombre, valores, totalIngresos) {
@@ -2715,34 +2744,35 @@ function filaMargenPnL(nombre, valores, totalIngresos) {
 function renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope) {
   llenarEncabezadosPnL(porMesDatos);
   const numColumnas = porMesDatos.length + 2;
+  const totalIngresosPorMes = porMesDatos.map((m) => m.totalIngresos);
 
   let html = '';
 
   html += filaSeccionPnL('ingresos', 'INGRESOS', numColumnas);
-  html += filaValoresPnL('Póliza 3 (Planta Interna)', porMesDatos.map((m) => m.ingresoPlantaInterna), { indent: true, grupo: 'ingresos' });
-  html += filaValoresPnL('Multidistrito', porMesDatos.map((m) => m.ingresoMultidistrito), { indent: true, grupo: 'ingresos' });
-  html += filaValoresPnL('Recolecciones', porMesDatos.map((m) => m.ingresoRecolecciones), { indent: true, grupo: 'ingresos' });
-  html += filaValoresPnL('Total Ingresos', porMesDatos.map((m) => m.totalIngresos), { bold: true });
+  html += filaValoresPnL('Póliza 3 (Planta Interna)', porMesDatos.map((m) => m.ingresoPlantaInterna), { indent: true, grupo: 'ingresos' }, totalIngresosPorMes);
+  html += filaValoresPnL('Multidistrito', porMesDatos.map((m) => m.ingresoMultidistrito), { indent: true, grupo: 'ingresos' }, totalIngresosPorMes);
+  html += filaValoresPnL('Recolecciones', porMesDatos.map((m) => m.ingresoRecolecciones), { indent: true, grupo: 'ingresos' }, totalIngresosPorMes);
+  html += filaValoresPnL('Total Ingresos', porMesDatos.map((m) => m.totalIngresos), { bold: true }, totalIngresosPorMes);
 
   html += filaSeccionPnL('costos', 'COSTOS DIRECTOS', numColumnas);
   listaFamiliasCD.forEach((familia) => {
-    html += filaValoresPnL(familia, porMesDatos.map((m) => (m.porFamiliaCD[familia] && m.porFamiliaCD[familia].total) || 0), { indent: true, grupo: 'costos' });
+    html += filaValoresPnL(familia, porMesDatos.map((m) => (m.porFamiliaCD[familia] && m.porFamiliaCD[familia].total) || 0), { indent: true, grupo: 'costos' }, totalIngresosPorMes);
   });
-  html += filaValoresPnL('Total Costo Directo', porMesDatos.map((m) => m.totalCD), { bold: true });
-  html += filaUtilidadPnL('Utilidad Bruta', porMesDatos.map((m) => m.utilidadBruta));
-  html += filaMargenPnL('Margen Bruto', porMesDatos.map((m) => m.margenBruto), porMesDatos.map((m) => m.totalIngresos));
+  html += filaValoresPnL('Total Costo Directo', porMesDatos.map((m) => m.totalCD), { bold: true }, totalIngresosPorMes);
+  html += filaUtilidadPnL('Utilidad Bruta', porMesDatos.map((m) => m.utilidadBruta), totalIngresosPorMes);
+  html += filaMargenPnL('Margen Bruto', porMesDatos.map((m) => m.margenBruto), totalIngresosPorMes);
 
   html += filaSeccionPnL('operativos', 'GASTOS OPERATIVOS', numColumnas);
   if (scope === 'GENERAL') {
     listaFamiliasGO.forEach((familia) => {
-      html += filaValoresPnL(familia, porMesDatos.map((m) => (m.porFamiliaGO[familia] && m.porFamiliaGO[familia].total) || 0), { indent: true, grupo: 'operativos' });
+      html += filaValoresPnL(familia, porMesDatos.map((m) => (m.porFamiliaGO[familia] && m.porFamiliaGO[familia].total) || 0), { indent: true, grupo: 'operativos' }, totalIngresosPorMes);
     });
   } else {
-    html += filaValoresPnL('Gasto Operativo Asignado', porMesDatos.map((m) => m.totalGO), { indent: true, grupo: 'operativos' });
+    html += filaValoresPnL('Gasto Operativo Asignado', porMesDatos.map((m) => m.totalGO), { indent: true, grupo: 'operativos' }, totalIngresosPorMes);
   }
-  html += filaValoresPnL('Total Gastos de Operación', porMesDatos.map((m) => m.totalGO), { bold: true });
-  html += filaUtilidadPnL('Utilidad de Operación', porMesDatos.map((m) => m.utilidadOperacion));
-  html += filaMargenPnL('Margen de Operación', porMesDatos.map((m) => m.margenOperacion), porMesDatos.map((m) => m.totalIngresos));
+  html += filaValoresPnL('Total Gastos de Operación', porMesDatos.map((m) => m.totalGO), { bold: true }, totalIngresosPorMes);
+  html += filaUtilidadPnL('Utilidad de Operación', porMesDatos.map((m) => m.utilidadOperacion), totalIngresosPorMes);
+  html += filaMargenPnL('Margen de Operación', porMesDatos.map((m) => m.margenOperacion), totalIngresosPorMes);
 
   document.getElementById('tabla-pnl-body').innerHTML = html;
 }
