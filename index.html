@@ -719,7 +719,13 @@
       <div style="height: 220px;" class="mb-8">
         <canvas id="grafica-drilldown-rentabilidad"></canvas>
       </div>
-      <h4 class="font-gordita-bold text-sm text-primary mb-3">Detalle mensual (más reciente primero)</h4>
+      <div class="flex justify-between items-center mb-3">
+        <h4 class="font-gordita-bold text-sm text-primary">Detalle mensual (más reciente primero)</h4>
+        <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+          <button id="rentabilidad-modo-pesos" onclick="cambiarModoVistaRentabilidad('pesos')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
+          <button id="rentabilidad-modo-porcentaje" onclick="cambiarModoVistaRentabilidad('porcentaje')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
+        </div>
+      </div>
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
@@ -2656,13 +2662,17 @@ function cambiarModoVistaPnL(modo) {
   renderizarPnL();
 }
 
-function formatoValorPnL(valor, ingresoRef, signado) {
-  if (pnlModoVista === 'porcentaje') {
+function formatoValorSegunModo(valor, ingresoRef, modo, signado) {
+  if (modo === 'porcentaje') {
     if (!ingresoRef) return '—';
     const pct = (valor / ingresoRef) * 100;
     return (signado && pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
   }
   return formatoMoneda(valor);
+}
+
+function formatoValorPnL(valor, ingresoRef, signado) {
+  return formatoValorSegunModo(valor, ingresoRef, pnlModoVista, signado);
 }
 
 function alternarSeccionPnL(grupo) {
@@ -3015,10 +3025,47 @@ function renderizarGraficaTendenciaPct(canvasId, refGrafica, etiquetas, series) 
   });
 }
 
+let distritoRentabilidadActual = null;
+let rentabilidadModoVista = 'pesos';
+
+function cambiarModoVistaRentabilidad(modo) {
+  rentabilidadModoVista = modo;
+  const botonPesos = document.getElementById('rentabilidad-modo-pesos');
+  const botonPorcentaje = document.getElementById('rentabilidad-modo-porcentaje');
+  botonPesos.classList.toggle('bg-primary', modo === 'pesos');
+  botonPesos.classList.toggle('text-on-primary', modo === 'pesos');
+  botonPesos.classList.toggle('text-on-surface-variant', modo !== 'pesos');
+  botonPorcentaje.classList.toggle('bg-primary', modo === 'porcentaje');
+  botonPorcentaje.classList.toggle('text-on-primary', modo === 'porcentaje');
+  botonPorcentaje.classList.toggle('text-on-surface-variant', modo !== 'porcentaje');
+  renderizarDetalleRentabilidad();
+}
+
+function renderizarDetalleRentabilidad() {
+  const datos = rentabilidadPorDistrito[distritoRentabilidadActual];
+  if (!datos) return;
+
+  const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
+  const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
+  cuerpo.innerHTML = datos.porMes.slice().reverse().map((m) => {
+    const ing = m.totalIngresos;
+    return `<tr>` +
+      `<td class="px-3 py-2 font-gordita-bold whitespace-nowrap">${m.etiqueta}</td>` +
+      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalIngresos, ing, rentabilidadModoVista, false)}</td>` +
+      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalCD, ing, rentabilidadModoVista, false)}</td>` +
+      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.utilidadBruta, ing, rentabilidadModoVista, false)}</td>` +
+      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalGO, ing, rentabilidadModoVista, false)}</td>` +
+      `<td class="px-2 py-2 text-right font-gordita-bold whitespace-nowrap">${formatoValorSegunModo(m.utilidadOperacion, ing, rentabilidadModoVista, false)}</td>` +
+      `<td class="px-2 py-2 text-right whitespace-nowrap ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`;
+  }).join('');
+}
+
 function abrirDrillDownRentabilidad(distrito) {
   const datos = rentabilidadPorDistrito[distrito];
   if (!datos) return;
 
+  distritoRentabilidadActual = distrito;
   document.getElementById('drilldown-rentabilidad-titulo').textContent = distrito;
 
   const etiquetas = datos.porMes.map((m) => m.etiqueta);
@@ -3027,19 +3074,7 @@ function abrirDrillDownRentabilidad(distrito) {
     { label: 'Margen de Operación %', datos: datos.porMes.map((m) => m.margenOperacion), color: '#984700' },
   ]);
 
-  const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
-  const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
-  const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
-  cuerpo.innerHTML = datos.porMes.slice().reverse().map((m) =>
-    `<tr>` +
-    `<td class="px-3 py-2 font-gordita-bold whitespace-nowrap">${m.etiqueta}</td>` +
-    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalIngresos)}</td>` +
-    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalCD)}</td>` +
-    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.utilidadBruta)}</td>` +
-    `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoMoneda(m.totalGO)}</td>` +
-    `<td class="px-2 py-2 text-right font-gordita-bold whitespace-nowrap">${formatoMoneda(m.utilidadOperacion)}</td>` +
-    `<td class="px-2 py-2 text-right whitespace-nowrap ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`
-  ).join('');
+  renderizarDetalleRentabilidad();
 
   document.getElementById('modal-drilldown-rentabilidad').style.display = 'flex';
 }
