@@ -193,6 +193,38 @@
     };
   }
 
+  function calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO) {
+    const clasificadas = facturasDelMes.map((f) => clasificarFactura(f, glosarioMap));
+    const totalCD = clasificadas
+      .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito)
+      .reduce((s, f) => s + (f.monto || 0), 0);
+
+    const prorrateo = calcularProrrateo(facturasDelMes, glosarioMap);
+    const entradaProrrateo = prorrateo.distritos.find((d) => d.distrito === distrito);
+    const totalGO = entradaProrrateo ? entradaProrrateo.gastoOperativoAsignado : 0;
+
+    const ingresos = calcularIngresosDistrito(datosIngresos, distrito, region, mesISO);
+    const totalIngresos = ingresos.total;
+
+    const utilidadBruta = totalIngresos - totalCD;
+    const margenBruto = totalIngresos > 0 ? (utilidadBruta / totalIngresos) * 100 : null;
+    const utilidadOperacion = utilidadBruta - totalGO;
+    const margenOperacion = totalIngresos > 0 ? (utilidadOperacion / totalIngresos) * 100 : null;
+
+    return {
+      ingresoPlantaInterna: ingresos.plantaInterna,
+      ingresoRecolecciones: ingresos.recolecciones,
+      ingresoMultidistrito: ingresos.multidistrito,
+      totalIngresos,
+      totalCD,
+      totalGO,
+      utilidadBruta,
+      margenBruto,
+      utilidadOperacion,
+      margenOperacion,
+    };
+  }
+
   return {
     computeVentana,
     clasificarFactura,
@@ -206,5 +238,6 @@
     calcularIngresoPolizaDistrito,
     calcularIngresoMultidistritoDistrito,
     calcularIngresosDistrito,
+    calcularRentabilidadDistritoMes,
   };
 });

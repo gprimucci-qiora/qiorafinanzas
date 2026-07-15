@@ -106,6 +106,9 @@
         <li><button data-vista="pnl" onclick="mostrarVista('pnl')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">query_stats</span><span class="text-sm">P&amp;L</span>
         </button></li>
+        <li><button data-vista="rentabilidad" onclick="mostrarVista('rentabilidad')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">insights</span><span class="text-sm">Rentabilidades</span>
+        </button></li>
         <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">settings</span><span class="text-sm">Configuración</span>
         </button></li>
@@ -465,6 +468,38 @@
         </section>
       </div>
 
+      <div class="vista" id="vista-rentabilidad">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Rentabilidades</h1>
+          <p id="rentabilidad-subtitulo" class="text-on-surface-variant text-sm mt-2">Ranking YTD de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.</p>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación YTD por Distrito</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Ordenado de peor a mejor. Rojo = margen negativo, requiere atención.</p>
+          <div id="grafica-rentabilidad-contenedor" style="height: 400px;">
+            <canvas id="grafica-rentabilidad-distritos"></canvas>
+          </div>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto">
+          <table id="tabla-rentabilidad" class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso YTD <span id="orden-rentabilidad-ingreso"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo YTD <span id="orden-rentabilidad-costoDirecto"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Utilidad Bruta YTD <span id="orden-rentabilidad-utilidadBruta"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Margen Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Operativo YTD <span id="orden-rentabilidad-operativo"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Utilidad Operación YTD <span id="orden-rentabilidad-utilidadOperacion"></span></th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Margen Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tabla-rentabilidad-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
       <div class="vista" id="vista-config">
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
@@ -659,6 +694,43 @@
   </div>
 </div>
 
+<div id="modal-drilldown-rentabilidad" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Rentabilidades</p>
+        <h3 id="drilldown-rentabilidad-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownRentabilidad()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <h4 class="font-gordita-bold text-sm text-primary mb-3">Tendencia de margen (últimos 12 meses)</h4>
+      <div style="height: 220px;" class="mb-8">
+        <canvas id="grafica-drilldown-rentabilidad"></canvas>
+      </div>
+      <h4 class="font-gordita-bold text-sm text-primary mb-3">Detalle mensual</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest">Mes</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Utilidad Bruta</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto Operativo</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Utilidad Operación</th>
+              <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Margen Operación</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-drilldown-rentabilidad-body" class="text-sm divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://fnatpzeccnkurzqbhyfq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYXRwemVjY25rdXJ6cWJoeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjExMjEsImV4cCI6MjA5ODkzNzEyMX0.Ucc_4EmEGMZuSAOjdK3Q0fvvXi9Mga0F7heAIrLSqaA';
@@ -741,6 +813,7 @@ async function mostrarVista(nombre) {
     proveedor: cargarAnalisisProveedor,
     ingresos: cargarIngresos,
     pnl: cargarPnL,
+    rentabilidad: cargarRentabilidades,
     config: cargarConfig,
   };
   const cargador = cargadores[nombre];
@@ -1375,7 +1448,7 @@ let prorrateoActual = null;
 let ordenSucursales = { columna: 'total', direccion: 'desc' };
 
 function actualizarIconoOrden(prefijo, orden) {
-  ['distrito', 'costoDirecto', 'operativo', 'total', 'familia', 'monto', 'deltaPesos', 'deltaPct', 'plantaInterna', 'recolecciones', 'multidistrito'].forEach((col) => {
+  ['distrito', 'costoDirecto', 'operativo', 'total', 'familia', 'monto', 'deltaPesos', 'deltaPct', 'plantaInterna', 'recolecciones', 'multidistrito', 'ingreso', 'utilidadBruta', 'margenBruto', 'utilidadOperacion', 'margenOperacion'].forEach((col) => {
     const el = document.getElementById(prefijo + '-' + col);
     if (el) el.textContent = '';
   });
@@ -2470,42 +2543,40 @@ function renderizarPnL() {
     const mesISO = mes.clave + '-01';
     const facturasDelMes = datosPnL.porMesFacturas[mes.clave] || [];
 
-    const facturasCostosDirectos = scope === 'GENERAL'
-      ? facturasDelMes.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS')
-      : facturasDelMes.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === scope);
+    if (scope !== 'GENERAL') {
+      const region = datosPnL.regionPorDistrito[scope];
+      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosPnL.datosIngresos, datosPnL.glosarioMap, scope, region, mesISO);
+      const facturasCostosDirectos = facturasDelMes.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === scope);
+      const porFamiliaCD = Calc.agruparPorFamiliaGasto(facturasCostosDirectos);
+      return {
+        etiqueta: mes.etiqueta,
+        anio: mes.clave.slice(0, 4),
+        ingresoPlantaInterna: r.ingresoPlantaInterna, ingresoRecolecciones: r.ingresoRecolecciones, ingresoMultidistrito: r.ingresoMultidistrito, totalIngresos: r.totalIngresos,
+        porFamiliaCD, totalCD: r.totalCD,
+        porFamiliaGO: {}, totalGO: r.totalGO,
+        utilidadBruta: r.utilidadBruta, margenBruto: r.margenBruto,
+        utilidadOperacion: r.utilidadOperacion, margenOperacion: r.margenOperacion,
+      };
+    }
+
+    const facturasCostosDirectos = facturasDelMes.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS');
     const porFamiliaCD = Calc.agruparPorFamiliaGasto(facturasCostosDirectos);
     const totalCD = Object.values(porFamiliaCD).reduce((s, f) => s + f.total, 0);
 
-    let porFamiliaGO = {};
-    let totalGO = 0;
-    if (scope === 'GENERAL') {
-      const facturasGastoOperativo = facturasDelMes.filter((f) => f.tipo_gasto === 'GASTOS OPERATIVOS');
-      porFamiliaGO = Calc.agruparPorFamiliaGasto(facturasGastoOperativo);
-      totalGO = Object.values(porFamiliaGO).reduce((s, f) => s + f.total, 0);
-    } else {
-      const prorrateo = Calc.calcularProrrateo(facturasDelMes, datosPnL.glosarioMap);
-      const entrada = prorrateo.distritos.find((d) => d.distrito === scope);
-      totalGO = entrada ? entrada.gastoOperativoAsignado : 0;
-    }
+    const facturasGastoOperativo = facturasDelMes.filter((f) => f.tipo_gasto === 'GASTOS OPERATIVOS');
+    const porFamiliaGO = Calc.agruparPorFamiliaGasto(facturasGastoOperativo);
+    const totalGO = Object.values(porFamiliaGO).reduce((s, f) => s + f.total, 0);
 
     let ingresoPlantaInterna = 0;
     let ingresoRecolecciones = 0;
     let ingresoMultidistrito = 0;
-    if (scope === 'GENERAL') {
-      datosPnL.distritosIngresos.forEach((distrito) => {
-        const region = datosPnL.regionPorDistrito[distrito];
-        const r = Calc.calcularIngresosDistrito(datosPnL.datosIngresos, distrito, region, mesISO);
-        ingresoPlantaInterna += r.plantaInterna;
-        ingresoRecolecciones += r.recolecciones;
-        ingresoMultidistrito += r.multidistrito;
-      });
-    } else {
-      const region = datosPnL.regionPorDistrito[scope];
-      const r = Calc.calcularIngresosDistrito(datosPnL.datosIngresos, scope, region, mesISO);
-      ingresoPlantaInterna = r.plantaInterna;
-      ingresoRecolecciones = r.recolecciones;
-      ingresoMultidistrito = r.multidistrito;
-    }
+    datosPnL.distritosIngresos.forEach((distrito) => {
+      const region = datosPnL.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(datosPnL.datosIngresos, distrito, region, mesISO);
+      ingresoPlantaInterna += r.plantaInterna;
+      ingresoRecolecciones += r.recolecciones;
+      ingresoMultidistrito += r.multidistrito;
+    });
     const totalIngresos = ingresoPlantaInterna + ingresoRecolecciones + ingresoMultidistrito;
 
     const utilidadBruta = totalIngresos - totalCD;
@@ -2660,6 +2731,260 @@ function renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope
   html += filaMargenPnL('Margen de Operación', porMesDatos.map((m) => m.margenOperacion), porMesDatos.map((m) => m.totalIngresos));
 
   document.getElementById('tabla-pnl-body').innerHTML = html;
+}
+
+let rentabilidadPorDistrito = {};
+let ordenRentabilidad = { columna: 'margenOperacion', direccion: 'asc' };
+
+async function cargarRentabilidades() {
+  const glosarioMap = obtenerGlosarioMap();
+  const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+
+  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+    obtenerTablaCompleta('poliza_parametros'),
+    obtenerTablaCompleta('multidistrito_bolsas'),
+    obtenerTablaCompleta('multidistrito_asignacion'),
+  ]);
+  const datosIngresos = { polizaParametros, multidistritoBolsas, multidistritoAsignacion };
+
+  const distritosIngresos = new Set();
+  polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
+  multidistritoAsignacion.forEach((a) => distritosIngresos.add(a.distrito));
+
+  const meses = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    meses.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
+  }
+  const inicioVentana = rangoDeMes(meses[0].anio, meses[0].mes).inicio;
+  const finVentana = rangoDeMes(meses[11].anio, meses[11].mes).fin;
+
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const porMesFacturas = {};
+  facturasVentana.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
+  const clavesYTD = meses.filter((m) => m.anio === anioRef).map((m) => m.clave);
+
+  rentabilidadPorDistrito = {};
+  Array.from(distritosIngresos).sort().forEach((distrito) => {
+    const region = regionPorDistrito[distrito];
+    const porMes = meses.map((m) => {
+      const mesISO = m.clave + '-01';
+      const facturasDelMes = porMesFacturas[m.clave] || [];
+      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO);
+      return Object.assign({ etiqueta: m.etiqueta, clave: m.clave }, r);
+    });
+
+    const mesesYTD = porMes.filter((m) => clavesYTD.includes(m.clave));
+    const sumar = (campo) => mesesYTD.reduce((s, m) => s + m[campo], 0);
+    const ytdIngreso = sumar('totalIngresos');
+    const ytdCostoDirecto = sumar('totalCD');
+    const ytdOperativo = sumar('totalGO');
+    const ytdUtilidadBruta = ytdIngreso - ytdCostoDirecto;
+    const ytdMargenBruto = ytdIngreso > 0 ? (ytdUtilidadBruta / ytdIngreso) * 100 : null;
+    const ytdUtilidadOperacion = ytdUtilidadBruta - ytdOperativo;
+    const ytdMargenOperacion = ytdIngreso > 0 ? (ytdUtilidadOperacion / ytdIngreso) * 100 : null;
+
+    rentabilidadPorDistrito[distrito] = {
+      porMes,
+      ytd: {
+        ingreso: ytdIngreso,
+        costoDirecto: ytdCostoDirecto,
+        operativo: ytdOperativo,
+        utilidadBruta: ytdUtilidadBruta,
+        margenBruto: ytdMargenBruto,
+        utilidadOperacion: ytdUtilidadOperacion,
+        margenOperacion: ytdMargenOperacion,
+      },
+    };
+  });
+
+  document.getElementById('rentabilidad-subtitulo').textContent =
+    'Ranking YTD (' + MESES_LARGOS[0] + ' – ' + MESES_LARGOS[mesRef] + ' ' + anioRef + ') de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.';
+
+  renderizarRentabilidades();
+}
+
+function ordenarRentabilidad(columna) {
+  if (ordenRentabilidad.columna === columna) {
+    ordenRentabilidad.direccion = ordenRentabilidad.direccion === 'desc' ? 'asc' : 'desc';
+  } else {
+    ordenRentabilidad = { columna, direccion: columna === 'distrito' ? 'asc' : 'desc' };
+  }
+  renderizarRentabilidades();
+}
+
+function renderizarRentabilidades() {
+  const distritos = Object.keys(rentabilidadPorDistrito);
+  const dir = ordenRentabilidad.direccion === 'asc' ? 1 : -1;
+  const valorColumna = (distrito) => {
+    const y = rentabilidadPorDistrito[distrito].ytd;
+    switch (ordenRentabilidad.columna) {
+      case 'distrito': return distrito;
+      case 'ingreso': return y.ingreso;
+      case 'costoDirecto': return y.costoDirecto;
+      case 'utilidadBruta': return y.utilidadBruta;
+      case 'margenBruto': return y.margenBruto === null ? -Infinity : y.margenBruto;
+      case 'operativo': return y.operativo;
+      case 'utilidadOperacion': return y.utilidadOperacion;
+      default: return y.margenOperacion === null ? -Infinity : y.margenOperacion;
+    }
+  };
+  distritos.sort((a, b) => {
+    const va = valorColumna(a);
+    const vb = valorColumna(b);
+    if (typeof va === 'string') return va.localeCompare(vb) * dir;
+    return (va - vb) * dir;
+  });
+  actualizarIconoOrden('orden-rentabilidad', ordenRentabilidad);
+
+  const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
+  const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+
+  const cuerpo = document.getElementById('tabla-rentabilidad-body');
+  cuerpo.innerHTML = distritos.map((distrito) => {
+    const y = rentabilidadPorDistrito[distrito].ytd;
+    const alerta = y.margenOperacion !== null && y.margenOperacion < 0;
+    const distritoEscapado = distrito.replace(/'/g, "\\'");
+    return `<tr class="cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">` +
+      `<td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2">${distrito}${alerta ? '<span class="text-[9px] font-gordita-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-error/10 text-error">Atención</span>' : ''}</span></td>` +
+      `<td class="px-6 py-4 text-right">${formatoMoneda(y.ingreso)}</td>` +
+      `<td class="px-6 py-4 text-right">${formatoMoneda(y.costoDirecto)}</td>` +
+      `<td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(y.utilidadBruta)}</td>` +
+      `<td class="px-6 py-4 text-right ${claseMargen(y.margenBruto)}">${textoPct(y.margenBruto)}</td>` +
+      `<td class="px-6 py-4 text-right">${formatoMoneda(y.operativo)}</td>` +
+      `<td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(y.utilidadOperacion)}</td>` +
+      `<td class="px-6 py-4 text-right ${claseMargen(y.margenOperacion)}">${textoPct(y.margenOperacion)}</td></tr>`;
+  }).join('');
+
+  renderizarGraficaRentabilidadDistritos();
+}
+
+function renderizarGraficaRentabilidadDistritos() {
+  const distritosOrdenChart = Object.keys(rentabilidadPorDistrito)
+    .filter((d) => rentabilidadPorDistrito[d].ytd.margenOperacion !== null)
+    .sort((a, b) => rentabilidadPorDistrito[a].ytd.margenOperacion - rentabilidadPorDistrito[b].ytd.margenOperacion);
+
+  const contenedor = document.getElementById('grafica-rentabilidad-contenedor');
+  contenedor.style.height = Math.max(300, distritosOrdenChart.length * 26) + 'px';
+
+  const ctx = document.getElementById('grafica-rentabilidad-distritos');
+  if (window.graficaRentabilidadDistritos) window.graficaRentabilidadDistritos.destroy();
+  if (distritosOrdenChart.length === 0) return;
+
+  const valores = distritosOrdenChart.map((d) => rentabilidadPorDistrito[d].ytd.margenOperacion);
+  window.graficaRentabilidadDistritos = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: distritosOrdenChart,
+      datasets: [{
+        data: valores,
+        backgroundColor: valores.map((v) => (v >= 0 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(186, 26, 26, 0.7)')),
+        borderRadius: 4,
+        barThickness: 14,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => 'Margen de Operación: ' + (item.raw >= 0 ? '+' : '') + item.raw.toFixed(1) + '%' },
+        },
+      },
+      scales: {
+        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 10 } } },
+      },
+    },
+  });
+}
+
+function renderizarGraficaTendenciaPct(canvasId, refGrafica, etiquetas, series) {
+  const ctx = document.getElementById(canvasId);
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: etiquetas,
+      datasets: series.map((serie) => ({
+        label: serie.label,
+        data: serie.datos,
+        borderColor: serie.color,
+        backgroundColor: serie.color + '1a',
+        fill: false,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: serie.color,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        spanGaps: true,
+      })),
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: {
+            label: (ctxTooltip) => ctxTooltip.dataset.label + ': ' + (ctxTooltip.parsed.y === null ? '—' : (ctxTooltip.parsed.y >= 0 ? '+' : '') + ctxTooltip.parsed.y.toFixed(1) + '%'),
+          },
+        },
+      },
+      scales: {
+        y: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => v + '%', font: { family: 'Gordita' } } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+      },
+    },
+  });
+}
+
+function abrirDrillDownRentabilidad(distrito) {
+  const datos = rentabilidadPorDistrito[distrito];
+  if (!datos) return;
+
+  document.getElementById('drilldown-rentabilidad-titulo').textContent = distrito;
+
+  const etiquetas = datos.porMes.map((m) => m.etiqueta);
+  renderizarGraficaTendenciaPct('grafica-drilldown-rentabilidad', 'graficaDrilldownRentabilidad', etiquetas, [
+    { label: 'Margen Bruto %', datos: datos.porMes.map((m) => m.margenBruto), color: '#3498DB' },
+    { label: 'Margen de Operación %', datos: datos.porMes.map((m) => m.margenOperacion), color: '#984700' },
+  ]);
+
+  const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
+  const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
+  cuerpo.innerHTML = datos.porMes.map((m) =>
+    `<tr>` +
+    `<td class="px-4 py-2 text-xs font-gordita-bold">${m.etiqueta}</td>` +
+    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalIngresos)}</td>` +
+    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalCD)}</td>` +
+    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.utilidadBruta)}</td>` +
+    `<td class="px-4 py-2 text-xs text-right">${formatoMoneda(m.totalGO)}</td>` +
+    `<td class="px-4 py-2 text-xs text-right font-gordita-bold">${formatoMoneda(m.utilidadOperacion)}</td>` +
+    `<td class="px-4 py-2 text-xs text-right ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`
+  ).join('');
+
+  document.getElementById('modal-drilldown-rentabilidad').style.display = 'flex';
+}
+
+function cerrarDrillDownRentabilidad() {
+  document.getElementById('modal-drilldown-rentabilidad').style.display = 'none';
 }
 
 cargarSesion();

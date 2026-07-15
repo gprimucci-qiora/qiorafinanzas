@@ -261,3 +261,44 @@ test('calcularIngresosDistrito suma las 3 polizas en un solo objeto', () => {
   assert.strictEqual(resultado.multidistrito, 2107 * 613);
   assert.strictEqual(resultado.total, 475 * 4245 + 250 * 100 + 2107 * 613);
 });
+
+test('calcularRentabilidadDistritoMes calcula utilidad bruta y de operación restando costo directo y gasto operativo asignado', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-B': { region: 'ORIENTE', sucursal_secundaria: 'DIST-B', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-NACIONAL': { region: 'NACIONAL', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturasDelMes = [
+    { sucursal: 'DIST-A', subtotal: 300 },
+    { sucursal: 'DIST-B', subtotal: 100 },
+    { sucursal: 'BOLSA-NACIONAL', subtotal: 400 },
+  ];
+  const datosIngresos = {
+    polizaParametros: [
+      { poliza: 'PLANTA INTERNA', distrito: 'DIST-A', precio_por_orden: 100, ordenes_dimensionadas: 10, vigente_desde: '2026-01-01' },
+    ],
+    multidistritoBolsas: [],
+    multidistritoAsignacion: [],
+  };
+  // Ingreso DIST-A = 1000; Costo Directo DIST-A = 300; folios 1 de 2 -> 200 de la bolsa de 400
+  const resultado = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, 'DIST-A', 'BAJIO', '2026-03-01');
+  assert.strictEqual(resultado.totalIngresos, 1000);
+  assert.strictEqual(resultado.totalCD, 300);
+  assert.strictEqual(resultado.totalGO, 200);
+  assert.strictEqual(resultado.utilidadBruta, 700);
+  assert.strictEqual(resultado.margenBruto, 70);
+  assert.strictEqual(resultado.utilidadOperacion, 500);
+  assert.strictEqual(resultado.margenOperacion, 50);
+});
+
+test('calcularRentabilidadDistritoMes regresa margenes null cuando no hay ingresos', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+  };
+  const facturasDelMes = [{ sucursal: 'DIST-A', subtotal: 100 }];
+  const datosIngresos = { polizaParametros: [], multidistritoBolsas: [], multidistritoAsignacion: [] };
+  const resultado = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, 'DIST-A', 'BAJIO', '2026-03-01');
+  assert.strictEqual(resultado.totalIngresos, 0);
+  assert.strictEqual(resultado.margenBruto, null);
+  assert.strictEqual(resultado.margenOperacion, null);
+});
