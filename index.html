@@ -2925,9 +2925,9 @@ function renderizarHeatmapRentabilidad() {
   }
 
   const meses = rentabilidadPorDistrito[distritosOrden[0]].porMes;
-  const anchoMes = (84 / meses.length).toFixed(2);
-  encabezado.innerHTML = '<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-left sticky left-0 bg-white z-10" style="width:16%;">Distrito</th>' +
-    meses.map((m) => `<th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-center" style="width:${anchoMes}%;">${m.etiqueta}</th>`).join('');
+  const anchoMes = (78 / meses.length).toFixed(2);
+  encabezado.innerHTML = '<th class="px-3 py-2 font-gordita-bold uppercase tracking-widest text-left sticky left-0 bg-white z-10" style="width:22%;">Distrito</th>' +
+    meses.map((m) => `<th class="px-1 py-2 font-gordita-bold uppercase tracking-widest text-center" style="width:${anchoMes}%;">${m.etiqueta}</th>`).join('');
 
   cuerpo.innerHTML = distritosOrden.map((distrito) => {
     const distritoEscapado = distrito.replace(/'/g, "\\'");
@@ -2935,10 +2935,10 @@ function renderizarHeatmapRentabilidad() {
       const color = colorMargenHeatmap(m.margenOperacion);
       const colorTexto = colorTextoParaFondo(color);
       const texto = m.margenOperacion === null ? '—' : (m.margenOperacion >= 0 ? '+' : '') + Math.round(m.margenOperacion) + '%';
-      return `<td class="px-2 py-3 text-center cursor-pointer font-gordita-bold" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
+      return `<td class="px-1 py-2 text-center cursor-pointer font-gordita-bold text-[11px]" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
     }).join('');
     return `<tr>` +
-      `<td class="px-4 py-3 font-gordita-bold sticky left-0 bg-white z-10 cursor-pointer hover:underline whitespace-nowrap overflow-hidden text-ellipsis" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${distrito}</td>` +
+      `<td class="px-3 py-2 font-gordita-bold text-xs sticky left-0 bg-white z-10 cursor-pointer hover:underline" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${distrito}</td>` +
       celdas + `</tr>`;
   }).join('');
 }
