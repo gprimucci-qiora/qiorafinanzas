@@ -296,10 +296,10 @@
           <p class="text-on-surface-variant text-sm mt-2">Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Top 15 Proveedores</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Mayor monto pagado en el periodo activo (Costos Directos).</p>
-          <div style="height: 360px;">
-            <canvas id="grafica-top-proveedores"></canvas>
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Costos Directos (últimos 6 meses)</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Monto total pagado por mes, mismo alcance que el desglose de abajo.</p>
+          <div style="height: 260px;">
+            <canvas id="grafica-tendencia-proveedor"></canvas>
           </div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -307,7 +307,7 @@
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-primary inline-block"></span>Familia</span>
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-qiora-blue inline-block"></span>Gasto</span>
             <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-brand-teal inline-block"></span>Proveedor</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-secondary-container inline-block"></span>Sucursal (ranking)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-secondary-container inline-block"></span>Sucursal (ranking + últimos 6 meses)</span>
           </div>
           <table id="tabla-analisis-proveedor" class="w-full text-left border-collapse">
             <thead>
@@ -770,19 +770,37 @@ async function cargarConfig() {
 }
 
 let analisisProveedorDatos = {};
+let analisisProveedorMeses = [];
 
 async function cargarAnalisisProveedor() {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
-  const facturas = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, 'sucursal, familia, gasto, proveedor, monto, subtotal, fecha_pago');
+
+  const mesesTendencia = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    mesesTendencia.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()) });
+  }
+  const inicioTendencia = rangoDeMes(mesesTendencia[0].anio, mesesTendencia[0].mes).inicio;
+  const finTendencia = rangoDeMes(mesesTendencia[5].anio, mesesTendencia[5].mes).fin;
+  analisisProveedorMeses = mesesTendencia;
+
+  const inicioVentana = inicioTendencia < rangos.actual.inicio ? inicioTendencia : rangos.actual.inicio;
+  const finVentana = finTendencia > rangos.actual.fin ? finTendencia : rangos.actual.fin;
+
+  const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, familia, gasto, proveedor, monto, subtotal, fecha_pago');
   const clasificadas = facturas
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
     .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS');
 
   const porFamilia = {};
-  const porProveedorGlobal = {};
+  const totalTendenciaPorMes = {};
   clasificadas.forEach((f) => {
+    const enActivo = f.fecha_pago >= rangos.actual.inicio && f.fecha_pago <= rangos.actual.fin;
+    const enTendencia = f.fecha_pago >= inicioTendencia && f.fecha_pago <= finTendencia;
+    if (!enActivo && !enTendencia) return;
+
     const familia = f.familia || 'Sin familia';
     const gasto = f.gasto || 'Sin gasto';
     const proveedor = f.proveedor || 'Sin proveedor';
@@ -790,91 +808,67 @@ async function cargarAnalisisProveedor() {
     const monto = f.monto || 0;
 
     porFamilia[familia] = porFamilia[familia] || { total: 0, porGasto: {} };
-    porFamilia[familia].total += monto;
-
     const nodoGasto = porFamilia[familia].porGasto[gasto] = porFamilia[familia].porGasto[gasto] || { total: 0, porProveedor: {} };
-    nodoGasto.total += monto;
-
     const nodoProveedor = nodoGasto.porProveedor[proveedor] = nodoGasto.porProveedor[proveedor] || { total: 0, porSucursal: {} };
-    nodoProveedor.total += monto;
-    nodoProveedor.porSucursal[sucursal] = (nodoProveedor.porSucursal[sucursal] || 0) + monto;
+    const nodoSucursal = nodoProveedor.porSucursal[sucursal] = nodoProveedor.porSucursal[sucursal] || { total: 0, porMes: {} };
 
-    porProveedorGlobal[proveedor] = (porProveedorGlobal[proveedor] || 0) + monto;
+    if (enActivo) {
+      porFamilia[familia].total += monto;
+      nodoGasto.total += monto;
+      nodoProveedor.total += monto;
+      nodoSucursal.total += monto;
+    }
+    if (enTendencia) {
+      const clave = f.fecha_pago.slice(0, 7);
+      nodoSucursal.porMes[clave] = (nodoSucursal.porMes[clave] || 0) + monto;
+      totalTendenciaPorMes[clave] = (totalTendenciaPorMes[clave] || 0) + monto;
+    }
   });
 
   analisisProveedorDatos = porFamilia;
   renderizarAnalisisProveedor();
 
-  const topProveedores = Object.keys(porProveedorGlobal)
-    .map((p) => ({ proveedor: p, total: porProveedorGlobal[p] }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
-  renderizarGraficaTopProveedores('grafica-top-proveedores', 'graficaTopProveedores', topProveedores);
-}
-
-function renderizarGraficaTopProveedores(canvasId, refGrafica, datos) {
-  const ctx = document.getElementById(canvasId);
-  if (window[refGrafica]) window[refGrafica].destroy();
-  if (datos.length === 0) return;
-
-  window[refGrafica] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: datos.map((d) => d.proveedor),
-      datasets: [{
-        data: datos.map((d) => d.total),
-        backgroundColor: '#3498DB',
-        borderRadius: 4,
-        barThickness: 16,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 10,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (item) => formatoMoneda(item.raw) },
-        },
-      },
-      scales: {
-        x: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 10 } } },
-      },
-    },
-  });
+  renderizarGraficaTendenciaSimple('grafica-tendencia-proveedor', 'graficaTendenciaProveedor', mesesTendencia.map((m) => etiquetaMesCorta(m.anio, m.mes)), [
+    { label: 'Costos Directos', datos: mesesTendencia.map((m) => totalTendenciaPorMes[m.clave] || 0), color: '#3498DB' },
+  ]);
 }
 
 function renderizarAnalisisProveedor() {
   const filas = [];
 
-  const familias = Object.keys(analisisProveedorDatos).sort((a, b) => analisisProveedorDatos[b].total - analisisProveedorDatos[a].total);
+  const familias = Object.keys(analisisProveedorDatos)
+    .filter((familia) => analisisProveedorDatos[familia].total > 0)
+    .sort((a, b) => analisisProveedorDatos[b].total - analisisProveedorDatos[a].total);
   familias.forEach((familia, iFamilia) => {
     const idFamilia = 'ap-' + iFamilia;
     filas.push(`<tr class="cursor-pointer bg-white border-l-4 border-primary hover:bg-surface-container-low/50 transition-colors" onclick="alternarNivelAnalisisProveedor('${idFamilia}')"><td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span id="chevron-${idFamilia}" class="material-symbols-outlined text-sm">chevron_right</span><span class="material-symbols-outlined text-sm text-primary/40">category</span>${familia}</span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(analisisProveedorDatos[familia].total)}</td></tr>`);
 
-    const gastos = Object.keys(analisisProveedorDatos[familia].porGasto).sort((a, b) => analisisProveedorDatos[familia].porGasto[b].total - analisisProveedorDatos[familia].porGasto[a].total);
+    const gastos = Object.keys(analisisProveedorDatos[familia].porGasto)
+      .filter((gasto) => analisisProveedorDatos[familia].porGasto[gasto].total > 0)
+      .sort((a, b) => analisisProveedorDatos[familia].porGasto[b].total - analisisProveedorDatos[familia].porGasto[a].total);
     gastos.forEach((gasto, iGasto) => {
       const idGasto = idFamilia + '-' + iGasto;
       const nodoGasto = analisisProveedorDatos[familia].porGasto[gasto];
       filas.push(`<tr data-grupo="${idFamilia}" style="display:none;" class="bg-qiora-blue/5 border-l-4 border-qiora-blue cursor-pointer hover:bg-qiora-blue/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idGasto}')"><td class="pl-14 pr-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idGasto}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-qiora-blue">receipt_long</span>${gasto}</td><td class="px-6 py-2.5 text-right text-xs font-gordita-bold">${formatoMoneda(nodoGasto.total)}</td></tr>`);
 
-      const proveedores = Object.keys(nodoGasto.porProveedor).sort((a, b) => nodoGasto.porProveedor[b].total - nodoGasto.porProveedor[a].total);
+      const proveedores = Object.keys(nodoGasto.porProveedor)
+        .filter((proveedor) => nodoGasto.porProveedor[proveedor].total > 0)
+        .sort((a, b) => nodoGasto.porProveedor[b].total - nodoGasto.porProveedor[a].total);
       proveedores.forEach((proveedor, iProveedor) => {
         const idProveedor = idGasto + '-' + iProveedor;
         const nodoProveedor = nodoGasto.porProveedor[proveedor];
         filas.push(`<tr data-grupo="${idGasto}" style="display:none;" class="bg-brand-teal/5 border-l-4 border-brand-teal cursor-pointer hover:bg-brand-teal/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idProveedor}')"><td class="pl-20 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idProveedor}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-brand-teal">storefront</span>${proveedor}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(nodoProveedor.total)}</td></tr>`);
 
-        const sucursales = Object.keys(nodoProveedor.porSucursal).sort((a, b) => nodoProveedor.porSucursal[b] - nodoProveedor.porSucursal[a]);
-        const maxSucursal = sucursales.length > 0 ? nodoProveedor.porSucursal[sucursales[0]] : 0;
+        const sucursales = Object.keys(nodoProveedor.porSucursal)
+          .filter((sucursal) => nodoProveedor.porSucursal[sucursal].total > 0)
+          .sort((a, b) => nodoProveedor.porSucursal[b].total - nodoProveedor.porSucursal[a].total);
         sucursales.forEach((sucursal, iSucursal) => {
-          const montoSucursal = nodoProveedor.porSucursal[sucursal];
-          const pct = maxSucursal > 0 ? (montoSucursal / maxSucursal) * 100 : 0;
-          filas.push(`<tr data-grupo="${idProveedor}" style="display:none;" class="bg-secondary-container/5 hover:bg-secondary-container/10 transition-colors"><td colspan="2" class="pl-28 pr-6 py-1.5"><div class="relative h-5 flex items-center rounded overflow-hidden"><div class="absolute inset-y-0 left-0 bg-secondary-container/25" style="width:${pct}%"></div><div class="relative flex justify-between items-center w-full text-[11px] text-on-surface-variant px-2"><span class="font-gordita-bold text-on-surface">#${iSucursal + 1}</span><span class="flex-1 px-2">${sucursal}</span><span class="font-gordita-bold text-on-surface">${formatoMoneda(montoSucursal)}</span></div></div></td></tr>`);
+          const nodoSucursal = nodoProveedor.porSucursal[sucursal];
+          const mesesHtml = analisisProveedorMeses.map((m) => {
+            const valor = nodoSucursal.porMes[m.clave] || 0;
+            return `<div class="w-16 shrink-0 text-right"><div class="text-[8px] text-on-surface-variant/60 uppercase">${etiquetaMesCorta(m.anio, m.mes)}</div><div class="text-[10px] text-on-surface-variant">${formatoCompacto(valor)}</div></div>`;
+          }).join('');
+          filas.push(`<tr data-grupo="${idProveedor}" style="display:none;" class="bg-secondary-container/5 hover:bg-secondary-container/10 transition-colors"><td colspan="2" class="pl-28 pr-6 py-1.5"><div class="flex items-center gap-3"><span class="text-[11px] font-gordita-bold text-on-surface w-6 shrink-0">#${iSucursal + 1}</span><span class="text-[11px] text-on-surface-variant flex-1 min-w-[140px]">${sucursal}</span><div class="flex gap-2">${mesesHtml}</div><span class="text-[11px] font-gordita-bold text-on-surface w-24 text-right shrink-0">${formatoMoneda(nodoSucursal.total)}</span></div></td></tr>`);
         });
       });
     });
