@@ -476,13 +476,13 @@
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación por Distrito (últimos 12 meses)</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Rojo = margen negativo, verde = margen sano. Un distrito rojo varios meses seguidos es un problema estructural, no ruido — click en cualquier celda para ver el detalle.</p>
+          <p class="text-xs text-on-surface-variant mb-6">Rojo = margen negativo, amarillo = margen bajo (0%-5%, hay que subirlo), verde = margen sano. Un distrito rojo varios meses seguidos es un problema estructural, no ruido — click en cualquier celda para ver el detalle.</p>
           <div class="overflow-x-auto">
-            <table id="tabla-heatmap-rentabilidad" class="border-collapse">
+            <table id="tabla-heatmap-rentabilidad" class="w-full border-collapse table-fixed">
               <thead>
-                <tr id="heatmap-rentabilidad-encabezado" class="text-[9px] text-on-surface-variant"></tr>
+                <tr id="heatmap-rentabilidad-encabezado" class="text-[10px] text-on-surface-variant"></tr>
               </thead>
-              <tbody id="heatmap-rentabilidad-body" class="text-[10px]"></tbody>
+              <tbody id="heatmap-rentabilidad-body" class="text-xs"></tbody>
             </table>
           </div>
         </div>
@@ -2890,9 +2890,15 @@ function interpolarColor(c1, c2, t) {
 
 function colorMargenHeatmap(v) {
   if (v === null) return 'rgb(238,238,238)';
-  const clamp = Math.max(-30, Math.min(30, v));
-  if (clamp >= 0) return interpolarColor([255, 255, 255], [46, 204, 113], clamp / 30);
-  return interpolarColor([255, 255, 255], [186, 26, 26], -clamp / 30);
+  if (v < 0) {
+    const clamp = Math.max(-30, v);
+    return interpolarColor([255, 255, 255], [186, 26, 26], -clamp / 30);
+  }
+  if (v < 5) {
+    return interpolarColor([255, 255, 255], [245, 196, 66], v / 5);
+  }
+  const clamp = Math.min(30, v);
+  return interpolarColor([245, 196, 66], [46, 204, 113], (clamp - 5) / 25);
 }
 
 function colorTextoParaFondo(rgbString) {
@@ -2919,8 +2925,9 @@ function renderizarHeatmapRentabilidad() {
   }
 
   const meses = rentabilidadPorDistrito[distritosOrden[0]].porMes;
-  encabezado.innerHTML = '<th class="px-3 py-2 font-gordita-bold uppercase tracking-widest text-left sticky left-0 bg-white z-10">Distrito</th>' +
-    meses.map((m) => `<th class="px-1 py-2 font-gordita-bold uppercase tracking-widest text-center">${m.etiqueta}</th>`).join('');
+  const anchoMes = (84 / meses.length).toFixed(2);
+  encabezado.innerHTML = '<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-left sticky left-0 bg-white z-10" style="width:16%;">Distrito</th>' +
+    meses.map((m) => `<th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-center" style="width:${anchoMes}%;">${m.etiqueta}</th>`).join('');
 
   cuerpo.innerHTML = distritosOrden.map((distrito) => {
     const distritoEscapado = distrito.replace(/'/g, "\\'");
@@ -2928,10 +2935,10 @@ function renderizarHeatmapRentabilidad() {
       const color = colorMargenHeatmap(m.margenOperacion);
       const colorTexto = colorTextoParaFondo(color);
       const texto = m.margenOperacion === null ? '—' : (m.margenOperacion >= 0 ? '+' : '') + Math.round(m.margenOperacion) + '%';
-      return `<td class="px-1 py-2 text-center cursor-pointer" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
+      return `<td class="px-2 py-3 text-center cursor-pointer font-gordita-bold" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
     }).join('');
     return `<tr>` +
-      `<td class="px-3 py-2 font-gordita-bold sticky left-0 bg-white z-10 cursor-pointer hover:underline" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${distrito}</td>` +
+      `<td class="px-4 py-3 font-gordita-bold sticky left-0 bg-white z-10 cursor-pointer hover:underline whitespace-nowrap overflow-hidden text-ellipsis" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${distrito}</td>` +
       celdas + `</tr>`;
   }).join('');
 }
