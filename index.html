@@ -1059,10 +1059,21 @@ async function cargarGlosario() {
   data.forEach((fila) => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-surface-container-low/50 transition-colors';
+    const sucursalEscapada = fila.sucursal.replace(/'/g, "\\'");
+    const acciones = usuarioActual && usuarioActual.rol === 'admin'
+      ? `<button onclick="editarGlosario('${sucursalEscapada}')" class="text-xs font-gordita-bold text-secondary hover:underline mr-3">Editar</button><button onclick="eliminarGlosario('${sucursalEscapada}')" class="text-xs font-gordita-bold text-error hover:underline">Eliminar</button>`
+      : '';
     tr.innerHTML = `<td class="px-8 py-4">${fila.sucursal}</td><td class="px-6 py-4">${fila.tipo_sucursal || ''}</td><td class="px-6 py-4">${fila.region || ''}</td><td class="px-6 py-4">${fila.sucursal_secundaria || ''}</td><td class="px-6 py-4">${fila.tipo_gasto || ''}</td>
-      <td class="px-6 py-4">${usuarioActual && usuarioActual.rol === 'admin' ? '<button onclick="editarGlosario(\'' + fila.sucursal.replace(/'/g, "\\'") + '\')" class="text-xs font-gordita-bold text-secondary hover:underline">Editar</button>' : ''}</td>`;
+      <td class="px-6 py-4">${acciones}</td>`;
     cuerpo.appendChild(tr);
   });
+}
+
+async function eliminarGlosario(sucursal) {
+  if (!confirm('¿Eliminar la sucursal "' + sucursal + '" del glosario? Esta acción no se puede deshacer. Las facturas con esa sucursal pasarán a "Sin Clasificar" hasta que la vuelvas a agregar.')) return;
+  const { error } = await supabaseClient.from('glosario_sucursales').delete().eq('sucursal', sucursal);
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  await cargarGlosario();
 }
 
 function obtenerGlosarioMap() {
