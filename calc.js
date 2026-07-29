@@ -159,28 +159,62 @@
     return vigente.precio_por_orden * vigente.ordenes_dimensionadas;
   }
 
-  function calcularIngresoMultidistritoDistrito(asignaciones, bolsas, distrito, region, mesISO) {
+  // Convierte 'CTA-TPI-INT-CBA CORDOBA ORIZABA' -> 'CBA'. Las 4 sucursales de Guadalajara
+  // (GBA/GES/GLM/GPR) comparten una sola sucursal MLT ('GDL') en el Excel de HC Autorizado,
+  // por lo que su cuadrilla se reparte entre las 4 en partes iguales.
+  function obtenerCuadrillasMultidistrito(hcAutorizado, distrito, mesISO) {
+    const match = distrito.match(/^CTA-TPI-INT-([A-Z]+)\s/);
+    if (!match) return 0;
+    const codigo = match[1];
+    const esGuadalajara = codigo === 'GBA' || codigo === 'GES' || codigo === 'GLM' || codigo === 'GPR';
+    const codigoMLT = esGuadalajara ? 'GDL' : codigo;
+    const factorReparto = esGuadalajara ? 0.25 : 1;
+
+    const prefijoMLT = 'CTA-TPI-MLT-' + codigoMLT + ' ';
+    const filaEjemplo = hcAutorizado.find((h) => h.distrito.indexOf(prefijoMLT) === 0);
+    if (!filaEjemplo) return 0;
+
+    const filasVigentes = hcAutorizado.filter((h) => h.distrito === filaEjemplo.distrito && h.vigente_desde <= mesISO);
+    const porPuesto = {};
+    filasVigentes.forEach((h) => {
+      if (!porPuesto[h.puesto] || h.vigente_desde > porPuesto[h.puesto].vigente_desde) porPuesto[h.puesto] = h;
+    });
+    const total = Object.values(porPuesto).reduce((s, h) => s + (h.personas_autorizadas || 0), 0);
+    return total * factorReparto;
+  }
+
+  function calcularIngresoMultidistritoDistrito(bolsas, hcAutorizado, todosLosDistritos, regionPorDistrito, distrito, region, mesISO) {
     const regionBolsa = bolsaMultidistritoDeRegion(region);
     if (!regionBolsa) return 0;
-    const vigenteAsignacion = obtenerParametroVigente(
-      asignaciones.filter((a) => a.distrito === distrito),
-      mesISO,
-    );
-    if (!vigenteAsignacion) return 0;
     const vigenteBolsa = obtenerParametroVigente(
       bolsas.filter((b) => b.region_bolsa === regionBolsa),
       mesISO,
     );
     if (!vigenteBolsa) return 0;
-    return vigenteAsignacion.ordenes_asignadas * vigenteBolsa.precio_por_orden;
+
+    const distritosBolsa = todosLosDistritos.filter((d) => bolsaMultidistritoDeRegion(regionPorDistrito[d]) === regionBolsa);
+    let totalCuadrillas = 0;
+    let cuadrillasDistrito = 0;
+    distritosBolsa.forEach((d) => {
+      const cuadrillas = obtenerCuadrillasMultidistrito(hcAutorizado, d, mesISO);
+      totalCuadrillas += cuadrillas;
+      if (d === distrito) cuadrillasDistrito = cuadrillas;
+    });
+    if (totalCuadrillas === 0) return 0;
+
+    const peso = cuadrillasDistrito / totalCuadrillas;
+    const ordenesAsignadas = peso * vigenteBolsa.ordenes_dimensionadas;
+    return ordenesAsignadas * vigenteBolsa.precio_por_orden;
   }
 
   function calcularIngresosDistrito(datos, distrito, region, mesISO) {
     const plantaInterna = calcularIngresoPolizaDistrito(datos.polizaParametros, 'PLANTA INTERNA', distrito, mesISO);
     const recolecciones = calcularIngresoPolizaDistrito(datos.polizaParametros, 'RECOLECCIONES', distrito, mesISO);
     const multidistrito = calcularIngresoMultidistritoDistrito(
-      datos.multidistritoAsignacion,
       datos.multidistritoBolsas,
+      datos.hcAutorizado,
+      datos.todosLosDistritos,
+      datos.regionPorDistrito,
       distrito,
       region,
       mesISO,
@@ -236,6 +270,7 @@
     bolsaMultidistritoDeRegion,
     obtenerRegionPorDistrito,
     calcularIngresoPolizaDistrito,
+    obtenerCuadrillasMultidistrito,
     calcularIngresoMultidistritoDistrito,
     calcularIngresosDistrito,
     calcularRentabilidadDistritoMes,

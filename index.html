@@ -37,7 +37,10 @@
           "qiora-blue": "#3498DB",
           "qiora-orange": "#E67E22",
           "brand-teal": "#2DD4BF",
-          "brand-emerald": "#10B981"
+          "brand-emerald": "#10B981",
+          "op-pi": "#1B4F72",
+          "op-rec": "#2E86C1",
+          "op-md": "#85C1E9"
         },
         borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
         spacing: { xs: "4px", sm: "12px", base: "8px", md: "24px", gutter: "24px", lg: "48px", xl: "80px" },
@@ -60,6 +63,12 @@
   #sidebar button.activo { background-color: #e8e8e8; color: #000000; font-weight: 700; border-right: 4px solid #000000; }
   .vista { display: none; }
   .vista.activa { display: block; }
+  #sidebar.colapsado { width: 4.5rem; }
+  #sidebar.colapsado + main { margin-left: 4.5rem; }
+  #sidebar.colapsado .sidebar-texto { display: none; }
+  #sidebar.colapsado .sidebar-header-row { justify-content: center; }
+  #sidebar.colapsado nav button { justify-content: center; gap: 0; }
+  #sidebar.colapsado .p-md.border-t button { justify-content: center; gap: 0; }
 </style>
 </head>
 <body class="bg-surface text-on-surface font-gordita-regular">
@@ -79,47 +88,47 @@
 </div>
 
 <div id="app-shell">
-  <aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-white border-r border-outline-variant w-64">
-    <div class="p-md flex items-center gap-sm">
+  <aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 z-40 bg-white border-r border-outline-variant w-64" style="transition: width 0.2s ease;">
+    <button id="btn-colapsar-sidebar" onclick="alternarSidebar()" class="absolute -right-3 top-6 w-6 h-6 bg-white border border-outline-variant rounded-full flex items-center justify-center shadow-sm hover:bg-surface-container transition-colors z-50">
+      <span class="material-symbols-outlined" style="font-size:16px;" id="icono-colapsar-sidebar">chevron_left</span>
+    </button>
+    <div class="p-md flex items-center gap-sm sidebar-header-row">
       <div class="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center rounded shrink-0 p-1.5">
         <img src="logo-qiora.png" alt="QiORA" class="w-full h-full object-contain">
       </div>
-      <div class="overflow-hidden">
+      <div class="overflow-hidden sidebar-texto">
         <h1 class="font-gordita-bold text-lg text-primary leading-tight truncate">QiORA Conecta</h1>
         <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Auditoría de Gastos</p>
       </div>
     </div>
     <nav class="mt-lg flex-grow px-sm overflow-y-auto">
       <ul class="space-y-1">
-        <li><button data-vista="resumen" onclick="mostrarVista('resumen')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">dashboard</span><span class="text-sm">Resumen Ejecutivo</span>
+        <li><button data-vista="overview" onclick="mostrarVista('overview')" title="Overview" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">grid_view</span><span class="text-sm sidebar-texto">Overview</span>
         </button></li>
-        <li><button data-vista="sucursal" onclick="mostrarVista('sucursal')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">location_city</span><span class="text-sm">Por Sucursal/Distrito</span>
+        <li><button data-vista="operaciones" onclick="abrirPilar('operaciones')" title="Operaciones" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">engineering</span><span class="text-sm sidebar-texto">Operaciones</span>
         </button></li>
-        <li><button data-vista="proveedor" onclick="mostrarVista('proveedor')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">local_shipping</span><span class="text-sm">Análisis por Proveedor</span>
+        <li><button data-vista="financieros" onclick="abrirPilar('financieros')" title="Financieros" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">account_balance</span><span class="text-sm sidebar-texto">Financieros</span>
         </button></li>
-        <li><button data-vista="ingresos" onclick="mostrarVista('ingresos')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">payments</span><span class="text-sm">Ingresos</span>
+        <li><button data-vista="capitalhumano" onclick="abrirPilar('capitalhumano')" title="Capital Humano" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">groups</span><span class="text-sm sidebar-texto">Capital Humano</span>
         </button></li>
-        <li><button data-vista="pnl" onclick="mostrarVista('pnl')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">query_stats</span><span class="text-sm">P&amp;L</span>
+        <li><button data-vista="flota" onclick="abrirPilar('flota')" title="Flota Vehicular" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">local_shipping</span><span class="text-sm sidebar-texto">Flota Vehicular</span>
         </button></li>
-        <li><button data-vista="rentabilidad" onclick="mostrarVista('rentabilidad')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">insights</span><span class="text-sm">Rentabilidades</span>
-        </button></li>
-        <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">settings</span><span class="text-sm">Configuración</span>
+        <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" title="Configuración" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">settings</span><span class="text-sm sidebar-texto">Configuración</span>
         </button></li>
       </ul>
     </nav>
     <div class="p-md border-t border-outline-variant">
-      <button onclick="mostrarFormularioPassword()" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors text-left">
-        <span class="material-symbols-outlined">lock_reset</span><span class="text-sm">Cambiar contraseña</span>
+      <button onclick="mostrarFormularioPassword()" title="Cambiar contraseña" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors text-left">
+        <span class="material-symbols-outlined">lock_reset</span><span class="text-sm sidebar-texto">Cambiar contraseña</span>
       </button>
-      <button onclick="cerrarSesion()" class="w-full flex items-center gap-sm p-sm rounded-lg text-error hover:bg-error/5 transition-colors text-left">
-        <span class="material-symbols-outlined">logout</span><span class="text-sm font-gordita-bold">Cerrar sesión</span>
+      <button onclick="cerrarSesion()" title="Cerrar sesión" class="w-full flex items-center gap-sm p-sm rounded-lg text-error hover:bg-error/5 transition-colors text-left">
+        <span class="material-symbols-outlined">logout</span><span class="text-sm font-gordita-bold sidebar-texto">Cerrar sesión</span>
       </button>
     </div>
   </aside>
@@ -147,9 +156,240 @@
       </div>
     </header>
 
-    <div id="contenido" class="p-8 max-w-[1440px] mx-auto">
+    <div id="contenido" class="p-8">
 
-      <div class="vista activa" id="vista-resumen">
+      <div class="vista activa" id="vista-overview">
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Overview del Negocio</h1>
+          <p id="overview-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-qiora-blue/10 rounded-lg"><span class="material-symbols-outlined text-qiora-blue">engineering</span></div>
+              <h2 class="font-gordita-bold text-xl text-primary">Operaciones</h2>
+            </div>
+            <button onclick="abrirPilar('operaciones')" class="flex items-center gap-1 text-xs font-gordita-bold text-on-surface-variant hover:text-qiora-blue transition-colors">
+              Ver desglose completo <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-surface-container-low p-5 rounded-lg text-center">
+              <p class="font-gordita-bold text-[10px] text-op-pi uppercase tracking-wider mb-1">Alcance Planta Interna</p>
+              <div style="height:90px; width:170px;" class="mx-auto"><canvas id="ov-op-gauge-pi"></canvas></div>
+              <div class="flex justify-center gap-4 text-[10px] text-on-surface-variant mt-1">
+                <span>Dimensionados<br><span id="ov-op-kpi-dim-pi" class="font-gordita-bold text-primary text-xs">-</span></span>
+                <span>Realizados<br><span id="ov-op-kpi-real-pi" class="font-gordita-bold text-primary text-xs">-</span></span>
+              </div>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg text-center">
+              <p class="font-gordita-bold text-[10px] text-op-rec uppercase tracking-wider mb-1">Alcance Recolecciones</p>
+              <div style="height:90px; width:170px;" class="mx-auto"><canvas id="ov-op-gauge-rec"></canvas></div>
+              <div class="flex justify-center gap-4 text-[10px] text-on-surface-variant mt-1">
+                <span>Dimensionados<br><span id="ov-op-kpi-dim-rec" class="font-gordita-bold text-primary text-xs">-</span></span>
+                <span>Realizados<br><span id="ov-op-kpi-real-rec" class="font-gordita-bold text-primary text-xs">-</span></span>
+              </div>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg text-center">
+              <p class="font-gordita-bold text-[10px] text-op-md uppercase tracking-wider mb-1">Alcance Multidistrito</p>
+              <div style="height:90px; width:170px;" class="mx-auto"><canvas id="ov-op-gauge-md"></canvas></div>
+              <div class="flex justify-center gap-4 text-[10px] text-on-surface-variant mt-1">
+                <span>Dimensionados<br><span id="ov-op-kpi-dim-md" class="font-gordita-bold text-primary text-xs">-</span></span>
+                <span>Realizados<br><span id="ov-op-kpi-real-md" class="font-gordita-bold text-primary text-xs">-</span></span>
+              </div>
+            </div>
+          </div>
+          <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Folios por Póliza · Dimensionados vs. Alcance</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-start">
+            <div class="bg-surface-container-low p-4 rounded-lg">
+              <p class="font-gordita-bold text-xs text-op-pi uppercase tracking-wide mb-2">Planta Interna</p>
+              <div style="height:220px;"><canvas id="ov-op-grafica-pi"></canvas></div>
+            </div>
+            <div class="bg-surface-container-low p-4 rounded-lg">
+              <p class="font-gordita-bold text-xs text-op-rec uppercase tracking-wide mb-2">Recolecciones</p>
+              <div style="height:220px;"><canvas id="ov-op-grafica-rec"></canvas></div>
+            </div>
+            <div class="bg-surface-container-low p-4 rounded-lg">
+              <p class="font-gordita-bold text-xs text-op-md uppercase tracking-wide mb-2">Multidistrito</p>
+              <div style="height:220px;"><canvas id="ov-op-grafica-md"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-qiora-blue/10 rounded-lg"><span class="material-symbols-outlined text-qiora-blue">account_balance</span></div>
+              <h2 class="font-gordita-bold text-xl text-primary">Financieros</h2>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="bg-white p-1 rounded-lg border border-outline-variant flex shrink-0">
+                <button id="fin-formato-completo" onclick="cambiarFormatoFinanciero('completo')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">$</button>
+                <button id="fin-formato-miles" onclick="cambiarFormatoFinanciero('miles')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Miles</button>
+                <button id="fin-formato-millones" onclick="cambiarFormatoFinanciero('millones')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Millones</button>
+              </div>
+              <button onclick="abrirPilar('financieros')" class="flex items-center gap-1 text-xs font-gordita-bold text-on-surface-variant hover:text-qiora-blue transition-colors">
+                Ver desglose completo <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-surface-container-low p-5 rounded-lg text-center">
+              <p id="ov-fin-kpi-ingreso-titulo" class="font-gordita-bold text-[10px] text-qiora-blue uppercase tracking-wider mb-2">Ingreso Recurrente</p>
+              <h2 id="ov-fin-kpi-ingreso" class="font-gordita-bold text-base text-primary mb-3">-</h2>
+              <div class="w-full h-5 rounded-lg overflow-hidden flex text-[8px] font-gordita-bold text-white">
+                <div id="ov-fin-ingreso-seg-pi" class="h-full bg-op-pi flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+                <div id="ov-fin-ingreso-seg-rec" class="h-full bg-op-rec flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+                <div id="ov-fin-ingreso-seg-md" class="h-full bg-op-md flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+              </div>
+              <div class="mt-2 space-y-1">
+                <div class="flex justify-between items-center text-[9px]">
+                  <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-pi shrink-0"></span>Planta Interna</span>
+                  <span id="ov-fin-ingreso-pi-monto" class="font-gordita-bold text-primary">-</span>
+                </div>
+                <div class="flex justify-between items-center text-[9px]">
+                  <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-rec shrink-0"></span>Recolecciones</span>
+                  <span id="ov-fin-ingreso-rec-monto" class="font-gordita-bold text-primary">-</span>
+                </div>
+                <div class="flex justify-between items-center text-[9px]">
+                  <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-md shrink-0"></span>Multidistrito</span>
+                  <span id="ov-fin-ingreso-md-monto" class="font-gordita-bold text-primary">-</span>
+                </div>
+              </div>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-2 text-center">Gastos</p>
+              <div class="flex justify-between items-baseline">
+                <p class="text-[10px] text-op-pi font-gordita-bold">Costo Directo</p>
+                <div class="flex items-baseline gap-1.5">
+                  <h2 id="ov-fin-kpi-directo" class="font-gordita-bold text-sm text-primary">-</h2>
+                  <span id="ov-fin-kpi-directo-yoy" class="text-[9px] font-gordita-bold"></span>
+                </div>
+              </div>
+              <div class="flex justify-between items-baseline mt-2">
+                <p class="text-[10px] text-op-md font-gordita-bold">Gasto Operativo</p>
+                <div class="flex items-baseline gap-1.5">
+                  <h2 id="ov-fin-kpi-operativo" class="font-gordita-bold text-sm text-primary">-</h2>
+                  <span id="ov-fin-kpi-operativo-yoy" class="text-[9px] font-gordita-bold"></span>
+                </div>
+              </div>
+              <div class="flex justify-between items-baseline mt-2 pt-2 border-t border-outline-variant">
+                <p class="text-[10px] text-primary font-gordita-bold">Gasto Total</p>
+                <div class="flex items-baseline gap-1.5">
+                  <h2 id="ov-fin-kpi-total" class="font-gordita-bold text-base text-primary">-</h2>
+                  <span id="ov-fin-kpi-total-yoy" class="text-[9px] font-gordita-bold"></span>
+                </div>
+              </div>
+              <p class="text-[8px] text-on-surface-variant opacity-60 text-right mt-2">Variación interanual (YoY)</p>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg text-center">
+              <p id="ov-fin-kpi-margen-titulo" class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Margen (·)</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <p class="text-[9px] text-op-pi font-gordita-bold uppercase tracking-wide">Bruto</p>
+                  <div style="height:55px; width:100px;" class="mx-auto"><canvas id="ov-fin-gauge-margen-bruto"></canvas></div>
+                  <p class="text-[8px] text-on-surface-variant">Utilidad Bruta<br><span id="ov-fin-kpi-utilidad-bruta" class="font-gordita-bold text-primary">-</span></p>
+                </div>
+                <div>
+                  <p class="text-[9px] text-op-md font-gordita-bold uppercase tracking-wide">Operativo</p>
+                  <div style="height:55px; width:100px;" class="mx-auto"><canvas id="ov-fin-gauge-margen-operativo"></canvas></div>
+                  <p class="text-[8px] text-on-surface-variant">Utilidad Operativa<br><span id="ov-fin-kpi-utilidad-operativa" class="font-gordita-bold text-primary">-</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Tendencia de Gasto · últimos 12 meses</h3>
+            <div style="height:260px;"><canvas id="grafica-overview-fin"></canvas></div>
+          </div>
+        </section>
+        </div>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 mb-lg">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-qiora-blue/10 rounded-lg"><span class="material-symbols-outlined text-qiora-blue">local_shipping</span></div>
+              <h2 class="font-gordita-bold text-xl text-primary">Flota Vehicular</h2>
+            </div>
+            <button onclick="abrirPilar('flota')" class="flex items-center gap-1 text-xs font-gordita-bold text-on-surface-variant hover:text-qiora-blue transition-colors">
+              Ver desglose completo <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"># Flota Activa</p>
+              <h2 id="ov-flota-kpi-activa" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Vehículos en Atención</p>
+              <h2 id="ov-flota-kpi-atencion" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Antigüedad Promedio</p>
+              <h2 id="ov-flota-kpi-antiguedad" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota YTD</p>
+              <h2 id="ov-flota-kpi-ytd" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+          </div>
+          <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Composición de Flota</h3>
+          <div class="w-full h-6 rounded-lg overflow-hidden flex text-[9px] font-gordita-bold text-white mb-2">
+            <div id="ov-flota-seg-activo" class="h-full bg-op-pi flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+            <div id="ov-flota-seg-baja" class="h-full bg-op-rec flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+            <div id="ov-flota-seg-inactivo" class="h-full bg-op-md flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+          </div>
+          <div class="flex items-center justify-center flex-wrap gap-x-5 gap-y-1 text-[10px]">
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-pi shrink-0"></span>Activo <span id="ov-flota-count-activo" class="font-gordita-bold text-primary">-</span></span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-rec shrink-0"></span>Baja <span id="ov-flota-count-baja" class="font-gordita-bold text-primary">-</span></span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-op-md shrink-0"></span>Inactivo <span id="ov-flota-count-inactivo" class="font-gordita-bold text-primary">-</span></span>
+          </div>
+        </section>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 mb-lg">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-brand-teal/10 rounded-lg"><span class="material-symbols-outlined text-brand-teal">groups</span></div>
+              <h2 class="font-gordita-bold text-xl text-primary">Capital Humano</h2>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">HeadCount</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Nómina Pagada</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Bono Pagado</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Rotación (Altas/Bajas)</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+          </div>
+          <div class="bg-surface-container-low p-8 rounded-lg flex flex-col items-center text-center">
+            <span class="material-symbols-outlined text-brand-teal mb-2" style="font-size:32px;">database</span>
+            <h3 class="font-gordita-bold text-primary mb-1">Falta conectar la fuente de datos</h3>
+            <p class="text-sm text-on-surface-variant max-w-md">En cuanto compartas la base de HeadCount, nómina, bonos y movimientos de altas/bajas, esta sección se conecta con datos reales.</p>
+          </div>
+        </section>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 mb-lg">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-totalplay-cyan/10 rounded-lg"><span class="material-symbols-outlined text-totalplay-cyan">request_quote</span></div>
+              <h2 class="font-gordita-bold text-xl text-primary">Presupuesto</h2>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Presupuestado</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Real</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Variación</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
+          </div>
+          <div class="bg-surface-container-low p-8 rounded-lg flex flex-col items-center text-center">
+            <span class="material-symbols-outlined text-totalplay-cyan mb-2" style="font-size:32px;">database</span>
+            <h3 class="font-gordita-bold text-primary mb-1">Falta conectar la fuente de datos</h3>
+            <p class="text-sm text-on-surface-variant max-w-md">En cuanto tengamos el presupuesto por distrito/categoría, esta sección compara real vs. presupuestado.</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-resumen">
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
           <h1 class="font-gordita-bold text-4xl text-primary mt-1">Resumen Ejecutivo</h1>
@@ -202,7 +442,7 @@
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
           <p class="text-xs text-on-surface-variant mb-6">Barra sólida: Costo Directo + Gasto Operativo del mes, con su monto dentro de cada tramo. Barra punteada junto a ella: total del mismo mes hace un año. % arriba: variación vs. ese mes (rojo = más gasto, verde = menos gasto).</p>
-          <canvas id="grafica-composicion-mensual" height="90"></canvas>
+          <div style="height:340px;"><canvas id="grafica-composicion-mensual"></canvas></div>
         </div>
         <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
           <div class="px-8 py-4 border-b border-outline-variant">
@@ -218,108 +458,6 @@
               </tr>
             </thead>
             <tbody id="tabla-tipo-gasto-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <div class="vista" id="vista-sucursal">
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Por Sucursal / Distrito</h1>
-          </div>
-          <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-prorrateo" value="bolsa" checked onchange="renderizarSucursales()" class="hidden"> Bolsa
-            </label>
-            <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-              <input type="radio" name="modo-prorrateo" value="prorrateado" onchange="renderizarSucursales()" class="hidden"> Prorrateado
-            </label>
-          </div>
-        </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table id="tabla-sucursales" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarSucursales('distrito')">Distrito <span id="orden-sucursal-distrito"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('costoDirecto')">Costo Directo <span id="orden-sucursal-costoDirecto"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('operativo')">Gasto Operativo <span id="orden-sucursal-operativo"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarSucursales('total')">Total <span id="orden-sucursal-total"></span></th>
-              </tr>
-            </thead>
-            <tbody id="tabla-sucursales-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-          <p id="bolsa-total-info" class="px-8 py-4 bg-surface-container-low text-xs font-gordita-bold text-on-surface-variant"></p>
-        </section>
-
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg mt-lg">
-          <div class="flex justify-between items-start flex-wrap gap-4 mb-1">
-            <h3 class="font-gordita-bold text-lg text-primary">Mapa de Variaciones (Costos Directos)</h3>
-            <div class="bg-white p-1 rounded-lg border border-outline-variant flex shrink-0">
-              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="filtro-movimientos" value="todos" checked onchange="cambiarFiltroMovimientos('todos')" class="hidden"> Todos
-              </label>
-              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="filtro-movimientos" value="aumentos" onchange="cambiarFiltroMovimientos('aumentos')" class="hidden"> Solo Aumentos
-              </label>
-              <label class="px-3 py-1 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
-                <input type="radio" name="filtro-movimientos" value="disminuciones" onchange="cambiarFiltroMovimientos('disminuciones')" class="hidden"> Solo Disminuciones
-              </label>
-            </div>
-          </div>
-          <p class="text-xs text-on-surface-variant mb-6">Cada burbuja es una familia de gasto en un distrito. Eje X: % de variación (valores extremos se limitan visualmente a ±150% para mantener la escala legible; el tooltip muestra el % real). Eje Y: monto actual. Tamaño: el $ real que cambió — lo que de verdad importa investigar.</p>
-          <div style="height: 320px;">
-            <canvas id="grafica-burbujas-variaciones"></canvas>
-          </div>
-        </div>
-
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
-          <div class="px-8 py-4 border-b border-outline-variant">
-            <h3 class="font-gordita-bold text-lg text-primary">Top Movimientos</h3>
-          </div>
-          <table id="tabla-top-movimientos" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarMovimientos('distrito')">Distrito <span id="orden-movimientos-distrito"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarMovimientos('familia')">Familia <span id="orden-movimientos-familia"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('monto')">Monto <span id="orden-movimientos-monto"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('deltaPesos')">Δ$ <span id="orden-movimientos-deltaPesos"></span></th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarMovimientos('deltaPct')">Δ% <span id="orden-movimientos-deltaPct"></span></th>
-              </tr>
-            </thead>
-            <tbody id="tabla-top-movimientos-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <div class="vista" id="vista-proveedor">
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Análisis por Proveedor</h1>
-          <p class="text-on-surface-variant text-sm mt-2">Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
-        </div>
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Costos Directos (últimos 6 meses)</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Monto total pagado por mes, mismo alcance que el desglose de abajo.</p>
-          <div style="height: 260px;">
-            <canvas id="grafica-tendencia-proveedor"></canvas>
-          </div>
-        </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <div class="px-8 py-3 flex items-center gap-5 text-[10px] text-on-surface-variant uppercase tracking-widest bg-surface-container-low border-b border-outline-variant">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-primary inline-block"></span>Familia</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-qiora-blue inline-block"></span>Gasto</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-brand-teal inline-block"></span>Proveedor</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-secondary-container inline-block"></span>Sucursal (ranking + últimos 6 meses)</span>
-          </div>
-          <table id="tabla-analisis-proveedor" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia / Gasto / Proveedor / Sucursal</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-analisis-proveedor-body" class="text-sm divide-y divide-outline-variant"></tbody>
           </table>
         </section>
       </div>
@@ -433,12 +571,13 @@
             <input id="bolsa-vigente" type="month" class="px-3 py-2 border border-outline-variant rounded text-sm">
             <button onclick="guardarBolsaMultidistrito()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Agregar bolsa Multidistrito</button>
           </div>
+          <p class="text-xs text-on-surface-variant mb-2">El peso de cada distrito dentro de su bolsa Multidistrito ya no se captura a mano: se calcula a partir del HC Autorizado (sucursales "MLT") de abajo.</p>
           <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-            <input id="asignacion-distrito" placeholder="Distrito (código)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
-            <input id="asignacion-ordenes" type="number" step="0.01" placeholder="Órdenes asignadas" class="px-3 py-2 border border-outline-variant rounded text-sm">
-            <input id="asignacion-porcentaje" type="number" step="0.0001" placeholder="% (informativo)" class="px-3 py-2 border border-outline-variant rounded text-sm">
-            <input id="asignacion-vigente" type="month" class="px-3 py-2 border border-outline-variant rounded text-sm">
-            <button onclick="guardarAsignacionMultidistrito()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity md:col-span-5">Agregar asignación de distrito (Multidistrito)</button>
+            <input id="hc-distrito" placeholder="Sucursal HC (código MLT o INT)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
+            <input id="hc-puesto" placeholder="Puesto" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <input id="hc-personas" type="number" step="1" placeholder="Personas autorizadas" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <input id="hc-vigente" type="month" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            <button onclick="guardarHcAutorizado()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity md:col-span-5">Agregar vigencia de HC Autorizado</button>
           </div>
           <p id="estado-ingresos-admin" class="text-sm font-gordita-bold text-secondary mt-3"></p>
         </div>
@@ -472,43 +611,6 @@
         </section>
       </div>
 
-      <div class="vista" id="vista-rentabilidad">
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Rentabilidades</h1>
-          <p id="rentabilidad-subtitulo" class="text-on-surface-variant text-sm mt-2">Ranking YTD de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.</p>
-        </div>
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación por Distrito (últimos 12 meses)</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Rojo = margen negativo, amarillo = margen bajo (0%-5%, hay que subirlo), verde = margen sano. Un distrito rojo varios meses seguidos es un problema estructural, no ruido — click en cualquier celda para ver el detalle.</p>
-          <div class="overflow-x-auto">
-            <table id="tabla-heatmap-rentabilidad" class="w-full border-collapse table-fixed">
-              <thead>
-                <tr id="heatmap-rentabilidad-encabezado" class="text-[10px] text-on-surface-variant"></tr>
-              </thead>
-              <tbody id="heatmap-rentabilidad-body" class="text-xs"></tbody>
-            </table>
-          </div>
-        </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm">
-          <table id="tabla-rentabilidad" class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso <span id="orden-rentabilidad-ingreso"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo <span id="orden-rentabilidad-costoDirecto"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Ut. Bruta <span id="orden-rentabilidad-utilidadBruta"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Marg. Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Oper. <span id="orden-rentabilidad-operativo"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Ut. Operación <span id="orden-rentabilidad-utilidadOperacion"></span></th>
-                <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Marg. Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
-              </tr>
-            </thead>
-            <tbody id="tabla-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
-      </div>
-
       <div class="vista" id="vista-config">
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
@@ -517,6 +619,7 @@
         <div class="bg-white p-1 rounded-lg border border-outline-variant flex w-fit mb-8">
           <button id="config-tab-glosario" onclick="mostrarSubConfig('glosario')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Glosario de Sucursales</button>
           <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
+          <button id="config-tab-flota" onclick="mostrarSubConfig('flota')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Flota Vehicular</button>
           <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
 
@@ -568,6 +671,19 @@
           </div>
         </div>
 
+        <div id="config-sub-flota" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el "REPORTE SUCURSAL DETALLE" descargado de FFM. Este reporte es una fotografía completa de la flota al momento de la descarga — cada carga <strong>reemplaza todo</strong> el inventario anterior, no se acumula por fecha.</p>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <input type="file" id="input-excel-flota" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-flota" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-3">Vehículos a cargar: <strong id="preview-filas-flota" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará por completo el inventario de flota vehicular existente.</p>
+              <button onclick="confirmarCargaFlota()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga-flota" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
         <div id="config-sub-usuarios" class="config-sub" style="display:none;">
           <div class="mb-6 flex justify-end">
             <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
@@ -604,7 +720,7 @@
       </div>
 
       <div class="vista" id="vista-detalle-distrito">
-        <button onclick="mostrarVista('sucursal')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+        <button onclick="abrirPilar('financieros')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver
         </button>
         <div class="mb-8">
@@ -614,7 +730,7 @@
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de gasto (últimos 12 meses)</h3>
           <p class="text-xs text-on-surface-variant mb-6">Barra sólida: Costo Directo + Gasto Operativo Asignado del mes en este distrito, con su monto dentro de cada tramo. Barra punteada: total del mismo mes hace un año. % arriba: variación vs. ese mes.</p>
-          <canvas id="grafica-tendencia-distrito" height="90"></canvas>
+          <div style="height:340px;"><canvas id="grafica-tendencia-distrito"></canvas></div>
         </div>
         <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
           <div class="flex justify-between items-start flex-wrap gap-4 mb-1">
@@ -650,6 +766,452 @@
           </table>
           <div id="detalle-distrito-operativo" class="px-8 py-4 bg-surface-container-low flex justify-between items-center text-sm font-gordita-bold"></div>
         </section>
+      </div>
+
+      <div class="vista" id="vista-pilar-operaciones">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Operaciones</h1>
+          <p id="pilar-op-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
+            <p class="font-gordita-bold text-[10px] text-op-pi uppercase tracking-wider mb-1">Alcance Planta Interna</p>
+            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-pi"></canvas></div>
+            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
+              <span>Dimensionados<br><span id="op-kpi-dim-pi" class="font-gordita-bold text-primary text-sm">-</span></span>
+              <span>Realizados<br><span id="op-kpi-real-pi" class="font-gordita-bold text-primary text-sm">-</span></span>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
+            <p class="font-gordita-bold text-[10px] text-op-rec uppercase tracking-wider mb-1">Alcance Recolecciones</p>
+            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-rec"></canvas></div>
+            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
+              <span>Dimensionados<br><span id="op-kpi-dim-rec" class="font-gordita-bold text-primary text-sm">-</span></span>
+              <span>Realizados<br><span id="op-kpi-real-rec" class="font-gordita-bold text-primary text-sm">-</span></span>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
+            <p class="font-gordita-bold text-[10px] text-op-md uppercase tracking-wider mb-1">Alcance Multidistrito</p>
+            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-md"></canvas></div>
+            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
+              <span>Dimensionados<br><span id="op-kpi-dim-md" class="font-gordita-bold text-primary text-sm">-</span></span>
+              <span>Realizados<br><span id="op-kpi-real-md" class="font-gordita-bold text-primary text-sm">-</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Folios por Póliza</h3>
+          <p class="text-xs text-on-surface-variant mb-6">Barra: folios dimensionados. Línea (eje derecho): % de alcance, con folios realizados entre paréntesis.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-start">
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-sm text-op-pi uppercase tracking-wide mb-2">Planta Interna</p>
+              <div style="height:260px;"><canvas id="op-grafica-pi"></canvas></div>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-sm text-op-rec uppercase tracking-wide mb-2">Recolecciones</p>
+              <div style="height:260px;"><canvas id="op-grafica-rec"></canvas></div>
+            </div>
+            <div class="bg-surface-container-low p-5 rounded-lg">
+              <p class="font-gordita-bold text-sm text-op-md uppercase tracking-wide mb-2">Multidistrito</p>
+              <div style="height:260px;"><canvas id="op-grafica-md"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Distritos por Alcance</h3>
+            <p class="text-xs text-on-surface-variant mb-4">% de alcance promedio (todas las pólizas)</p>
+            <div id="op-ranking-distritos" class="space-y-3"></div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución de OS Dimensionadas</h3>
+            <p class="text-xs text-on-surface-variant mb-4">OS dimensionadas por distrito · mes vigente</p>
+            <h2 id="op-alcance-grande" class="font-gordita-bold text-3xl text-primary mb-4">-</h2>
+            <div class="w-full h-3 rounded-full overflow-hidden flex bg-surface-container">
+              <div id="op-alcance-seg-pi" class="h-full bg-op-pi" style="width:0%;"></div>
+              <div id="op-alcance-seg-rec" class="h-full bg-op-rec" style="width:0%;"></div>
+              <div id="op-alcance-seg-md" class="h-full bg-op-md" style="width:0%;"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-on-surface-variant mt-2">
+              <span class="text-op-pi font-gordita-bold">PI</span>
+              <span class="text-op-rec font-gordita-bold">Recolecciones</span>
+              <span class="text-op-md font-gordita-bold">Multidistrito</span>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Multidistrito por Bolsa Regional</h3>
+            <p class="text-xs text-on-surface-variant mb-4">Cuadrillas autorizadas · mes vigente</p>
+            <div id="op-bolsas-regionales" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-xs text-op-pi uppercase tracking-wider mb-3">Planta Interna</p>
+            <h2 id="op-pi-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
+            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
+            <div class="flex justify-between mt-3 text-xs"><span id="op-pi-os" class="font-gordita-bold">-</span><span id="op-pi-precio" class="font-gordita-bold">-</span></div>
+            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS dimensionadas</span><span>Precio/OS</span></div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-xs text-op-rec uppercase tracking-wider mb-3">Recolecciones</p>
+            <h2 id="op-rec-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
+            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
+            <div class="flex justify-between mt-3 text-xs"><span id="op-rec-os" class="font-gordita-bold">-</span><span id="op-rec-precio" class="font-gordita-bold">-</span></div>
+            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS dimensionadas</span><span>Precio/OS</span></div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-xs text-op-md uppercase tracking-wider mb-3">Multidistrito</p>
+            <h2 id="op-md-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
+            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
+            <div class="flex justify-between mt-3 text-xs"><span id="op-md-os" class="font-gordita-bold">-</span><span id="op-md-precio" class="font-gordita-bold">-</span></div>
+            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS asignadas</span><span>Precio/OS (bolsa)</span></div>
+          </div>
+        </div>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Planta Interna</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Recolecciones</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Multidistrito</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total YTD</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-op-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-pilar-financieros">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+            <h1 class="font-gordita-bold text-4xl text-primary mt-1">Financieros</h1>
+            <p id="pilar-fin-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+          </div>
+          <select id="fin-selector-distrito" onchange="cambiarDistritoFinancieros(this.value)" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
+            <option value="TODAS">Todas las sucursales/distritos</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-op-pi/10 rounded-lg inline-flex mb-3">
+              <span class="material-symbols-outlined text-op-pi">payments</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingresos YTD</p>
+            <h2 id="fin-kpi-ingresos" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-op-rec/10 rounded-lg inline-flex mb-3">
+              <span class="material-symbols-outlined text-op-rec">receipt_long</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gastos YTD</p>
+            <h2 id="fin-kpi-gastos" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-op-md/10 rounded-lg inline-flex mb-3">
+              <span class="material-symbols-outlined text-op-md">trending_up</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Utilidad YTD</p>
+            <h2 id="fin-kpi-utilidad" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <div class="p-2 bg-primary/10 rounded-lg inline-flex mb-3">
+              <span class="material-symbols-outlined text-primary">percent</span>
+            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Margen YTD</p>
+            <h2 id="fin-kpi-margen" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+        </div>
+
+        <div id="fin-areas-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+          <button onclick="abrirAreaFinanciera('ingresos')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">payments</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Ingresos</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Desglose por póliza, tendencias, nacional o por distrito.</p>
+            <div class="flex items-baseline gap-2 mb-3">
+              <h2 id="fin-card-ingresos-monto" class="font-gordita-bold text-xl text-primary">-</h2>
+              <span id="fin-card-ingresos-yoy" class="text-[9px] font-gordita-bold"></span>
+            </div>
+            <div class="w-full h-4 rounded-lg overflow-hidden flex text-[8px] font-gordita-bold text-white mt-auto">
+              <div id="fin-card-ingresos-seg-pi" class="h-full bg-op-pi flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+              <div id="fin-card-ingresos-seg-rec" class="h-full bg-op-rec flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+              <div id="fin-card-ingresos-seg-md" class="h-full bg-op-md flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+            </div>
+          </button>
+
+          <button onclick="abrirAreaFinanciera('gastos')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">receipt_long</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Gastos</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Nómina, comisiones, flota y más — últimos 6 meses.</p>
+            <h2 id="fin-card-gastos-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
+            <div style="height:56px;" class="mt-auto"><canvas id="fin-card-gastos-sparkline"></canvas></div>
+          </button>
+
+          <button onclick="abrirAreaFinanciera('rentabilidad')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">query_stats</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rentabilidad</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Márgenes y utilidad en el tiempo, por distrito.</p>
+            <div class="flex items-center gap-3 mb-2">
+              <div style="height:44px; width:80px;"><canvas id="fin-card-gauge-margen-bruto"></canvas></div>
+              <div style="height:44px; width:80px;"><canvas id="fin-card-gauge-margen-operacion"></canvas></div>
+              <div class="flex-1 text-[9px] text-on-surface-variant">
+                <p class="text-op-pi font-gordita-bold">Bruto</p>
+                <p class="text-op-md font-gordita-bold mt-2">Operación</p>
+              </div>
+            </div>
+            <div style="height:36px;" class="mt-auto"><canvas id="fin-card-sparkline-margen"></canvas></div>
+          </button>
+
+          <button onclick="abrirAreaFinanciera('proveedores')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-primary/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-primary">storefront</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Proveedores</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Drill down completo: Familia → Gasto → Proveedor.</p>
+            <h2 id="fin-card-proveedores-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
+            <div id="fin-card-proveedores-ranking" class="space-y-2 mt-auto"></div>
+          </button>
+        </div>
+
+        <div id="fin-area-ingresos" class="fin-area" style="display:none;">
+          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
+          </button>
+          <h3 id="fin-ingresos-titulo" class="font-gordita-bold text-2xl text-primary mb-6">Ingresos</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-xs text-op-pi uppercase tracking-wider mb-2">Planta Interna</p>
+              <h2 id="fin-ingresos-pi-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
+              <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div id="fin-ingresos-pi-bar" class="h-full bg-op-pi rounded-full" style="width:0%;"></div></div>
+              <p class="text-xs text-on-surface-variant mt-1"><span id="fin-ingresos-pi-pct">-</span> del ingreso</p>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-xs text-op-rec uppercase tracking-wider mb-2">Recolecciones</p>
+              <h2 id="fin-ingresos-rec-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
+              <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div id="fin-ingresos-rec-bar" class="h-full bg-op-rec rounded-full" style="width:0%;"></div></div>
+              <p class="text-xs text-on-surface-variant mt-1"><span id="fin-ingresos-rec-pct">-</span> del ingreso</p>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-xs text-op-md uppercase tracking-wider mb-2">Multidistrito</p>
+              <h2 id="fin-ingresos-md-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
+              <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div id="fin-ingresos-md-bar" class="h-full bg-op-md rounded-full" style="width:0%;"></div></div>
+              <p class="text-xs text-on-surface-variant mt-1"><span id="fin-ingresos-md-pct">-</span> del ingreso</p>
+            </div>
+          </div>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Ingreso por Póliza (últimos 12 meses)</h3>
+            <div style="height: 320px;"><canvas id="grafica-fin-ingresos-tendencia"></canvas></div>
+          </div>
+          <div id="fin-ingresos-ranking-wrap" class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-4">Ranking por Distrito (YTD)</h3>
+            <div id="fin-ingresos-ranking" class="space-y-4"></div>
+          </div>
+        </div>
+
+        <div id="fin-area-gastos" class="fin-area" style="display:none;">
+          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
+          </button>
+          <h3 class="font-gordita-bold text-2xl text-primary mb-1">Top Gastos</h3>
+          <p class="text-sm text-on-surface-variant mb-6">Rubros que representan la mayor parte del costo operativo mensual del negocio — <span id="fin-gastos-periodo" class="font-gordita-bold">-</span></p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Total del Periodo</p>
+              <h2 id="fin-gastos-total-periodo" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm md:col-span-2">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Identificado en los rubros clave de abajo</p>
+              <div class="flex items-baseline gap-3">
+                <h2 id="fin-gastos-identificado-pct" class="font-gordita-bold text-2xl text-primary">-</h2>
+                <span id="fin-gastos-identificado-monto" class="text-sm text-on-surface-variant">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Nómina y Cuadrillas</h3>
+            <p class="text-xs text-on-surface-variant mb-6">Desglosado por gasto específico (no por familia). Últimos 6 meses, mes contra mes.</p>
+            <div id="fin-gastos-nomina-filas" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter"></div>
+          </div>
+
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Otros Gastos Operativos Clave</h3>
+            <p class="text-xs text-on-surface-variant mb-6">Familias de gasto con mayor peso en la operación. Últimos 6 meses, mes contra mes.</p>
+            <div id="fin-gastos-operativas-filas" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter"></div>
+          </div>
+        </div>
+
+        <div id="fin-area-rentabilidad" class="fin-area" style="display:none;">
+          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
+          </button>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Márgenes (últimos 12 meses)</h3>
+            <p class="text-xs text-on-surface-variant mb-6">Margen Bruto y Margen de Operación a nivel nacional, mes a mes — útil para ver el efecto de incrementos de precio o cambios de costo en el tiempo.</p>
+            <div style="height: 260px;"><canvas id="grafica-fin-tendencia-margen"></canvas></div>
+          </div>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación por Distrito (últimos 12 meses)</h3>
+            <p id="rentabilidad-subtitulo" class="text-xs text-on-surface-variant mb-6">Ranking YTD de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.</p>
+            <div class="overflow-x-auto">
+              <table id="tabla-heatmap-rentabilidad" class="w-full border-collapse table-fixed">
+                <thead>
+                  <tr id="heatmap-rentabilidad-encabezado" class="text-[10px] text-on-surface-variant"></tr>
+                </thead>
+                <tbody id="heatmap-rentabilidad-body" class="text-xs"></tbody>
+              </table>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <table id="tabla-rentabilidad" class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso <span id="orden-rentabilidad-ingreso"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo <span id="orden-rentabilidad-costoDirecto"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Ut. Bruta <span id="orden-rentabilidad-utilidadBruta"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Marg. Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Oper. <span id="orden-rentabilidad-operativo"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Ut. Operación <span id="orden-rentabilidad-utilidadOperacion"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Marg. Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <div id="fin-area-proveedores" class="fin-area" style="display:none;">
+          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
+          </button>
+          <div class="mb-6">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Análisis por Proveedor</h3>
+            <p id="fin-proveedor-subtitulo" class="text-xs text-on-surface-variant">Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-8 py-3 flex items-center gap-5 text-[10px] text-on-surface-variant uppercase tracking-widest bg-surface-container-low border-b border-outline-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi inline-block"></span>Familia</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-rec inline-block"></span>Gasto</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md inline-block"></span>Proveedor</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-secondary-container inline-block"></span>Sucursal (ranking + últimos 6 meses)</span>
+            </div>
+            <table id="tabla-analisis-proveedor" class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia / Gasto / Proveedor / Sucursal</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-analisis-proveedor-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+
+      <div class="vista" id="vista-pilar-flota">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Flota Vehicular</h1>
+          <p id="pilar-flota-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota YTD</p>
+            <h2 id="flota-kpi-ytd" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota (mes vigente)</p>
+            <h2 id="flota-kpi-mes" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"># Flota Activa</p>
+            <h2 id="flota-kpi-activa" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+        </div>
+        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Gasto de Flota (últimos 12 meses)</h3>
+          <div style="height: 340px;"><canvas id="grafica-flota-tendencia"></canvas></div>
+        </div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Gasto Flota YTD</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-flota-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="vista" id="vista-pilar-capitalhumano">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Capital Humano</h1>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">HeadCount</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Nómina Pagada</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Bono Pagado</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Rotación (Altas/Bajas)</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+        </div>
+        <div class="bg-white p-12 border border-outline-variant rounded-xl shadow-sm flex flex-col items-center text-center">
+          <span class="material-symbols-outlined text-brand-teal mb-3" style="font-size:40px;">database</span>
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Falta conectar la fuente de datos</h3>
+          <p class="text-sm text-on-surface-variant max-w-md">En cuanto compartas la base de HeadCount, nómina, bonos y movimientos de altas/bajas, esta vista se conecta con datos reales — el diseño y la navegación ya están listos.</p>
+        </div>
+      </div>
+
+      <div class="vista" id="vista-pilar-presupuesto">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Presupuesto</h1>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Presupuestado</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Real</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Variación</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+        </div>
+        <div class="bg-white p-12 border border-outline-variant rounded-xl shadow-sm flex flex-col items-center text-center">
+          <span class="material-symbols-outlined text-totalplay-cyan mb-3" style="font-size:40px;">database</span>
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Falta conectar la fuente de datos</h3>
+          <p class="text-sm text-on-surface-variant max-w-md">En cuanto tengamos el presupuesto por distrito/categoría, esta vista compara real vs. presupuestado — el diseño y la navegación ya están listos.</p>
+        </div>
       </div>
 
     </div>
@@ -795,6 +1357,7 @@ async function cargarSesion() {
   document.getElementById('app-shell').style.display = 'block';
   if (perfil.rol !== 'admin') {
     document.getElementById('config-tab-cargar').style.display = 'none';
+    document.getElementById('config-tab-flota').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   } else {
@@ -804,7 +1367,13 @@ async function cargarSesion() {
   mesGlobalSeleccionado = await obtenerUltimoMesConDatos();
   actualizarEtiquetaMesGlobal();
   await cargarGlosario();
-  mostrarVista('resumen');
+  mostrarVista('overview');
+}
+
+function alternarSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const colapsado = sidebar.classList.toggle('colapsado');
+  document.getElementById('icono-colapsar-sidebar').textContent = colapsado ? 'chevron_right' : 'chevron_left';
 }
 
 function mostrarIndicadorCarga() {
@@ -823,12 +1392,10 @@ async function mostrarVista(nombre) {
   if (boton) boton.classList.add('activo');
 
   const cargadores = {
+    overview: cargarOverview,
     resumen: cargarResumenEjecutivo,
-    sucursal: cargarPorSucursal,
-    proveedor: cargarAnalisisProveedor,
     ingresos: cargarIngresos,
     pnl: cargarPnL,
-    rentabilidad: cargarRentabilidades,
     config: cargarConfig,
   };
   const cargador = cargadores[nombre];
@@ -842,7 +1409,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'flota', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -860,10 +1427,14 @@ async function cargarConfig() {
 let analisisProveedorDatos = {};
 let analisisProveedorMeses = [];
 
-async function cargarAnalisisProveedor() {
+async function cargarAnalisisProveedor(distritoFiltro) {
   const glosarioMap = obtenerGlosarioMap();
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+
+  document.getElementById('fin-proveedor-subtitulo').textContent = distritoFiltro
+    ? 'Costos Directos del periodo activo en ' + distritoFiltro + '. Familia → Gasto → Proveedor → últimos 6 meses.'
+    : 'Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.';
 
   const mesesTendencia = [];
   for (let i = 5; i >= 0; i--) {
@@ -880,10 +1451,10 @@ async function cargarAnalisisProveedor() {
   const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, familia, gasto, proveedor, monto, subtotal, fecha_pago');
   const clasificadas = facturas
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
-    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS');
+    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS')
+    .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
 
   const porFamilia = {};
-  const totalTendenciaPorMes = {};
   clasificadas.forEach((f) => {
     const enActivo = f.fecha_pago >= rangos.actual.inicio && f.fecha_pago <= rangos.actual.fin;
     const enTendencia = f.fecha_pago >= inicioTendencia && f.fecha_pago <= finTendencia;
@@ -909,16 +1480,11 @@ async function cargarAnalisisProveedor() {
     if (enTendencia) {
       const clave = f.fecha_pago.slice(0, 7);
       nodoSucursal.porMes[clave] = (nodoSucursal.porMes[clave] || 0) + monto;
-      totalTendenciaPorMes[clave] = (totalTendenciaPorMes[clave] || 0) + monto;
     }
   });
 
   analisisProveedorDatos = porFamilia;
   renderizarAnalisisProveedor();
-
-  renderizarGraficaTendenciaSimple('grafica-tendencia-proveedor', 'graficaTendenciaProveedor', mesesTendencia.map((m) => etiquetaMesCorta(m.anio, m.mes)), [
-    { label: 'Costos Directos', datos: mesesTendencia.map((m) => totalTendenciaPorMes[m.clave] || 0), color: '#3498DB' },
-  ]);
 }
 
 function renderizarAnalisisProveedor() {
@@ -1054,8 +1620,91 @@ async function confirmarCarga() {
     document.getElementById('estado-carga').textContent = 'Error: ' + error.message;
     return;
   }
+  invalidarCache('facturas');
   document.getElementById('estado-carga').textContent = 'Carga completada: ' + filasParaCargar.length + ' filas.';
   document.getElementById('preview-carga').style.display = 'none';
+}
+
+function fechaISOOpcional(valor) {
+  if (valor === undefined || valor === null || valor === '') return null;
+  return fechaISODesdeCelda(valor);
+}
+
+let filasParaCargarFlota = null;
+
+document.getElementById('input-excel-flota').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja);
+
+      filasParaCargarFlota = filas.map((fila, indice) => {
+        try {
+          return {
+            numero_unico: fila['NUMERO UNICO'] || null,
+            placa: fila['PLACA'] || null,
+            estado_placa: fila['ESTADO PLACA'] || null,
+            sucursal: fila['SUCURSAL'] || null,
+            empleado_asignado: fila['EMPLEADO ASIGNADO'] || null,
+            numero_empleado: fila['NÚMERO EMPLEADO'] ? String(fila['NÚMERO EMPLEADO']) : null,
+            usuario_ffm: fila['USUARIO FFM'] || null,
+            puesto_empleado: fila['PUESTO EMPLEADO'] || null,
+            tipo_poliza: fila['TIPO PÓLIZA'] || null,
+            clasificacion: fila['CLASIFICACIÓN'] || null,
+            estatus_nuevo: fila['ESTATUS NUEVO'] || null,
+            responsable: fila['RESPONSABLE'] || null,
+            empleado_aprobo: fila['EMPLEADO APROBO'] || null,
+            fecha_aprobo: fechaISOOpcional(fila['FECHA APROBO']),
+            fecha_modificacion: fechaISOOpcional(fila['FECHA MODIFICACION']),
+            no_poliza: fila['NO. POLIZA'] ? String(fila['NO. POLIZA']) : null,
+            inciso_poliza: fila['INCISO POLIZA'] ? String(fila['INCISO POLIZA']) : null,
+            fecha_vencimiento_poliza: fechaISOOpcional(fila['FECHA VENCIMIENTO POLIZA']),
+            indicador_gasolina: fila['INDICADOR GASOLINA'] || null,
+            marca: fila['MARCA'] || null,
+            modelo: fila['MODELO'] || null,
+            numero_serie: fila['NUMERO DE SERIE'] || null,
+            placa_anterior: fila['PLACA ANTERIOR'] || null,
+            anio: fila['AÑO'] ?? null,
+            propiedad_vehiculo: fila['PROPIEDAD VEHICULO'] || null,
+            arrendadora: fila['ARRENDADORA'] || null,
+            empresa_compra_propio: fila['EMPRESA COMPRA PROPIO'] || null,
+            ultimo_kilometraje: fila['ULTIMO KILOMETRAJE'] ?? null,
+            fecha_ultimo_kilometraje: fechaISOOpcional(fila['FECHA ULTIMO KILOMETRAJE']),
+            taller: fila['TALLER'] || null,
+            tipos_servicio: fila['TIPOS DE SERVICIO'] || null,
+            fecha_compromiso: fechaISOOpcional(fila['FECHA COMPROMISO']),
+            monto: fila['MONTO'] ?? null,
+            motivo_reprogramacion: fila['MOTIVO REPROGRAMACION'] || null,
+            comentario: fila['COMENTARIO'] || null,
+          };
+        } catch (errorFila) {
+          throw new Error('Fila ' + (indice + 2) + ' del Excel: ' + errorFila.message);
+        }
+      });
+
+      document.getElementById('preview-filas-flota').textContent = filasParaCargarFlota.length;
+      document.getElementById('preview-carga-flota').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga-flota').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaFlota() {
+  document.getElementById('estado-carga-flota').textContent = 'Cargando...';
+  const { error } = await supabaseClient.rpc('reemplazar_flota_vehicular', { filas: filasParaCargarFlota });
+  if (error) {
+    document.getElementById('estado-carga-flota').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('flota_vehicular');
+  document.getElementById('estado-carga-flota').textContent = 'Carga completada: ' + filasParaCargarFlota.length + ' vehículos.';
+  document.getElementById('preview-carga-flota').style.display = 'none';
 }
 
 let glosarioActual = [];
@@ -1191,6 +1840,39 @@ function formatoMoneda(valor) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 }
 
+function formatoMonedaModo(valor, modo) {
+  if (modo === 'millones') return '$' + (valor / 1e6).toFixed(1) + 'M';
+  if (modo === 'miles') return '$' + Math.round(valor / 1e3).toLocaleString('es-MX') + 'K';
+  return formatoMoneda(valor);
+}
+
+let finFormatoModo = 'millones';
+let finKpisRawOverview = null;
+
+function cambiarFormatoFinanciero(modo) {
+  finFormatoModo = modo;
+  ['completo', 'miles', 'millones'].forEach((m) => {
+    const boton = document.getElementById('fin-formato-' + m);
+    boton.classList.toggle('bg-primary', m === modo);
+    boton.classList.toggle('text-on-primary', m === modo);
+    boton.classList.toggle('text-on-surface-variant', m !== modo);
+  });
+  renderizarKpisFinancierosOverview();
+}
+
+function renderizarKpisFinancierosOverview() {
+  if (!finKpisRawOverview) return;
+  document.getElementById('ov-fin-kpi-total').textContent = formatoMonedaModo(finKpisRawOverview.total, finFormatoModo);
+  document.getElementById('ov-fin-kpi-directo').textContent = formatoMonedaModo(finKpisRawOverview.directo, finFormatoModo);
+  document.getElementById('ov-fin-kpi-operativo').textContent = formatoMonedaModo(finKpisRawOverview.operativo, finFormatoModo);
+  document.getElementById('ov-fin-kpi-ingreso').textContent = formatoMonedaModo(finKpisRawOverview.ingreso, finFormatoModo);
+  document.getElementById('ov-fin-kpi-utilidad-bruta').textContent = formatoMonedaModo(finKpisRawOverview.utilidadBruta, finFormatoModo);
+  document.getElementById('ov-fin-kpi-utilidad-operativa').textContent = formatoMonedaModo(finKpisRawOverview.utilidadOperativa, finFormatoModo);
+  document.getElementById('ov-fin-ingreso-pi-monto').textContent = formatoMonedaModo(finKpisRawOverview.ingresoPI, finFormatoModo);
+  document.getElementById('ov-fin-ingreso-rec-monto').textContent = formatoMonedaModo(finKpisRawOverview.ingresoRec, finFormatoModo);
+  document.getElementById('ov-fin-ingreso-md-monto').textContent = formatoMonedaModo(finKpisRawOverview.ingresoMD, finFormatoModo);
+}
+
 function formatoDifMoneda(variacionPct, dif) {
   if (variacionPct === null) return '—';
   return (dif > 0 ? '+' : '') + formatoMoneda(dif);
@@ -1203,42 +1885,90 @@ function formatoCompacto(valor) {
   return '$' + valor;
 }
 
-async function obtenerTablaCompleta(nombreTabla) {
-  const TAMANO_PAGINA = 1000;
-  let todas = [];
-  let desde = 0;
-  while (true) {
-    const { data, error } = await supabaseClient
-      .from(nombreTabla)
-      .select('*')
-      .order('id')
-      .range(desde, desde + TAMANO_PAGINA - 1);
-    if (error) throw error;
-    todas = todas.concat(data || []);
-    if (!data || data.length < TAMANO_PAGINA) break;
-    desde += TAMANO_PAGINA;
+// Caché en memoria (dura mientras la pestaña siga abierta). Todas las vistas ya
+// pasan por estas 2 funciones para leer de Supabase, así que cachear aquí acelera
+// a toda la app sin tener que tocar cada vista una por una. invalidarCache() se
+// llama después de cualquier carga/edición admin para no dejar datos viejos.
+const cacheTablasCompletas = {};
+const cacheFacturasPorMes = {};
+
+function invalidarCache(nombreTabla) {
+  if (nombreTabla) {
+    delete cacheTablasCompletas[nombreTabla];
+    if (nombreTabla === 'facturas') {
+      Object.keys(cacheFacturasPorMes).forEach((clave) => delete cacheFacturasPorMes[clave]);
+    }
+  } else {
+    Object.keys(cacheTablasCompletas).forEach((clave) => delete cacheTablasCompletas[clave]);
+    Object.keys(cacheFacturasPorMes).forEach((clave) => delete cacheFacturasPorMes[clave]);
   }
-  return todas;
 }
 
+async function obtenerTablaCompleta(nombreTabla) {
+  if (cacheTablasCompletas[nombreTabla]) return cacheTablasCompletas[nombreTabla];
+  const promesa = (async () => {
+    const TAMANO_PAGINA = 1000;
+    let todas = [];
+    let desde = 0;
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from(nombreTabla)
+        .select('*')
+        .order('id')
+        .range(desde, desde + TAMANO_PAGINA - 1);
+      if (error) { delete cacheTablasCompletas[nombreTabla]; throw error; }
+      todas = todas.concat(data || []);
+      if (!data || data.length < TAMANO_PAGINA) break;
+      desde += TAMANO_PAGINA;
+    }
+    return todas;
+  })();
+  cacheTablasCompletas[nombreTabla] = promesa;
+  return promesa;
+}
+
+async function obtenerFacturasDeMes(claveMesStr) {
+  if (cacheFacturasPorMes[claveMesStr]) return cacheFacturasPorMes[claveMesStr];
+  const [anio, mes] = claveMesStr.split('-').map(Number);
+  const rango = rangoDeMes(anio, mes - 1);
+  const promesa = (async () => {
+    const TAMANO_PAGINA = 1000;
+    let todas = [];
+    let desde = 0;
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from('facturas')
+        .select('*')
+        .gte('fecha_pago', rango.inicio)
+        .lte('fecha_pago', rango.fin)
+        .order('id')
+        .range(desde, desde + TAMANO_PAGINA - 1);
+      if (error) { delete cacheFacturasPorMes[claveMesStr]; throw error; }
+      todas = todas.concat(data || []);
+      if (!data || data.length < TAMANO_PAGINA) break;
+      desde += TAMANO_PAGINA;
+    }
+    return todas;
+  })();
+  cacheFacturasPorMes[claveMesStr] = promesa;
+  return promesa;
+}
+
+// Cachea por mes calendario (no por rango exacto) para que vistas distintas que
+// piden ventanas de fechas traslapadas (mes actual, YTD, últimos 12 meses, etc.)
+// reutilicen los meses ya descargados en vez de volver a pedirlos a Supabase.
 async function obtenerFacturasEnRango(fechaInicio, fechaFin, columnas) {
-  const TAMANO_PAGINA = 1000;
-  let todas = [];
-  let desde = 0;
-  while (true) {
-    const { data, error } = await supabaseClient
-      .from('facturas')
-      .select(columnas)
-      .gte('fecha_pago', fechaInicio)
-      .lte('fecha_pago', fechaFin)
-      .order('id')
-      .range(desde, desde + TAMANO_PAGINA - 1);
-    if (error) throw error;
-    todas = todas.concat(data || []);
-    if (!data || data.length < TAMANO_PAGINA) break;
-    desde += TAMANO_PAGINA;
+  const inicio = new Date(fechaInicio + 'T00:00:00');
+  const fin = new Date(fechaFin + 'T00:00:00');
+  const claves = [];
+  let cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
+  while (cursor <= fin) {
+    claves.push(cursor.getFullYear() + '-' + String(cursor.getMonth() + 1).padStart(2, '0'));
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
   }
-  return todas;
+  const porMes = await Promise.all(claves.map((c) => obtenerFacturasDeMes(c)));
+  const todas = [].concat(...porMes);
+  return todas.filter((f) => f.fecha_pago >= fechaInicio && f.fecha_pago <= fechaFin);
 }
 
 async function cargarResumenEjecutivo() {
@@ -1302,8 +2032,10 @@ function formatoCompactoCorto(valor) {
   return '$' + Math.round(valor);
 }
 
-function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
+function renderizarGraficaTendencia(canvasId, refGrafica, datos, colores, mostrarEjeY) {
   const { etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy } = datos;
+  const paleta = Object.assign({ directo: '#2DD4BF', operativo: '#1b1b1b', textoDirecto: '#1b1b1b', textoOperativo: '#ffffff' }, colores || {});
+  const conEjeY = mostrarEjeY !== false;
   const ALTURA_MINIMA_ETIQUETA = 16;
 
   const ctx = document.getElementById(canvasId);
@@ -1314,11 +2046,12 @@ function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
       labels: etiquetas,
       datasets: [
         { label: 'Año anterior', data: datosAnioAnterior, backgroundColor: 'transparent', borderColor: '#7e7576', borderWidth: 2, borderDash: [4, 3], borderSkipped: false, stack: 'anterior', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
-        { label: 'Costo Directo', data: datosDirecto, backgroundColor: '#2DD4BF', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
-        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: '#1b1b1b', stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95, borderRadius: 4 },
+        { label: 'Costo Directo', data: datosDirecto, backgroundColor: paleta.directo, stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
+        { label: 'Gasto Operativo', data: datosOperativo, backgroundColor: paleta.operativo, stack: 'actual', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95, borderRadius: 4 },
       ],
     },
     options: {
+      maintainAspectRatio: false,
       layout: { padding: { top: 28 } },
       plugins: {
         legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
@@ -1339,7 +2072,7 @@ function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
       },
       scales: {
         x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
-        y: { stacked: true, beginAtZero: true, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
+        y: { stacked: true, beginAtZero: true, display: conEjeY, grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompacto(v), font: { family: 'Gordita' } } },
       },
     },
     plugins: [{
@@ -1354,7 +2087,7 @@ function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
           const altura = Math.abs(barra.base - barra.y);
           if (altura < ALTURA_MINIMA_ETIQUETA || datosDirecto[i] <= 0) return;
           ctxDibujo.save();
-          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.fillStyle = paleta.textoDirecto;
           ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
           ctxDibujo.textAlign = 'center';
           ctxDibujo.textBaseline = 'middle';
@@ -1366,7 +2099,7 @@ function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
           const altura = Math.abs(barra.base - barra.y);
           if (altura < ALTURA_MINIMA_ETIQUETA || datosOperativo[i] <= 0) return;
           ctxDibujo.save();
-          ctxDibujo.fillStyle = '#ffffff';
+          ctxDibujo.fillStyle = paleta.textoOperativo;
           ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
           ctxDibujo.textAlign = 'center';
           ctxDibujo.textBaseline = 'middle';
@@ -1402,8 +2135,7 @@ function renderizarGraficaTendencia(canvasId, refGrafica, datos) {
   });
 }
 
-async function renderizarTendenciaAnual(glosarioMap) {
-  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+async function calcularTendenciaGasto12m(glosarioMap, anioRef, mesRef) {
   const inicioVentana = rangoDeMes(anioRef, mesRef - 23).inicio;
   const finVentana = rangoDeMes(anioRef, mesRef).fin;
   const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, subtotal, fecha_pago');
@@ -1438,9 +2170,13 @@ async function renderizarTendenciaAnual(glosarioMap) {
     datosYoy.push(Calc.calcularVariacionPct(kpisMes.totalPagado, kpisMesAnioAnterior.totalPagado));
   }
 
-  renderizarGraficaTendencia('grafica-composicion-mensual', 'graficaComposicion', {
-    etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy,
-  });
+  return { etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy };
+}
+
+async function renderizarTendenciaAnual(glosarioMap) {
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const datos = await calcularTendenciaGasto12m(glosarioMap, anioRef, mesRef);
+  renderizarGraficaTendencia('grafica-composicion-mensual', 'graficaComposicion', datos);
 }
 
 function mostrarFormularioGlosario() {
@@ -1696,21 +2432,30 @@ function renderizarSucursales() {
     total: modo === 'prorrateado' ? d.totalProrrateado : d.costoDirecto,
   }));
 
-  const dir = ordenSucursales.direccion === 'asc' ? 1 : -1;
-  filas.sort((a, b) => {
-    if (ordenSucursales.columna === 'distrito') return a.distrito.localeCompare(b.distrito) * dir;
-    return (a[ordenSucursales.columna] - b[ordenSucursales.columna]) * dir;
-  });
-  actualizarIconoOrden('orden-sucursal', ordenSucursales);
+  filas.sort((a, b) => b.total - a.total);
+  const maxTotal = Math.max(...filas.map((d) => d.total), 1);
 
-  const cuerpo = document.getElementById('tabla-sucursales-body');
-  cuerpo.innerHTML = '';
-  filas.forEach((d) => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-surface-container-low/50 transition-colors';
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold"><button onclick="abrirDetalleDistrito('${d.distrito.replace(/'/g, "\\'")}')" class="hover:underline text-left">${d.distrito}</button></td><td class="px-6 py-4 text-right">${formatoMoneda(d.costoDirecto)}</td><td class="px-6 py-4 text-right">${formatoMoneda(d.operativo)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(d.total)}</td>`;
-    cuerpo.appendChild(tr);
-  });
+  const contenedor = document.getElementById('fin-sucursales-ranking');
+  contenedor.innerHTML = filas.map((d, i) => {
+    const pct = (d.total / maxTotal) * 100;
+    const distritoEscapado = d.distrito.replace(/'/g, "\\'");
+    return `<div>
+      <div class="flex items-center justify-between text-xs mb-1">
+        <button onclick="abrirDetalleDistrito('${distritoEscapado}')" class="flex items-center gap-2 hover:underline text-left">
+          <span class="w-5 h-5 rounded-full bg-primary/10 text-primary font-gordita-bold text-[10px] flex items-center justify-center shrink-0">${i + 1}</span>
+          <span class="font-gordita-bold">${d.distrito}</span>
+        </button>
+        <span class="font-gordita-bold text-primary">${formatoMoneda(d.total)}</span>
+      </div>
+      <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden ml-7">
+        <div class="h-full bg-op-pi rounded-full" style="width:${pct}%;"></div>
+      </div>
+      <div class="flex justify-between text-[10px] text-on-surface-variant mt-1 ml-7">
+        <span>Costo Directo: ${formatoCompacto(d.costoDirecto)}</span>
+        ${d.operativo > 0 ? `<span>Gasto Operativo: ${formatoCompacto(d.operativo)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
   const totalAsignado = prorrateoActual.distritos.reduce((s, d) => s + d.gastoOperativoAsignado, 0);
   const noAsignado = prorrateoActual.gastoOperativoBolsaTotal - totalAsignado;
@@ -1866,7 +2611,7 @@ async function abrirDetalleDistrito(distrito) {
   filtroVariacionesDistrito = 'todos';
   const radioTodos = document.querySelector('input[name="filtro-variaciones-distrito"][value="todos"]');
   if (radioTodos) radioTodos.checked = true;
-  document.getElementById('vista-sucursal').classList.remove('activa');
+  document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.getElementById('vista-detalle-distrito').classList.add('activa');
   document.getElementById('detalle-distrito-titulo').textContent = distrito;
   mostrarIndicadorCarga();
@@ -2277,20 +3022,23 @@ async function cargarIngresos() {
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
-  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+  const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
     obtenerTablaCompleta('poliza_parametros'),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('multidistrito_asignacion'),
+    obtenerTablaCompleta('hc_autorizado'),
   ]);
+
+  const distritos = new Set();
+  polizaParametros.forEach((p) => distritos.add(p.distrito));
+  const todosLosDistritos = Array.from(distritos);
+
   const datos = {
     polizaParametros,
     multidistritoBolsas,
-    multidistritoAsignacion,
+    hcAutorizado,
+    todosLosDistritos,
+    regionPorDistrito,
   };
-
-  const distritos = new Set();
-  datos.polizaParametros.forEach((p) => distritos.add(p.distrito));
-  datos.multidistritoAsignacion.forEach((a) => distritos.add(a.distrito));
 
   const inicioMes = new Date(rangos.actual.inicio + 'T00:00:00');
   const finMes = new Date(rangos.actual.fin + 'T00:00:00');
@@ -2333,10 +3081,18 @@ async function cargarIngresos() {
           mesVigenteISO,
         )
       : null;
-    const vigenteAsignacion = Calc.obtenerParametroVigente(
-      datos.multidistritoAsignacion.filter((a) => a.distrito === distrito),
-      mesVigenteISO,
-    );
+    let ordenesMultidistrito = null;
+    if (vigenteBolsa) {
+      const distritosBolsa = todosLosDistritos.filter((d) => Calc.bolsaMultidistritoDeRegion(regionPorDistrito[d]) === regionBolsa);
+      let totalCuadrillas = 0;
+      let cuadrillasDistrito = 0;
+      distritosBolsa.forEach((d) => {
+        const c = Calc.obtenerCuadrillasMultidistrito(hcAutorizado, d, mesVigenteISO);
+        totalCuadrillas += c;
+        if (d === distrito) cuadrillasDistrito = c;
+      });
+      ordenesMultidistrito = totalCuadrillas > 0 ? (cuadrillasDistrito / totalCuadrillas) * vigenteBolsa.ordenes_dimensionadas : 0;
+    }
 
     return {
       distrito,
@@ -2345,7 +3101,7 @@ async function cargarIngresos() {
       precioRecolecciones: vigenteRec ? vigenteRec.precio_por_orden : null,
       ordenesRecolecciones: vigenteRec ? vigenteRec.ordenes_dimensionadas : null,
       precioMultidistrito: vigenteBolsa ? vigenteBolsa.precio_por_orden : null,
-      ordenesMultidistrito: vigenteAsignacion ? vigenteAsignacion.ordenes_asignadas : null,
+      ordenesMultidistrito,
     };
   });
 
@@ -2443,6 +3199,7 @@ async function guardarParametroPoliza() {
   const vigente_desde = vigenteMes + '-01';
   const { error } = await supabaseClient.from('poliza_parametros').insert({ poliza, distrito, precio_por_orden, ordenes_dimensionadas, vigente_desde });
   if (error) { document.getElementById('estado-ingresos-admin').textContent = 'Error: ' + error.message; return; }
+  invalidarCache('poliza_parametros');
   document.getElementById('estado-ingresos-admin').textContent = 'Vigencia agregada.';
   await cargarIngresos();
 }
@@ -2459,24 +3216,25 @@ async function guardarBolsaMultidistrito() {
   const vigente_desde = vigenteMes + '-01';
   const { error } = await supabaseClient.from('multidistrito_bolsas').insert({ region_bolsa, precio_por_orden, ordenes_dimensionadas, vigente_desde });
   if (error) { document.getElementById('estado-ingresos-admin').textContent = 'Error: ' + error.message; return; }
+  invalidarCache('multidistrito_bolsas');
   document.getElementById('estado-ingresos-admin').textContent = 'Bolsa actualizada.';
   await cargarIngresos();
 }
 
-async function guardarAsignacionMultidistrito() {
-  const distrito = document.getElementById('asignacion-distrito').value;
-  const ordenes_asignadas = parseFloat(document.getElementById('asignacion-ordenes').value);
-  const porcentajeInput = document.getElementById('asignacion-porcentaje').value;
-  const porcentaje = porcentajeInput === '' ? null : parseFloat(porcentajeInput);
-  const vigenteMes = document.getElementById('asignacion-vigente').value;
-  if (!distrito || isNaN(ordenes_asignadas) || !vigenteMes) {
-    document.getElementById('estado-ingresos-admin').textContent = 'Completa distrito, órdenes asignadas y vigencia.';
+async function guardarHcAutorizado() {
+  const distrito = document.getElementById('hc-distrito').value;
+  const puesto = document.getElementById('hc-puesto').value;
+  const personas_autorizadas = parseFloat(document.getElementById('hc-personas').value);
+  const vigenteMes = document.getElementById('hc-vigente').value;
+  if (!distrito || !puesto || isNaN(personas_autorizadas) || !vigenteMes) {
+    document.getElementById('estado-ingresos-admin').textContent = 'Completa sucursal, puesto, personas autorizadas y vigencia.';
     return;
   }
   const vigente_desde = vigenteMes + '-01';
-  const { error } = await supabaseClient.from('multidistrito_asignacion').insert({ distrito, ordenes_asignadas, porcentaje, vigente_desde });
+  const { error } = await supabaseClient.from('hc_autorizado').insert({ distrito, puesto, personas_autorizadas, vigente_desde });
   if (error) { document.getElementById('estado-ingresos-admin').textContent = 'Error: ' + error.message; return; }
-  document.getElementById('estado-ingresos-admin').textContent = 'Asignación actualizada.';
+  invalidarCache('hc_autorizado');
+  document.getElementById('estado-ingresos-admin').textContent = 'HC Autorizado actualizado.';
   await cargarIngresos();
 }
 
@@ -2488,16 +3246,15 @@ async function cargarPnL() {
   const glosarioMap = obtenerGlosarioMap();
   const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
 
-  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+  const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
     obtenerTablaCompleta('poliza_parametros'),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('multidistrito_asignacion'),
+    obtenerTablaCompleta('hc_autorizado'),
   ]);
-  const datosIngresos = { polizaParametros, multidistritoBolsas, multidistritoAsignacion };
 
   const distritosIngresos = new Set();
   polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
-  multidistritoAsignacion.forEach((a) => distritosIngresos.add(a.distrito));
+  const datosIngresos = { polizaParametros, multidistritoBolsas, hcAutorizado, todosLosDistritos: Array.from(distritosIngresos), regionPorDistrito };
 
   const aniosDisponibles = new Set();
   polizaParametros.forEach((p) => aniosDisponibles.add(p.vigente_desde.slice(0, 4)));
@@ -2803,16 +3560,15 @@ async function cargarRentabilidades() {
   const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
 
-  const [polizaParametros, multidistritoBolsas, multidistritoAsignacion] = await Promise.all([
+  const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
     obtenerTablaCompleta('poliza_parametros'),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('multidistrito_asignacion'),
+    obtenerTablaCompleta('hc_autorizado'),
   ]);
-  const datosIngresos = { polizaParametros, multidistritoBolsas, multidistritoAsignacion };
 
   const distritosIngresos = new Set();
   polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
-  multidistritoAsignacion.forEach((a) => distritosIngresos.add(a.distrito));
+  const datosIngresos = { polizaParametros, multidistritoBolsas, hcAutorizado, todosLosDistritos: Array.from(distritosIngresos), regionPorDistrito };
 
   const meses = [];
   for (let i = 11; i >= 0; i--) {
@@ -3090,6 +3846,1090 @@ function abrirDrillDownRentabilidad(distrito) {
 function cerrarDrillDownRentabilidad() {
   document.getElementById('modal-drilldown-rentabilidad').style.display = 'none';
 }
+
+function renderizarGraficaGaugeAlcance(canvasId, refGrafica, pct, color, tamanoFuente) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  const valor = pct === null ? 0 : Math.min(Math.max(pct, 0), 100);
+  const fuente = tamanoFuente || 22;
+  window[refGrafica] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [valor, 100 - valor], backgroundColor: [color, '#eeeeee'], borderWidth: 0 }] },
+    options: {
+      maintainAspectRatio: false,
+      rotation: -90,
+      circumference: 180,
+      cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    },
+    plugins: [{
+      id: 'textoGaugeAlcance',
+      afterDraw(chart) {
+        const arc = chart.getDatasetMeta(0).data[0];
+        if (!arc) return;
+        const texto = pct === null ? '—' : pct.toFixed(1) + '%';
+        const { ctx: ctxDibujo } = chart;
+        ctxDibujo.save();
+        ctxDibujo.fillStyle = '#1b1b1b';
+        ctxDibujo.font = "bold " + fuente + "px 'Gordita', sans-serif";
+        ctxDibujo.textAlign = 'center';
+        ctxDibujo.textBaseline = 'middle';
+        ctxDibujo.fillText(texto, arc.x, arc.y - 4);
+        ctxDibujo.restore();
+      },
+    }],
+  });
+}
+
+async function obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodo) {
+  const filas = await obtenerTablaCompleta('folios_poliza');
+  const mesCorte = claveMes(anioRef, mesRef);
+  const filasVentana = filas.filter((f) => f.mes.slice(0, 7) <= mesCorte);
+  const filasPeriodo = modoPeriodo === 'ytd'
+    ? filasVentana.filter((f) => f.mes.slice(0, 4) === String(anioRef))
+    : filasVentana.filter((f) => f.mes.slice(0, 7) === mesCorte);
+
+  const porMes = {};
+  filasVentana.forEach((f) => {
+    const clave = f.mes.slice(0, 7);
+    porMes[clave] = porMes[clave] || {
+      'PLANTA INTERNA': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+      'RECOLECCIONES': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+      'MULTIDISTRITO': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+    };
+    const nodo = porMes[clave][f.poliza];
+    if (!nodo) return;
+    nodo.dimensionados += f.folios_dimensionados || 0;
+    if (f.folios_realizados !== null && f.folios_realizados !== undefined) {
+      nodo.realizados += f.folios_realizados;
+      nodo.tieneRealizados = true;
+    }
+  });
+
+  const claves = Object.keys(porMes).sort();
+  const etiquetas = claves.map((c) => {
+    const [anio, mes] = c.split('-').map(Number);
+    return etiquetaMesCorta(anio, mes - 1);
+  });
+
+  const totalesPeriodo = {
+    'PLANTA INTERNA': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+    'RECOLECCIONES': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+    'MULTIDISTRITO': { dimensionados: 0, realizados: 0, tieneRealizados: false },
+  };
+  filasPeriodo.forEach((f) => {
+    const nodo = totalesPeriodo[f.poliza];
+    if (!nodo) return;
+    nodo.dimensionados += f.folios_dimensionados || 0;
+    if (f.folios_realizados !== null && f.folios_realizados !== undefined) {
+      nodo.realizados += f.folios_realizados;
+      nodo.tieneRealizados = true;
+    }
+  });
+
+  const construir = (poliza) => {
+    const dimensionados = [], realizados = [], alcance = [];
+    claves.forEach((c) => {
+      const nodo = porMes[c][poliza];
+      dimensionados.push(nodo.dimensionados);
+      realizados.push(nodo.tieneRealizados ? nodo.realizados : null);
+      alcance.push(nodo.tieneRealizados && nodo.dimensionados > 0 ? (nodo.realizados / nodo.dimensionados) * 100 : null);
+    });
+    const totales = totalesPeriodo[poliza];
+    const alcancePromedio = totales.tieneRealizados && totales.dimensionados > 0 ? (totales.realizados / totales.dimensionados) * 100 : null;
+    return { dimensionados, realizados, alcance, alcancePromedio, totalDimensionados: totales.dimensionados, totalRealizados: totales.realizados };
+  };
+
+  const porDistrito = {};
+  filasPeriodo.forEach((f) => {
+    if (f.folios_realizados === null || f.folios_realizados === undefined) return;
+    porDistrito[f.distrito] = porDistrito[f.distrito] || { dimensionados: 0, realizados: 0 };
+    porDistrito[f.distrito].dimensionados += f.folios_dimensionados || 0;
+    porDistrito[f.distrito].realizados += f.folios_realizados;
+  });
+  Object.keys(porDistrito).forEach((distrito) => {
+    const nodo = porDistrito[distrito];
+    nodo.alcancePct = nodo.dimensionados > 0 ? (nodo.realizados / nodo.dimensionados) * 100 : null;
+  });
+
+  return {
+    etiquetas,
+    planta: construir('PLANTA INTERNA'),
+    recolecciones: construir('RECOLECCIONES'),
+    multidistrito: construir('MULTIDISTRITO'),
+    porDistrito,
+  };
+}
+
+function renderizarGraficaFolioIndividual(canvasId, refGrafica, etiquetas, poliza, color) {
+  const ALTURA_MINIMA_ETIQUETA = 14;
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const dibujarSegmento = (ctxDibujo, meta, valores) => {
+    meta.data.forEach((barra, i) => {
+      const valor = valores[i];
+      if (!valor) return;
+      const altura = Math.abs(barra.base - barra.y);
+      const centroY = (barra.y + barra.base) / 2;
+      if (altura >= ALTURA_MINIMA_ETIQUETA) {
+        const texto = Math.round(valor).toLocaleString('es-MX');
+        ctxDibujo.save();
+        ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+        const anchoTexto = ctxDibujo.measureText(texto).width;
+        ctxDibujo.fillStyle = 'rgba(0,0,0,0.28)';
+        ctxDibujo.beginPath();
+        ctxDibujo.roundRect(barra.x - anchoTexto / 2 - 5, centroY - 10, anchoTexto + 10, 20, 4);
+        ctxDibujo.fill();
+        ctxDibujo.fillStyle = '#ffffff';
+        ctxDibujo.textAlign = 'center';
+        ctxDibujo.textBaseline = 'middle';
+        ctxDibujo.fillText(texto, barra.x, centroY);
+        ctxDibujo.restore();
+      } else {
+        const xExt = barra.x + 22;
+        ctxDibujo.save();
+        ctxDibujo.strokeStyle = color;
+        ctxDibujo.lineWidth = 1;
+        ctxDibujo.beginPath();
+        ctxDibujo.moveTo(barra.x, centroY);
+        ctxDibujo.lineTo(xExt, centroY);
+        ctxDibujo.stroke();
+        ctxDibujo.fillStyle = color;
+        ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+        ctxDibujo.textAlign = 'left';
+        ctxDibujo.textBaseline = 'middle';
+        ctxDibujo.fillText(Math.round(valor).toLocaleString('es-MX'), xExt + 3, centroY);
+        ctxDibujo.restore();
+      }
+    });
+  };
+
+  const dibujarEtiquetaLinea = (ctxDibujo, meta, alcanceArr, realizadosArr) => {
+    meta.data.forEach((punto, i) => {
+      const pct = alcanceArr[i];
+      if (pct === null || pct === undefined) return;
+      const realizados = realizadosArr[i];
+      const texto1 = pct.toFixed(1) + '%';
+      const texto2 = '(' + Math.round(realizados).toLocaleString('es-MX') + ')';
+      const x = punto.x;
+      const altoCaja = 22;
+      const yCaja = punto.y - 8 - altoCaja;
+
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+      const anchoTexto = Math.max(ctxDibujo.measureText(texto1).width, ctxDibujo.measureText(texto2).width);
+      ctxDibujo.fillStyle = 'rgba(255,255,255,0.85)';
+      ctxDibujo.fillRect(x - anchoTexto / 2 - 3, yCaja, anchoTexto + 6, altoCaja);
+      ctxDibujo.fillStyle = color;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.textBaseline = 'middle';
+      ctxDibujo.fillText(texto1, x, yCaja + 7);
+      ctxDibujo.font = "8px 'Gordita', sans-serif";
+      ctxDibujo.fillText(texto2, x, yCaja + 16);
+      ctxDibujo.restore();
+    });
+  };
+
+  window[refGrafica] = new Chart(ctx, {
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { type: 'bar', label: 'Dimensionados', data: poliza.dimensionados, backgroundColor: color, yAxisID: 'y', maxBarThickness: 44, categoryPercentage: 0.6, barPercentage: 0.9 },
+        { type: 'line', label: '% Alcance', data: poliza.alcance, borderColor: color, backgroundColor: color, yAxisID: 'y1', tension: 0.3, borderWidth: 2, pointRadius: 3, pointBackgroundColor: color, spanGaps: true },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 36 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' },
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.yAxisID === 'y1') {
+                return c.dataset.label + ': ' + (c.parsed.y === null ? '—' : c.parsed.y.toFixed(1) + '%');
+              }
+              return c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString('es-MX');
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+        y: { display: false, beginAtZero: true },
+        y1: { display: false, beginAtZero: true, min: 0, suggestedMax: 120 },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasFolioIndividual',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        dibujarSegmento(ctxDibujo, chart.getDatasetMeta(0), poliza.dimensionados);
+        dibujarEtiquetaLinea(ctxDibujo, chart.getDatasetMeta(1), poliza.alcance, poliza.realizados);
+      },
+    }],
+  });
+}
+
+let overviewDatos = null;
+
+async function cargarOverview() {
+  const glosarioMap = obtenerGlosarioMap();
+  const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+
+  const inicioYTD = rangoDeMes(anioRef, 0).inicio;
+  const finYTD = rangoDeMes(anioRef, mesRef).fin;
+  const mesVigenteISO = claveMes(anioRef, mesRef) + '-01';
+  const claveMesVigente = claveMes(anioRef, mesRef);
+
+  const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
+    obtenerFacturasEnRango(inicioYTD, finYTD, '*'),
+    obtenerTablaCompleta('poliza_parametros'),
+    obtenerTablaCompleta('multidistrito_bolsas'),
+    obtenerTablaCompleta('hc_autorizado'),
+  ]);
+
+  const distritosSet = new Set();
+  polizaParametros.forEach((p) => distritosSet.add(p.distrito));
+  const listaDistritos = Array.from(distritosSet);
+  const datosIngresos = { polizaParametros, multidistritoBolsas, hcAutorizado, todosLosDistritos: listaDistritos, regionPorDistrito };
+
+  const mesesYTD = [];
+  for (let mes = 0; mes <= mesRef; mes++) mesesYTD.push({ clave: claveMes(anioRef, mes) });
+
+  let ytdPlantaInterna = 0, ytdRecolecciones = 0, ytdMultidistrito = 0;
+  const ingresoPorDistritoYTD = {};
+  listaDistritos.forEach((distrito) => {
+    const region = regionPorDistrito[distrito];
+    let acumPI = 0, acumRec = 0, acumMD = 0;
+    mesesYTD.forEach((m) => {
+      const r = Calc.calcularIngresosDistrito(datosIngresos, distrito, region, m.clave + '-01');
+      acumPI += r.plantaInterna;
+      acumRec += r.recolecciones;
+      acumMD += r.multidistrito;
+    });
+    ingresoPorDistritoYTD[distrito] = { plantaInterna: acumPI, recolecciones: acumRec, multidistrito: acumMD, total: acumPI + acumRec + acumMD };
+    ytdPlantaInterna += acumPI;
+    ytdRecolecciones += acumRec;
+    ytdMultidistrito += acumMD;
+  });
+  const ingresoOperacionesYTD = ytdPlantaInterna + ytdRecolecciones + ytdMultidistrito;
+
+  let osPI = 0, osRec = 0, osMD = 0;
+  let ingresoVigentePI = 0, ingresoVigenteRec = 0, ingresoVigenteMD = 0;
+  let distritosConPoliza = 0;
+  const preciosVigentes = [];
+  listaDistritos.forEach((distrito) => {
+    const region = regionPorDistrito[distrito];
+    const regionBolsa = Calc.bolsaMultidistritoDeRegion(region);
+    const vigentePI = Calc.obtenerParametroVigente(polizaParametros.filter((p) => p.poliza === 'PLANTA INTERNA' && p.distrito === distrito), mesVigenteISO);
+    const vigenteRec = Calc.obtenerParametroVigente(polizaParametros.filter((p) => p.poliza === 'RECOLECCIONES' && p.distrito === distrito), mesVigenteISO);
+    const vigenteBolsa = regionBolsa ? Calc.obtenerParametroVigente(multidistritoBolsas.filter((b) => b.region_bolsa === regionBolsa), mesVigenteISO) : null;
+    const ingresoMDVigente = Calc.calcularIngresoMultidistritoDistrito(multidistritoBolsas, hcAutorizado, listaDistritos, regionPorDistrito, distrito, region, mesVigenteISO);
+
+    let tienePoliza = false;
+    if (vigentePI) {
+      osPI += vigentePI.ordenes_dimensionadas;
+      ingresoVigentePI += vigentePI.precio_por_orden * vigentePI.ordenes_dimensionadas;
+      preciosVigentes.push(vigentePI.precio_por_orden);
+      tienePoliza = true;
+    }
+    if (vigenteRec) {
+      osRec += vigenteRec.ordenes_dimensionadas;
+      ingresoVigenteRec += vigenteRec.precio_por_orden * vigenteRec.ordenes_dimensionadas;
+      preciosVigentes.push(vigenteRec.precio_por_orden);
+      tienePoliza = true;
+    }
+    if (ingresoMDVigente > 0 && vigenteBolsa) {
+      osMD += ingresoMDVigente / vigenteBolsa.precio_por_orden;
+      ingresoVigenteMD += ingresoMDVigente;
+      preciosVigentes.push(vigenteBolsa.precio_por_orden);
+      tienePoliza = true;
+    }
+    if (tienePoliza) distritosConPoliza++;
+  });
+  const osTotalVigente = osPI + osRec + osMD;
+  const precioPromedioGeneral = preciosVigentes.length ? preciosVigentes.reduce((s, v) => s + v, 0) / preciosVigentes.length : null;
+  const alcancePromedio = distritosConPoliza > 0 ? osTotalVigente / distritosConPoliza : null;
+
+  const kpisGasto = Calc.calcularKPIs(facturasYTD, glosarioMap);
+  const gastoTotalYTD = kpisGasto.totalPagado;
+  const facturasFlotaYTD = facturasYTD.filter((f) => (f.tipo_gasto_categoria || '').toUpperCase().includes('FLOTA'));
+  const gastoFlotaYTD = facturasFlotaYTD.reduce((s, f) => s + (f.subtotal || 0), 0);
+  const gastoFlotaMesVigente = facturasFlotaYTD.filter((f) => f.fecha_pago.slice(0, 7) === claveMesVigente).reduce((s, f) => s + (f.subtotal || 0), 0);
+
+  const utilidadYTD = ingresoOperacionesYTD - gastoTotalYTD;
+  const margenYTD = ingresoOperacionesYTD > 0 ? (utilidadYTD / ingresoOperacionesYTD) * 100 : null;
+
+  overviewDatos = {
+    glosarioMap, regionPorDistrito, datosIngresos, listaDistritos, anioRef, mesRef, mesVigenteISO,
+    ingresoPorDistritoYTD, ytdPlantaInterna, ytdRecolecciones, ytdMultidistrito, ingresoOperacionesYTD,
+    osPI, osRec, osMD, osTotalVigente, ingresoVigentePI, ingresoVigenteRec, ingresoVigenteMD,
+    precioPromedioGeneral, alcancePromedio, distritosConPoliza,
+    facturasYTD, facturasFlotaYTD, gastoTotalYTD, kpisGasto, gastoFlotaYTD, gastoFlotaMesVigente,
+    utilidadYTD, margenYTD,
+  };
+
+  const etiquetaPeriodo = 'Año en curso ' + anioRef + ' (Ene–' + MESES_LARGOS[mesRef] + ')' +
+    (ultimaFechaConDatos ? ' · datos hasta ' + formatoFechaLarga(ultimaFechaConDatos) : '');
+  document.getElementById('overview-periodo').textContent = etiquetaPeriodo;
+
+  const rangosFin = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const facturasFinActual = await obtenerFacturasEnRango(rangosFin.actual.inicio, rangosFin.actual.fin, '*');
+  const facturasFinAnioAnterior = await obtenerFacturasEnRango(rangosFin.comparacionYoY.inicio, rangosFin.comparacionYoY.fin, '*');
+  const kpisFinActual = Calc.calcularKPIs(facturasFinActual, glosarioMap);
+  const kpisFinAnioAnterior = Calc.calcularKPIs(facturasFinAnioAnterior, glosarioMap);
+
+  const mesesRangoFin = [];
+  {
+    const inicioR = new Date(rangosFin.actual.inicio + 'T00:00:00');
+    const finR = new Date(rangosFin.actual.fin + 'T00:00:00');
+    let cursor = new Date(inicioR.getFullYear(), inicioR.getMonth(), 1);
+    while (cursor <= finR) {
+      mesesRangoFin.push(claveMes(cursor.getFullYear(), cursor.getMonth()) + '-01');
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+  }
+  let ingresoFinPeriodo = 0;
+  let ingresoFinPI = 0, ingresoFinRec = 0, ingresoFinMD = 0;
+  mesesRangoFin.forEach((mesISO) => {
+    listaDistritos.forEach((distrito) => {
+      const region = regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(datosIngresos, distrito, region, mesISO);
+      ingresoFinPeriodo += r.total;
+      ingresoFinPI += r.plantaInterna;
+      ingresoFinRec += r.recolecciones;
+      ingresoFinMD += r.multidistrito;
+    });
+  });
+  const utilidadBrutaFin = ingresoFinPeriodo - kpisFinActual.costoDirecto;
+  const margenBrutoFin = ingresoFinPeriodo > 0 ? (utilidadBrutaFin / ingresoFinPeriodo) * 100 : null;
+  const utilidadOperativaFin = utilidadBrutaFin - kpisFinActual.gastoOperativo;
+  const margenOperativoFin = ingresoFinPeriodo > 0 ? (utilidadOperativaFin / ingresoFinPeriodo) * 100 : null;
+
+  finKpisRawOverview = {
+    total: kpisFinActual.totalPagado,
+    directo: kpisFinActual.costoDirecto,
+    operativo: kpisFinActual.gastoOperativo,
+    ingreso: ingresoFinPeriodo,
+    ingresoPI: ingresoFinPI,
+    ingresoRec: ingresoFinRec,
+    ingresoMD: ingresoFinMD,
+    utilidadBruta: utilidadBrutaFin,
+    utilidadOperativa: utilidadOperativaFin,
+  };
+  renderizarKpisFinancierosOverview();
+  const totalComposicionIngresoFin = ingresoFinPI + ingresoFinRec + ingresoFinMD;
+  const pctComposicionFin = (v) => (totalComposicionIngresoFin > 0 ? (v / totalComposicionIngresoFin) * 100 : 0);
+  const pctPIFin = pctComposicionFin(ingresoFinPI);
+  const pctRecFin = pctComposicionFin(ingresoFinRec);
+  const pctMDFin = pctComposicionFin(ingresoFinMD);
+  document.getElementById('ov-fin-ingreso-seg-pi').style.width = pctPIFin + '%';
+  document.getElementById('ov-fin-ingreso-seg-rec').style.width = pctRecFin + '%';
+  document.getElementById('ov-fin-ingreso-seg-md').style.width = pctMDFin + '%';
+  document.getElementById('ov-fin-ingreso-seg-pi').textContent = pctPIFin >= 12 ? pctPIFin.toFixed(0) + '%' : '';
+  document.getElementById('ov-fin-ingreso-seg-rec').textContent = pctRecFin >= 12 ? pctRecFin.toFixed(0) + '%' : '';
+  document.getElementById('ov-fin-ingreso-seg-md').textContent = pctMDFin >= 12 ? pctMDFin.toFixed(0) + '%' : '';
+  renderizarGraficaGaugeAlcance('ov-fin-gauge-margen-bruto', 'graficaFinGaugeMargenBruto', margenBrutoFin, '#1B4F72', 13);
+  renderizarGraficaGaugeAlcance('ov-fin-gauge-margen-operativo', 'graficaFinGaugeMargenOperativo', margenOperativoFin, '#85C1E9', 13);
+  const etiquetaPeriodoFin = modoPeriodoGlobal === 'ytd' ? 'YTD' : MESES_ABREV[mesRef].toUpperCase();
+  document.getElementById('ov-fin-kpi-ingreso-titulo').textContent = 'Ingreso Recurrente (' + etiquetaPeriodoFin + ')';
+  document.getElementById('ov-fin-kpi-margen-titulo').textContent = 'Margen (' + etiquetaPeriodoFin + ')';
+
+  const claseVarFin = (v) => (v === null ? 'bg-surface-container text-on-surface-variant' : (v >= 0 ? 'bg-error/10 text-error' : 'bg-qiora-green/10 text-qiora-green'));
+  const flechaVarFin = (v) => (v === null ? '' : (v >= 0 ? '↑' : '↓'));
+  const textoVarFin = (v) => (v === null ? '—' : flechaVarFin(v) + (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  const pintarVariacionFin = (idYoy, actual, anioAnt) => {
+    const yoy = Calc.calcularVariacionPct(actual, anioAnt);
+    const elYoy = document.getElementById(idYoy);
+    elYoy.textContent = textoVarFin(yoy);
+    elYoy.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-gordita-bold whitespace-nowrap ' + claseVarFin(yoy);
+  };
+  pintarVariacionFin('ov-fin-kpi-total-yoy', kpisFinActual.totalPagado, kpisFinAnioAnterior.totalPagado);
+  pintarVariacionFin('ov-fin-kpi-directo-yoy', kpisFinActual.costoDirecto, kpisFinAnioAnterior.costoDirecto);
+  pintarVariacionFin('ov-fin-kpi-operativo-yoy', kpisFinActual.gastoOperativo, kpisFinAnioAnterior.gastoOperativo);
+
+  document.getElementById('ov-flota-kpi-ytd').textContent = formatoMoneda(gastoFlotaYTD);
+
+  const flotaVehicular = await obtenerTablaCompleta('flota_vehicular');
+  overviewDatos.flotaVehicular = flotaVehicular;
+  const ESTATUS_ATENCION = ['CORRALON', 'ROBO', 'ALTO COSTO', 'PERDIDA TOTAL', 'TALLER INTERNO', 'TALLER ASEGURADORA', 'SINIESTRO'];
+  const conteoClasificacion = { ACTIVO: 0, BAJA: 0, INACTIVO: 0 };
+  let sumaAnios = 0, conteoAnios = 0, conteoAtencion = 0;
+  const anioActualFlota = new Date().getFullYear();
+  flotaVehicular.forEach((v) => {
+    const clas = (v.clasificacion || '').toUpperCase();
+    if (conteoClasificacion[clas] !== undefined) conteoClasificacion[clas] += 1;
+    if (ESTATUS_ATENCION.includes((v.estatus_nuevo || '').toUpperCase())) conteoAtencion += 1;
+    if (v.anio) { sumaAnios += Number(v.anio); conteoAnios += 1; }
+  });
+  const flotaActiva = conteoClasificacion.ACTIVO;
+  document.getElementById('ov-flota-kpi-activa').textContent = flotaVehicular.length > 0 ? flotaActiva.toLocaleString('es-MX') : '—';
+  document.getElementById('ov-flota-kpi-atencion').textContent = flotaVehicular.length > 0 ? conteoAtencion.toLocaleString('es-MX') : '—';
+  document.getElementById('ov-flota-kpi-antiguedad').textContent = conteoAnios > 0 ? (anioActualFlota - sumaAnios / conteoAnios).toFixed(1) + ' años' : '—';
+
+  const totalFlotaComposicion = conteoClasificacion.ACTIVO + conteoClasificacion.BAJA + conteoClasificacion.INACTIVO;
+  const pctFlota = (v) => (totalFlotaComposicion > 0 ? (v / totalFlotaComposicion) * 100 : 0);
+  const pctActivo = pctFlota(conteoClasificacion.ACTIVO);
+  const pctBaja = pctFlota(conteoClasificacion.BAJA);
+  const pctInactivo = pctFlota(conteoClasificacion.INACTIVO);
+  document.getElementById('ov-flota-seg-activo').style.width = pctActivo + '%';
+  document.getElementById('ov-flota-seg-baja').style.width = pctBaja + '%';
+  document.getElementById('ov-flota-seg-inactivo').style.width = pctInactivo + '%';
+  document.getElementById('ov-flota-seg-activo').textContent = pctActivo >= 10 ? pctActivo.toFixed(0) + '% · ' + conteoClasificacion.ACTIVO.toLocaleString('es-MX') : '';
+  document.getElementById('ov-flota-seg-baja').textContent = pctBaja >= 10 ? pctBaja.toFixed(0) + '% · ' + conteoClasificacion.BAJA.toLocaleString('es-MX') : '';
+  document.getElementById('ov-flota-seg-inactivo').textContent = pctInactivo >= 10 ? pctInactivo.toFixed(0) + '% · ' + conteoClasificacion.INACTIVO.toLocaleString('es-MX') : '';
+  document.getElementById('ov-flota-count-activo').textContent = conteoClasificacion.ACTIVO.toLocaleString('es-MX');
+  document.getElementById('ov-flota-count-baja').textContent = conteoClasificacion.BAJA.toLocaleString('es-MX');
+  document.getElementById('ov-flota-count-inactivo').textContent = conteoClasificacion.INACTIVO.toLocaleString('es-MX');
+
+  const foliosPoliza = await obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodoGlobal);
+  overviewDatos.foliosPoliza = foliosPoliza;
+  renderizarGraficaFolioIndividual('ov-op-grafica-pi', 'graficaOverviewOpPI', foliosPoliza.etiquetas, foliosPoliza.planta, '#1B4F72');
+  renderizarGraficaFolioIndividual('ov-op-grafica-rec', 'graficaOverviewOpRec', foliosPoliza.etiquetas, foliosPoliza.recolecciones, '#2E86C1');
+  renderizarGraficaFolioIndividual('ov-op-grafica-md', 'graficaOverviewOpMD', foliosPoliza.etiquetas, foliosPoliza.multidistrito, '#85C1E9');
+  renderizarGraficaGaugeAlcance('ov-op-gauge-pi', 'graficaOvGaugePI', foliosPoliza.planta.alcancePromedio, '#1B4F72');
+  renderizarGraficaGaugeAlcance('ov-op-gauge-rec', 'graficaOvGaugeRec', foliosPoliza.recolecciones.alcancePromedio, '#2E86C1');
+  renderizarGraficaGaugeAlcance('ov-op-gauge-md', 'graficaOvGaugeMD', foliosPoliza.multidistrito.alcancePromedio, '#85C1E9');
+  document.getElementById('ov-op-kpi-dim-pi').textContent = Math.round(foliosPoliza.planta.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('ov-op-kpi-real-pi').textContent = Math.round(foliosPoliza.planta.totalRealizados).toLocaleString('es-MX');
+  document.getElementById('ov-op-kpi-dim-rec').textContent = Math.round(foliosPoliza.recolecciones.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('ov-op-kpi-real-rec').textContent = Math.round(foliosPoliza.recolecciones.totalRealizados).toLocaleString('es-MX');
+  document.getElementById('ov-op-kpi-dim-md').textContent = Math.round(foliosPoliza.multidistrito.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('ov-op-kpi-real-md').textContent = Math.round(foliosPoliza.multidistrito.totalRealizados).toLocaleString('es-MX');
+
+  const datosTendenciaGasto = await calcularTendenciaGasto12m(glosarioMap, anioRef, mesRef);
+  renderizarGraficaTendencia('grafica-overview-fin', 'graficaOverviewFin', datosTendenciaGasto, { directo: '#1B4F72', operativo: '#85C1E9', textoDirecto: '#ffffff', textoOperativo: '#1b1b1b' }, false);
+}
+
+async function abrirPilar(nombre) {
+  document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
+  document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
+  document.getElementById('vista-pilar-' + nombre).classList.add('activa');
+  const boton = document.querySelector('#sidebar button[data-vista="' + nombre + '"]');
+  if (boton) boton.classList.add('activo');
+  mostrarIndicadorCarga();
+  try {
+    if (!overviewDatos) await cargarOverview();
+    const cargador = {
+      operaciones: cargarPilarOperaciones,
+      capitalhumano: cargarPilarCapitalHumano,
+      financieros: cargarPilarFinancieros,
+      flota: cargarPilarFlota,
+      presupuesto: cargarPilarPresupuesto,
+    }[nombre];
+    if (cargador) await cargador();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+async function cargarPilarOperaciones() {
+  const d = overviewDatos;
+  const etiquetaPeriodo = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ') · parámetros vigentes de ' + MESES_LARGOS[d.mesRef] + ' ' + d.anioRef;
+  document.getElementById('pilar-op-periodo').textContent = etiquetaPeriodo;
+
+  renderizarGraficaGaugeAlcance('op-gauge-pi', 'graficaOpGaugePI', d.foliosPoliza.planta.alcancePromedio, '#1B4F72');
+  renderizarGraficaGaugeAlcance('op-gauge-rec', 'graficaOpGaugeRec', d.foliosPoliza.recolecciones.alcancePromedio, '#2E86C1');
+  renderizarGraficaGaugeAlcance('op-gauge-md', 'graficaOpGaugeMD', d.foliosPoliza.multidistrito.alcancePromedio, '#85C1E9');
+  document.getElementById('op-kpi-dim-pi').textContent = Math.round(d.foliosPoliza.planta.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('op-kpi-real-pi').textContent = Math.round(d.foliosPoliza.planta.totalRealizados).toLocaleString('es-MX');
+  document.getElementById('op-kpi-dim-rec').textContent = Math.round(d.foliosPoliza.recolecciones.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('op-kpi-real-rec').textContent = Math.round(d.foliosPoliza.recolecciones.totalRealizados).toLocaleString('es-MX');
+  document.getElementById('op-kpi-dim-md').textContent = Math.round(d.foliosPoliza.multidistrito.totalDimensionados).toLocaleString('es-MX');
+  document.getElementById('op-kpi-real-md').textContent = Math.round(d.foliosPoliza.multidistrito.totalRealizados).toLocaleString('es-MX');
+
+  const rankingDistritos = Object.keys(d.foliosPoliza.porDistrito)
+    .map((distrito) => ({ distrito, alcancePct: d.foliosPoliza.porDistrito[distrito].alcancePct }))
+    .filter((f) => f.alcancePct !== null)
+    .sort((a, b) => b.alcancePct - a.alcancePct)
+    .slice(0, 7);
+  document.getElementById('op-ranking-distritos').innerHTML = rankingDistritos.map((f) => {
+    const nombreCorto = f.distrito.replace(/^CTA-TPI-INT-[A-Z]+\s/, '');
+    return `<div>
+      <div class="flex justify-between text-xs mb-1"><span class="font-gordita-bold">${nombreCorto}</span><span>${f.alcancePct.toFixed(1)}%</span></div>
+      <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-op-pi rounded-full" style="width:${Math.min(f.alcancePct, 100)}%;"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('op-alcance-grande').textContent = d.alcancePromedio === null ? '—' : Math.round(d.alcancePromedio).toLocaleString('es-MX') + ' OS';
+  const totalAlcance = d.osPI + d.osRec + d.osMD;
+  const pctAlcance = (v) => (totalAlcance > 0 ? (v / totalAlcance) * 100 : 0);
+  document.getElementById('op-alcance-seg-pi').style.width = pctAlcance(d.osPI) + '%';
+  document.getElementById('op-alcance-seg-rec').style.width = pctAlcance(d.osRec) + '%';
+  document.getElementById('op-alcance-seg-md').style.width = pctAlcance(d.osMD) + '%';
+
+  const bolsasNombres = ['BAJIO', 'OCCIDENTE', 'ORIENTE', 'SURESTE'];
+  const cuadrillasPorBolsa = {};
+  bolsasNombres.forEach((b) => { cuadrillasPorBolsa[b] = 0; });
+  d.listaDistritos.forEach((distrito) => {
+    const regionBolsa = Calc.bolsaMultidistritoDeRegion(d.regionPorDistrito[distrito]);
+    if (!regionBolsa) return;
+    cuadrillasPorBolsa[regionBolsa] += Calc.obtenerCuadrillasMultidistrito(d.datosIngresos.hcAutorizado, distrito, d.mesVigenteISO);
+  });
+  const maxBolsa = Math.max(...Object.values(cuadrillasPorBolsa), 1);
+  const etiquetaBolsa = { BAJIO: 'Bajío', OCCIDENTE: 'Occidente', ORIENTE: 'Oriente', SURESTE: 'Sureste' };
+  document.getElementById('op-bolsas-regionales').innerHTML = bolsasNombres.map((b) => {
+    const pct = (cuadrillasPorBolsa[b] / maxBolsa) * 100;
+    return `<div>
+      <div class="flex justify-between text-xs mb-1"><span class="font-gordita-bold">${etiquetaBolsa[b]}</span><span>${cuadrillasPorBolsa[b].toLocaleString('es-MX')} cuadrillas</span></div>
+      <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-op-md rounded-full" style="width:${pct}%;"></div></div>
+    </div>`;
+  }).join('');
+
+  const precioPI = d.osPI > 0 ? d.ingresoVigentePI / d.osPI : null;
+  const precioRec = d.osRec > 0 ? d.ingresoVigenteRec / d.osRec : null;
+  const precioMD = d.osMD > 0 ? d.ingresoVigenteMD / d.osMD : null;
+  document.getElementById('op-pi-alcance').textContent = textoAlcanceOp(d.foliosPoliza.planta.alcancePromedio);
+  document.getElementById('op-pi-os').textContent = Math.round(d.osPI).toLocaleString('es-MX');
+  document.getElementById('op-pi-precio').textContent = precioPI === null ? '—' : formatoMoneda(precioPI);
+  document.getElementById('op-rec-alcance').textContent = textoAlcanceOp(d.foliosPoliza.recolecciones.alcancePromedio);
+  document.getElementById('op-rec-os').textContent = Math.round(d.osRec).toLocaleString('es-MX');
+  document.getElementById('op-rec-precio').textContent = precioRec === null ? '—' : formatoMoneda(precioRec);
+  document.getElementById('op-md-alcance').textContent = textoAlcanceOp(d.foliosPoliza.multidistrito.alcancePromedio);
+  document.getElementById('op-md-os').textContent = Math.round(d.osMD).toLocaleString('es-MX');
+  document.getElementById('op-md-precio').textContent = precioMD === null ? '—' : formatoMoneda(precioMD);
+
+  renderizarGraficaFolioIndividual('op-grafica-pi', 'graficaOpPI', d.foliosPoliza.etiquetas, d.foliosPoliza.planta, '#1B4F72');
+  renderizarGraficaFolioIndividual('op-grafica-rec', 'graficaOpRec', d.foliosPoliza.etiquetas, d.foliosPoliza.recolecciones, '#2E86C1');
+  renderizarGraficaFolioIndividual('op-grafica-md', 'graficaOpMD', d.foliosPoliza.etiquetas, d.foliosPoliza.multidistrito, '#85C1E9');
+
+  const filas = Object.keys(d.ingresoPorDistritoYTD)
+    .map((distrito) => Object.assign({ distrito }, d.ingresoPorDistritoYTD[distrito]))
+    .sort((a, b) => b.total - a.total);
+  document.getElementById('tabla-op-distrito-body').innerHTML = filas.map((f) =>
+    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.plantaInterna)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.recolecciones)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.multidistrito)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(f.total)}</td></tr>`
+  ).join('');
+}
+
+let finDistritoSeleccionado = 'TODAS';
+let finAreaActual = null;
+
+async function cargarPilarFinancieros() {
+  const d = overviewDatos;
+  document.getElementById('pilar-fin-periodo').textContent = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ')';
+
+  const selector = document.getElementById('fin-selector-distrito');
+  if (selector.options.length <= 1) {
+    d.listaDistritos.slice().sort().forEach((distrito) => {
+      const opcion = document.createElement('option');
+      opcion.value = distrito;
+      opcion.textContent = distrito;
+      selector.appendChild(opcion);
+    });
+  }
+  selector.value = finDistritoSeleccionado;
+
+  if (finDistritoSeleccionado === 'TODAS') {
+    renderizarFinKpisTodas();
+  } else {
+    await renderizarFinKpisDistrito(finDistritoSeleccionado);
+  }
+  await renderizarFinTarjetasResumen();
+
+  if (finAreaActual) await abrirAreaFinanciera(finAreaActual);
+}
+
+async function cambiarDistritoFinancieros(valor) {
+  finDistritoSeleccionado = valor;
+  mostrarIndicadorCarga();
+  try {
+    await cargarPilarFinancieros();
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+let finKpisActuales = null;
+
+function pintarBadgeVariacion(idBadge, actual, anterior) {
+  const el = document.getElementById(idBadge);
+  if (!el) return;
+  const v = Calc.calcularVariacionPct(actual, anterior);
+  const clase = v === null ? 'bg-surface-container text-on-surface-variant' : (v >= 0 ? 'bg-error/10 text-error' : 'bg-qiora-green/10 text-qiora-green');
+  const flecha = v === null ? '' : (v >= 0 ? '↑' : '↓');
+  el.textContent = v === null ? '—' : flecha + (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+  el.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-gordita-bold whitespace-nowrap ' + clase;
+}
+
+function renderizarSparkline(canvasId, refGrafica, datos, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: datos.map((_, i) => i), datasets: [{ data: datos, borderColor: color, backgroundColor: color + '22', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 0, spanGaps: true }] },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+    },
+  });
+}
+
+function renderizarFinKpisTodas() {
+  const d = overviewDatos;
+  finKpisActuales = {
+    ingreso: d.ingresoOperacionesYTD,
+    gasto: d.gastoTotalYTD,
+    utilidad: d.utilidadYTD,
+    margen: d.margenYTD,
+    costoDirecto: d.kpisGasto.costoDirecto,
+    gastoOperativo: d.kpisGasto.gastoOperativo,
+  };
+  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(d.ingresoOperacionesYTD);
+  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(d.gastoTotalYTD);
+  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(d.utilidadYTD);
+  document.getElementById('fin-kpi-margen').textContent = d.margenYTD === null ? '—' : d.margenYTD.toFixed(1) + '%';
+}
+
+async function renderizarFinKpisDistrito(distrito) {
+  const d = overviewDatos;
+  const glosarioMap = d.glosarioMap;
+  const region = d.regionPorDistrito[distrito];
+
+  const mesesYTD = [];
+  for (let mes = 0; mes <= d.mesRef; mes++) mesesYTD.push(claveMes(d.anioRef, mes));
+  const inicioYTD = rangoDeMes(d.anioRef, 0).inicio;
+  const finYTD = rangoDeMes(d.anioRef, d.mesRef).fin;
+  const facturasYTD = await obtenerFacturasEnRango(inicioYTD, finYTD, '*');
+  const porMesFacturas = {};
+  facturasYTD.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
+  let ytdIngreso = 0, ytdCD = 0, ytdGO = 0;
+  mesesYTD.forEach((clave) => {
+    const mesISO = clave + '-01';
+    const r = Calc.calcularRentabilidadDistritoMes(porMesFacturas[clave] || [], d.datosIngresos, glosarioMap, distrito, region, mesISO);
+    ytdIngreso += r.totalIngresos;
+    ytdCD += r.totalCD;
+    ytdGO += r.totalGO;
+  });
+  const ytdUtilidadOperacion = ytdIngreso - ytdCD - ytdGO;
+  const ytdMargenOperacion = ytdIngreso > 0 ? (ytdUtilidadOperacion / ytdIngreso) * 100 : null;
+
+  finKpisActuales = {
+    ingreso: ytdIngreso,
+    gasto: ytdCD + ytdGO,
+    utilidad: ytdUtilidadOperacion,
+    margen: ytdMargenOperacion,
+    costoDirecto: ytdCD,
+    gastoOperativo: ytdGO,
+  };
+  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(ytdIngreso);
+  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(ytdCD + ytdGO);
+  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(ytdUtilidadOperacion);
+  document.getElementById('fin-kpi-margen').textContent = ytdMargenOperacion === null ? '—' : ytdMargenOperacion.toFixed(1) + '%';
+}
+
+async function renderizarFinTarjetasResumen() {
+  const d = overviewDatos;
+  const glosarioMap = d.glosarioMap;
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+  const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+
+  // --- Ingresos: monto + YoY + composición por póliza ---
+  document.getElementById('fin-card-ingresos-monto').textContent = formatoMoneda(finKpisActuales.ingreso);
+  let ytdPI = 0, ytdRec = 0, ytdMD = 0, ytdPIAnt = 0, ytdRecAnt = 0, ytdMDAnt = 0;
+  for (let mes = 0; mes <= d.mesRef; mes++) {
+    const mesISO = claveMes(d.anioRef, mes) + '-01';
+    const mesISOAnt = claveMes(d.anioRef - 1, mes) + '-01';
+    distritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO);
+      ytdPI += r.plantaInterna;
+      ytdRec += r.recolecciones;
+      ytdMD += r.multidistrito;
+      const rAnt = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISOAnt);
+      ytdPIAnt += rAnt.plantaInterna;
+      ytdRecAnt += rAnt.recolecciones;
+      ytdMDAnt += rAnt.multidistrito;
+    });
+  }
+  pintarBadgeVariacion('fin-card-ingresos-yoy', finKpisActuales.ingreso, ytdPIAnt + ytdRecAnt + ytdMDAnt);
+  const pctIngreso = (v) => (finKpisActuales.ingreso > 0 ? (v / finKpisActuales.ingreso) * 100 : 0);
+  const pctPI = pctIngreso(ytdPI), pctRec = pctIngreso(ytdRec), pctMD = pctIngreso(ytdMD);
+  document.getElementById('fin-card-ingresos-seg-pi').style.width = pctPI + '%';
+  document.getElementById('fin-card-ingresos-seg-rec').style.width = pctRec + '%';
+  document.getElementById('fin-card-ingresos-seg-md').style.width = pctMD + '%';
+  document.getElementById('fin-card-ingresos-seg-pi').textContent = pctPI >= 15 ? pctPI.toFixed(0) + '%' : '';
+  document.getElementById('fin-card-ingresos-seg-rec').textContent = pctRec >= 15 ? pctRec.toFixed(0) + '%' : '';
+  document.getElementById('fin-card-ingresos-seg-md').textContent = pctMD >= 15 ? pctMD.toFixed(0) + '%' : '';
+
+  // --- Ventana de 12 meses compartida: Top Gastos, Rentabilidad, Proveedores ---
+  const meses = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(d.anioRef, d.mesRef - i, 1);
+    meses.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
+  }
+  const inicioVentana = rangoDeMes(meses[0].anio, meses[0].mes).inicio;
+  const finVentana = rangoDeMes(meses[11].anio, meses[11].mes).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
+  const clasificadas = facturasVentana
+    .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
+  const porMes = {};
+  clasificadas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMes[clave] = porMes[clave] || [];
+    porMes[clave].push(f);
+  });
+
+  // --- Top Gastos: monto + tendencia de 6 meses de los rubros clave ---
+  document.getElementById('fin-card-gastos-monto').textContent = formatoMoneda(finKpisActuales.gasto);
+  const meses6 = meses.slice(6);
+  const serieGastosClave = meses6.map((m) => {
+    const facturasDelMes = porMes[m.clave] || [];
+    return FAMILIAS_CLAVE_TODAS.reduce((total, cat) => total + facturasDelMes.reduce((s, f) => {
+      const valor = normalizarTexto(f[cat.campo]);
+      return s + (cat.test(valor) ? (f.monto || 0) : 0);
+    }, 0), 0);
+  });
+  renderizarGraficaBarraSimple('fin-card-gastos-sparkline', 'finCardGastosSparkline', meses6.map((m) => m.etiqueta), serieGastosClave, '#2E86C1');
+
+  // --- Rentabilidad: gauges + sparkline ---
+  const margenBruto = finKpisActuales.ingreso > 0 ? ((finKpisActuales.ingreso - finKpisActuales.costoDirecto) / finKpisActuales.ingreso) * 100 : null;
+  const margenOperacion = finKpisActuales.margen;
+  document.getElementById('fin-card-rentabilidad-monto').textContent = margenOperacion === null ? '—' : margenOperacion.toFixed(1) + '%';
+  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-bruto', 'finCardGaugeMargenBruto', margenBruto, '#1B4F72', 11);
+  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-operacion', 'finCardGaugeMargenOperacion', margenOperacion, '#2E86C1', 11);
+
+  const serieMargenSparkline = meses.map((m) => {
+    const kpisMes = Calc.calcularKPIs(porMes[m.clave] || [], glosarioMap);
+    let ingresoMes = 0;
+    distritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      ingresoMes += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01').total;
+    });
+    const utilidadBruta = ingresoMes - kpisMes.costoDirecto;
+    const utilidadOperacion = utilidadBruta - kpisMes.gastoOperativo;
+    return ingresoMes > 0 ? (utilidadOperacion / ingresoMes) * 100 : null;
+  });
+  renderizarSparkline('fin-card-sparkline-margen', 'finCardSparklineMargen', serieMargenSparkline, '#2E86C1');
+
+  // --- Proveedores: top 3 (YTD, Costos Directos) ---
+  const clasificadasYtd = clasificadas.filter((f) => f.fecha_pago.slice(0, 4) === String(d.anioRef) && f.tipo_gasto === 'COSTOS DIRECTOS');
+  const porProveedor = {};
+  clasificadasYtd.forEach((f) => {
+    const proveedor = f.proveedor || 'Sin proveedor';
+    porProveedor[proveedor] = (porProveedor[proveedor] || 0) + (f.monto || 0);
+  });
+  const topProveedores = Object.keys(porProveedor).map((proveedor) => ({ proveedor, monto: porProveedor[proveedor] })).sort((a, b) => b.monto - a.monto).slice(0, 3);
+  document.getElementById('fin-card-proveedores-monto').textContent = formatoMoneda(finKpisActuales.costoDirecto);
+  const maxProveedor = Math.max(...topProveedores.map((p) => p.monto), 1);
+  document.getElementById('fin-card-proveedores-ranking').innerHTML = topProveedores.map((p) => `
+    <div>
+      <div class="flex justify-between text-[9px] mb-0.5"><span class="truncate">${p.proveedor}</span><span class="font-gordita-bold shrink-0 ml-1">${formatoCompacto(p.monto)}</span></div>
+      <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:${(p.monto / maxProveedor) * 100}%;"></div></div>
+    </div>`).join('');
+}
+
+async function abrirAreaFinanciera(area) {
+  finAreaActual = area;
+  document.getElementById('fin-areas-grid').style.display = 'none';
+  ['ingresos', 'gastos', 'rentabilidad', 'proveedores'].forEach((a) => {
+    document.getElementById('fin-area-' + a).style.display = a === area ? '' : 'none';
+  });
+  mostrarIndicadorCarga();
+  try {
+    if (area === 'ingresos') {
+      await renderizarAreaIngresos();
+    } else if (area === 'gastos') {
+      await renderizarAreaGastos();
+    } else if (area === 'rentabilidad') {
+      await cargarRentabilidades();
+      renderizarTendenciaHistoricaMargen();
+    } else if (area === 'proveedores') {
+      await cargarAnalisisProveedor(finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado);
+    }
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+function cerrarAreaFinanciera() {
+  finAreaActual = null;
+  document.getElementById('fin-areas-grid').style.display = '';
+  ['ingresos', 'gastos', 'rentabilidad', 'proveedores'].forEach((a) => {
+    document.getElementById('fin-area-' + a).style.display = 'none';
+  });
+}
+
+async function renderizarAreaIngresos() {
+  const d = overviewDatos;
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+  document.getElementById('fin-ingresos-titulo').textContent = distritoFiltro ? 'Ingresos — ' + distritoFiltro : 'Ingresos — Nacional (todos los distritos)';
+
+  const meses = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(d.anioRef, d.mesRef - i, 1);
+    meses.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()), anio: base.getFullYear() });
+  }
+
+  const seriePI = [], serieRec = [], serieMD = [];
+  let ytdPI = 0, ytdRec = 0, ytdMD = 0;
+  const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  meses.forEach((m) => {
+    const mesISO = m.clave + '-01';
+    let pi = 0, rec = 0, md = 0;
+    distritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO);
+      pi += r.plantaInterna;
+      rec += r.recolecciones;
+      md += r.multidistrito;
+    });
+    seriePI.push(pi);
+    serieRec.push(rec);
+    serieMD.push(md);
+    if (m.anio === d.anioRef) {
+      ytdPI += pi;
+      ytdRec += rec;
+      ytdMD += md;
+    }
+  });
+
+  const totalYtd = ytdPI + ytdRec + ytdMD;
+  const pct = (v) => (totalYtd > 0 ? (v / totalYtd) * 100 : 0);
+  [
+    { id: 'pi', monto: ytdPI },
+    { id: 'rec', monto: ytdRec },
+    { id: 'md', monto: ytdMD },
+  ].forEach((f) => {
+    document.getElementById('fin-ingresos-' + f.id + '-monto').textContent = formatoMoneda(f.monto);
+    document.getElementById('fin-ingresos-' + f.id + '-pct').textContent = pct(f.monto).toFixed(1) + '%';
+    document.getElementById('fin-ingresos-' + f.id + '-bar').style.width = pct(f.monto) + '%';
+  });
+
+  renderizarGraficaTendenciaSimple('grafica-fin-ingresos-tendencia', 'graficaFinIngresosTendencia', meses.map((m) => m.etiqueta), [
+    { label: 'Planta Interna', datos: seriePI, color: '#1B4F72' },
+    { label: 'Recolecciones', datos: serieRec, color: '#2E86C1' },
+    { label: 'Multidistrito', datos: serieMD, color: '#85C1E9' },
+  ]);
+
+  const contenedorRanking = document.getElementById('fin-ingresos-ranking-wrap');
+  if (distritoFiltro) {
+    contenedorRanking.style.display = 'none';
+  } else {
+    contenedorRanking.style.display = '';
+    const filas = d.listaDistritos.map((distrito) => ({ distrito, total: d.ingresoPorDistritoYTD[distrito].total })).sort((a, b) => b.total - a.total);
+    const maxTotal = Math.max(...filas.map((f) => f.total), 1);
+    document.getElementById('fin-ingresos-ranking').innerHTML = filas.map((f, i) => {
+      const pctBarra = (f.total / maxTotal) * 100;
+      return `<div>
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full bg-primary/10 text-primary font-gordita-bold text-[10px] flex items-center justify-center shrink-0">${i + 1}</span><span class="font-gordita-bold">${f.distrito}</span></span>
+          <span class="font-gordita-bold text-primary">${formatoMoneda(f.total)}</span>
+        </div>
+        <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden ml-7"><div class="h-full bg-op-pi rounded-full" style="width:${pctBarra}%;"></div></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function normalizarTexto(valor) {
+  return (valor || '').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+const FAMILIAS_CLAVE_NOMINA = [
+  { id: 'imss', label: 'Módulo IMSS', campo: 'gasto', test: (v) => v.includes('IMSS') },
+  { id: 'nominas', label: 'Módulo Nóminas', campo: 'gasto', test: (v) => v.includes('NOMINA') },
+  { id: 'ptu', label: 'PTU', campo: 'gasto', test: (v) => v.includes('PTU') },
+  { id: 'bonosprod', label: 'Módulo Bonos Productividad', campo: 'gasto', test: (v) => v.includes('BONO') && v.includes('PRODUCTIVIDAD') },
+  { id: 'tiendascuadrillas', label: 'Módulo Tiendas y Cuadrillas', campo: 'familia', test: (v) => v.includes('TIENDAS') && v.includes('CUADRILLAS') },
+];
+const FAMILIAS_CLAVE_OPERATIVAS = [
+  { id: 'comisiones', label: 'Comisiones Distribuidores', campo: 'familia', test: (v) => v.includes('COMISION') },
+  { id: 'arrendamiento', label: 'Arrendamiento Vehicular', campo: 'familia', test: (v) => v.includes('ARRENDAMIENTO') },
+  { id: 'gasolina', label: 'Gasolina', campo: 'familia', test: (v) => v.includes('GASOLINA') },
+  { id: 'talleres', label: 'Talleres y Refacciones', campo: 'familia', test: (v) => v.includes('TALLER') },
+];
+const FAMILIAS_CLAVE_TODAS = FAMILIAS_CLAVE_NOMINA.concat(FAMILIAS_CLAVE_OPERATIVAS);
+
+function renderizarGraficaBarraSimple(canvasId, refGrafica, etiquetas, datos, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 28 }] },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 8,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => formatoMoneda(item.parsed.y) },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 } } },
+        y: { display: false, beginAtZero: true },
+      },
+    },
+  });
+}
+
+async function renderizarAreaGastos() {
+  const d = overviewDatos;
+  const glosarioMap = d.glosarioMap;
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+
+  const meses6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    meses6.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
+  }
+  const inicio6 = rangoDeMes(new Date(anioRef, mesRef - 5, 1).getFullYear(), new Date(anioRef, mesRef - 5, 1).getMonth()).inicio;
+  const fin6 = rangoDeMes(anioRef, mesRef).fin;
+  const inicioVentana = inicio6 < rangos.actual.inicio ? inicio6 : rangos.actual.inicio;
+  const finVentana = fin6 > rangos.actual.fin ? fin6 : rangos.actual.fin;
+
+  const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
+  const clasificadas = facturas
+    .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
+
+  const enRango = (f, rango) => f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
+  const actualPeriodo = clasificadas.filter((f) => enRango(f, rangos.actual));
+  const gastoTotalPeriodo = actualPeriodo.reduce((s, f) => s + (f.monto || 0), 0);
+
+  const porMes = {};
+  clasificadas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMes[clave] = porMes[clave] || [];
+    porMes[clave].push(f);
+  });
+
+  const sumaCategoriaEnLista = (cat, lista) => lista.reduce((s, f) => {
+    const valor = normalizarTexto(f[cat.campo]);
+    return s + (cat.test(valor) ? (f.monto || 0) : 0);
+  }, 0);
+
+  const calcularCategoria = (cat) => {
+    const serie = meses6.map((m) => sumaCategoriaEnLista(cat, porMes[m.clave] || []));
+    const montoActual = serie[5];
+    const montoAnterior = serie[4];
+    return Object.assign({}, cat, { serie, monto: montoActual, variacion: Calc.calcularVariacionPct(montoActual, montoAnterior) });
+  };
+
+  const nomina = FAMILIAS_CLAVE_NOMINA.map(calcularCategoria);
+  const operativas = FAMILIAS_CLAVE_OPERATIVAS.map(calcularCategoria);
+  const totalIdentificado = FAMILIAS_CLAVE_TODAS.reduce((s, cat) => s + sumaCategoriaEnLista(cat, actualPeriodo), 0);
+  const pctIdentificado = gastoTotalPeriodo > 0 ? (totalIdentificado / gastoTotalPeriodo) * 100 : 0;
+
+  const etiquetaPeriodo = modoPeriodoGlobal === 'ytd' ? 'YTD ' + anioRef : MESES_LARGOS[mesRef] + ' ' + anioRef;
+  document.getElementById('fin-gastos-periodo').textContent = etiquetaPeriodo;
+  document.getElementById('fin-gastos-total-periodo').textContent = formatoMoneda(gastoTotalPeriodo);
+  document.getElementById('fin-gastos-identificado-pct').textContent = pctIdentificado.toFixed(0) + '% del gasto total';
+  document.getElementById('fin-gastos-identificado-monto').textContent = formatoMoneda(totalIdentificado);
+
+  const etiquetasMeses = meses6.map((m) => m.etiqueta);
+  const renderizarFilas = (contenedorId, categorias) => {
+    const contenedor = document.getElementById(contenedorId);
+    contenedor.innerHTML = categorias.map((c) => {
+      const v = c.variacion;
+      const claseVar = v === null ? 'text-on-surface-variant' : (v >= 0 ? 'text-error' : 'text-qiora-green');
+      const textoVar = v === null ? '—' : (v >= 0 ? '↑+' : '↓') + Math.abs(v).toFixed(1) + '%';
+      return `<div class="bg-surface-container-low p-4 rounded-lg">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-gordita-bold text-sm">${c.label}</span>
+          <span class="flex items-center gap-2 text-xs"><span class="font-gordita-bold text-primary">${formatoMoneda(c.monto)}</span><span class="font-gordita-bold ${claseVar}">${textoVar}</span></span>
+        </div>
+        <div style="height:90px;"><canvas id="fin-gasto-chart-${c.id}"></canvas></div>
+      </div>`;
+    }).join('');
+    categorias.forEach((c) => {
+      renderizarGraficaBarraSimple('fin-gasto-chart-' + c.id, 'finGastoChart' + c.id, etiquetasMeses, c.serie, '#2E86C1');
+    });
+  };
+  renderizarFilas('fin-gastos-nomina-filas', nomina);
+  renderizarFilas('fin-gastos-operativas-filas', operativas);
+}
+
+function renderizarTendenciaHistoricaMargen() {
+  const distritos = Object.keys(rentabilidadPorDistrito);
+  if (distritos.length === 0) return;
+  const numMeses = rentabilidadPorDistrito[distritos[0]].porMes.length;
+  const etiquetas = rentabilidadPorDistrito[distritos[0]].porMes.map((m) => m.etiqueta);
+
+  const margenBruto = [], margenOperacion = [];
+  for (let i = 0; i < numMeses; i++) {
+    let ingreso = 0, cd = 0, go = 0;
+    distritos.forEach((distrito) => {
+      const m = rentabilidadPorDistrito[distrito].porMes[i];
+      ingreso += m.totalIngresos;
+      cd += m.totalCD;
+      go += m.totalGO;
+    });
+    const utilidadBruta = ingreso - cd;
+    const utilidadOperacion = utilidadBruta - go;
+    margenBruto.push(ingreso > 0 ? (utilidadBruta / ingreso) * 100 : null);
+    margenOperacion.push(ingreso > 0 ? (utilidadOperacion / ingreso) * 100 : null);
+  }
+
+  renderizarGraficaTendenciaPct('grafica-fin-tendencia-margen', 'graficaFinTendenciaMargen', etiquetas, [
+    { label: 'Margen Bruto %', datos: margenBruto, color: '#1B4F72' },
+    { label: 'Margen de Operación %', datos: margenOperacion, color: '#2E86C1' },
+  ]);
+}
+
+async function cargarPilarFlota() {
+  const d = overviewDatos;
+  document.getElementById('pilar-flota-periodo').textContent = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ')';
+  document.getElementById('flota-kpi-ytd').textContent = formatoMoneda(d.gastoFlotaYTD);
+  document.getElementById('flota-kpi-mes').textContent = formatoMoneda(d.gastoFlotaMesVigente);
+  const flotaActivaDetalle = d.flotaVehicular.filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO').length;
+  document.getElementById('flota-kpi-activa').textContent = d.flotaVehicular.length > 0 ? flotaActivaDetalle.toLocaleString('es-MX') : '—';
+
+  const meses = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(d.anioRef, d.mesRef - i, 1);
+    meses.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
+  }
+  const inicioVentana = rangoDeMes(meses[0].anio, meses[0].mes).inicio;
+  const finVentana = rangoDeMes(meses[11].anio, meses[11].mes).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, tipo_gasto_categoria, subtotal, fecha_pago');
+  const facturasFlota = facturasVentana.filter((f) => (f.tipo_gasto_categoria || '').toUpperCase().includes('FLOTA'));
+  const porMes = {};
+  facturasFlota.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMes[clave] = (porMes[clave] || 0) + (f.subtotal || 0);
+  });
+  renderizarGraficaTendenciaSimple('grafica-flota-tendencia', 'graficaFlotaTendencia', meses.map((m) => m.etiqueta), [
+    { label: 'Gasto Flota', datos: meses.map((m) => porMes[m.clave] || 0), color: '#E67E22' },
+  ]);
+
+  const porDistrito = {};
+  d.facturasFlotaYTD.forEach((f) => {
+    const entrada = d.glosarioMap[f.sucursal];
+    const distrito = (entrada && entrada.sucursal_secundaria) || f.sucursal || 'Sin Clasificar';
+    porDistrito[distrito] = (porDistrito[distrito] || 0) + (f.subtotal || 0);
+  });
+  const filas = Object.keys(porDistrito).map((distrito) => ({ distrito, monto: porDistrito[distrito] })).sort((a, b) => b.monto - a.monto);
+  document.getElementById('tabla-flota-distrito-body').innerHTML = filas.map((f) =>
+    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.monto)}</td></tr>`
+  ).join('');
+}
+
+async function cargarPilarCapitalHumano() {}
+
+async function cargarPilarPresupuesto() {}
 
 cargarSesion();
 </script>
