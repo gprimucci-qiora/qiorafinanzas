@@ -332,8 +332,8 @@
               <h2 id="ov-flota-kpi-antiguedad" class="font-gordita-bold text-xl text-primary">-</h2>
             </div>
             <div class="bg-surface-container-low p-5 rounded-lg">
-              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota YTD</p>
-              <h2 id="ov-flota-kpi-ytd" class="font-gordita-bold text-xl text-primary">-</h2>
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades Faltantes vs. Autorizado</p>
+              <h2 id="ov-flota-kpi-faltantes" class="font-gordita-bold text-xl text-primary">-</h2>
             </div>
           </div>
           <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Composición de Flota</h3>
@@ -620,6 +620,7 @@
           <button id="config-tab-glosario" onclick="mostrarSubConfig('glosario')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Glosario de Sucursales</button>
           <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
           <button id="config-tab-flota" onclick="mostrarSubConfig('flota')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Flota Vehicular</button>
+          <button id="config-tab-unidades" onclick="mostrarSubConfig('unidades')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Unidades Autorizadas</button>
           <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
 
@@ -681,6 +682,22 @@
               <button onclick="confirmarCargaFlota()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
             </div>
             <p id="estado-carga-flota" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
+        <div id="config-sub-unidades" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el Excel de "Unidades autorizadas" (una fila por sucursal, columnas PI AUTO / PI MOTO / RECOLECCION MOTO / MULTIDISTRITO AUTO / STBY / STAFF / ALMACEN / DESTAJO / TEMPORAL). Cada carga <strong>agrega una nueva vigencia</strong> — no reemplaza las anteriores, igual que HC Autorizado.</p>
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <div class="mb-4">
+              <label class="block text-xs font-gordita-bold text-on-surface-variant uppercase tracking-widest mb-2">Vigente desde</label>
+              <input type="month" id="unidades-vigente-desde" class="px-3 py-2 border border-outline-variant rounded text-sm">
+            </div>
+            <input type="file" id="input-excel-unidades" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-unidades" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-3">Combinaciones distrito/categoría/tipo a cargar: <strong id="preview-filas-unidades" class="font-gordita-bold text-primary"></strong></p>
+              <button onclick="confirmarCargaUnidadesAutorizadas()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y agregar vigencia</button>
+            </div>
+            <p id="estado-carga-unidades" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
           </div>
         </div>
 
@@ -778,48 +795,26 @@
           <p id="pilar-op-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
-            <p class="font-gordita-bold text-[10px] text-op-pi uppercase tracking-wider mb-1">Alcance Planta Interna</p>
-            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-pi"></canvas></div>
-            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
-              <span>Dimensionados<br><span id="op-kpi-dim-pi" class="font-gordita-bold text-primary text-sm">-</span></span>
-              <span>Realizados<br><span id="op-kpi-real-pi" class="font-gordita-bold text-primary text-sm">-</span></span>
+          <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-op-pi uppercase tracking-wide">Planta Interna</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ranking por % de alcance. Clic en un distrito para ver su detalle mensual.</p>
             </div>
+            <div id="op-ranking-alcance-pi" class="px-6 divide-y divide-outline-variant" style="max-height:440px; overflow-y:auto;"></div>
           </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
-            <p class="font-gordita-bold text-[10px] text-op-rec uppercase tracking-wider mb-1">Alcance Recolecciones</p>
-            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-rec"></canvas></div>
-            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
-              <span>Dimensionados<br><span id="op-kpi-dim-rec" class="font-gordita-bold text-primary text-sm">-</span></span>
-              <span>Realizados<br><span id="op-kpi-real-rec" class="font-gordita-bold text-primary text-sm">-</span></span>
+          <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-op-rec uppercase tracking-wide">Recolecciones</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ranking por % de alcance. Clic en un distrito para ver su detalle mensual.</p>
             </div>
+            <div id="op-ranking-alcance-rec" class="px-6 divide-y divide-outline-variant" style="max-height:440px; overflow-y:auto;"></div>
           </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm text-center">
-            <p class="font-gordita-bold text-[10px] text-op-md uppercase tracking-wider mb-1">Alcance Multidistrito</p>
-            <div style="height:100px; width:190px;" class="mx-auto"><canvas id="op-gauge-md"></canvas></div>
-            <div class="flex justify-center gap-6 text-xs text-on-surface-variant mt-1">
-              <span>Dimensionados<br><span id="op-kpi-dim-md" class="font-gordita-bold text-primary text-sm">-</span></span>
-              <span>Realizados<br><span id="op-kpi-real-md" class="font-gordita-bold text-primary text-sm">-</span></span>
+          <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-op-md uppercase tracking-wide">Multidistrito</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ranking por % de alcance. Clic en un distrito para ver su detalle mensual.</p>
             </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Folios por Póliza</h3>
-          <p class="text-xs text-on-surface-variant mb-6">Barra: folios dimensionados. Línea (eje derecho): % de alcance, con folios realizados entre paréntesis.</p>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter items-start">
-            <div class="bg-surface-container-low p-5 rounded-lg">
-              <p class="font-gordita-bold text-sm text-op-pi uppercase tracking-wide mb-2">Planta Interna</p>
-              <div style="height:260px;"><canvas id="op-grafica-pi"></canvas></div>
-            </div>
-            <div class="bg-surface-container-low p-5 rounded-lg">
-              <p class="font-gordita-bold text-sm text-op-rec uppercase tracking-wide mb-2">Recolecciones</p>
-              <div style="height:260px;"><canvas id="op-grafica-rec"></canvas></div>
-            </div>
-            <div class="bg-surface-container-low p-5 rounded-lg">
-              <p class="font-gordita-bold text-sm text-op-md uppercase tracking-wide mb-2">Multidistrito</p>
-              <div style="height:260px;"><canvas id="op-grafica-md"></canvas></div>
-            </div>
+            <div id="op-ranking-alcance-md" class="px-6 divide-y divide-outline-variant" style="max-height:440px; overflow-y:auto;"></div>
           </div>
         </div>
 
@@ -874,21 +869,6 @@
             <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS asignadas</span><span>Precio/OS (bolsa)</span></div>
           </div>
         </div>
-
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Planta Interna</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Recolecciones</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Multidistrito</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total YTD</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-op-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
       </div>
 
       <div class="vista" id="vista-pilar-financieros">
@@ -1016,6 +996,88 @@
             <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
           </button>
           <h3 id="fin-ingresos-titulo" class="font-gordita-bold text-2xl text-primary mb-6">Ingresos</h3>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-lg">
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-op-pi uppercase tracking-wide">Planta Interna</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Folios y precio por folio (mes vigente)</p>
+              </div>
+              <div class="overflow-x-auto" style="max-height:480px; overflow-y:auto;">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Folios</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Precio</th>
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fin-ingresos-tabla-pi" class="text-xs divide-y divide-outline-variant"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-op-rec uppercase tracking-wide">Recolecciones</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Folios y precio por folio (mes vigente)</p>
+              </div>
+              <div class="overflow-x-auto" style="max-height:480px; overflow-y:auto;">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Folios</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Precio</th>
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fin-ingresos-tabla-rec" class="text-xs divide-y divide-outline-variant"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-4 py-3 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-op-md uppercase tracking-wide">Multidistrito</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Folios asignados y precio de bolsa (mes vigente)</p>
+              </div>
+              <div class="overflow-x-auto" style="max-height:480px; overflow-y:auto;">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Folios</th>
+                      <th class="px-3 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Precio</th>
+                      <th class="px-4 py-2.5 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fin-ingresos-tabla-md" class="text-xs divide-y divide-outline-variant"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Ingreso por Distrito y Póliza</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Acumulado YTD.</p>
+            </div>
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Planta Interna</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Recolecciones</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Multidistrito</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total YTD</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-op-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
             <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
               <p class="font-gordita-bold text-xs text-op-pi uppercase tracking-wider mb-2">Planta Interna</p>
@@ -1040,7 +1102,7 @@
             <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Ingreso por Póliza (últimos 12 meses)</h3>
             <div style="height: 320px;"><canvas id="grafica-fin-ingresos-tendencia"></canvas></div>
           </div>
-          <div id="fin-ingresos-ranking-wrap" class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+          <div id="fin-ingresos-ranking-wrap" class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm mb-lg">
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-4">Ranking por Distrito (YTD)</h3>
             <div id="fin-ingresos-ranking" class="space-y-4"></div>
           </div>
@@ -1160,35 +1222,257 @@
           <h1 class="font-gordita-bold text-4xl text-primary mt-1">Flota Vehicular</h1>
           <p id="pilar-flota-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
         </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota YTD</p>
-            <h2 id="flota-kpi-ytd" class="font-gordita-bold text-2xl text-primary">-</h2>
-          </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Flota (mes vigente)</p>
-            <h2 id="flota-kpi-mes" class="font-gordita-bold text-2xl text-primary">-</h2>
-          </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"># Flota Activa</p>
             <h2 id="flota-kpi-activa" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades Faltantes vs. Autorizado</p>
+            <h2 id="flota-kpi-faltantes" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Alertas Activas</p>
+            <h2 id="flota-kpi-alertas" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
         </div>
-        <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Gasto de Flota (últimos 12 meses)</h3>
-          <div style="height: 340px;"><canvas id="grafica-flota-tendencia"></canvas></div>
+
+        <div id="flota-areas-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <button onclick="abrirAreaFlota('autorizado')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">directions_car</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Real vs. Autorizado</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor faltante de unidades.</p>
+            <div style="height:130px;"><canvas id="flota-card-autorizado-chart"></canvas></div>
+            <div class="mt-auto pt-4">
+              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Distrito</span><span class="text-right">Real / Autorizado</span>
+              </div>
+              <div id="flota-card-autorizado-ranking" class="space-y-1"></div>
+            </div>
+          </button>
+
+          <button onclick="abrirAreaFlota('distrito')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">warning</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Composición nacional de la flota y alertas operativas.</p>
+            <div style="height:160px;"><canvas id="flota-card-composicion-chart"></canvas></div>
+            <div class="mt-auto pt-4 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-on-surface-variant">Pólizas por vencer/vencidas</span>
+                <span id="flota-card-polizas-count" class="font-gordita-bold text-primary">-</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-on-surface-variant">Mantenimientos pendientes/atrasados</span>
+                <span id="flota-card-mantenimiento-count" class="font-gordita-bold text-primary">-</span>
+              </div>
+            </div>
+          </button>
+
+          <button onclick="abrirAreaFlota('inventario')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">list_alt</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Inventario</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Antigüedad, kilometraje, marcas y condición por distrito.</p>
+            <div style="height:130px;"><canvas id="flota-card-antiguedad-chart"></canvas></div>
+            <div class="mt-auto pt-4 flex items-end justify-between">
+              <div>
+                <p class="text-2xl font-gordita-bold text-primary" id="flota-card-inventario-total">-</p>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">vehículos registrados</p>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-gordita-bold text-primary" id="flota-card-km-promedio">-</p>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">km promedio</p>
+              </div>
+            </div>
+          </button>
         </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
-                <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Gasto Flota YTD</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-flota-distrito-body" class="text-sm divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
+
+        <div id="flota-area-autorizado" class="flota-area" style="display:none;">
+          <button onclick="cerrarAreaFlota()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Flota Vehicular
+          </button>
+          <div class="mb-6">
+            <h2 class="font-gordita-bold text-2xl text-primary">Real vs. Autorizado</h2>
+            <p class="text-sm text-on-surface-variant mt-1">Unidades reales activas vs. unidades autorizadas por distrito. Ordenado de mayor a menor faltante. Clic en un distrito para ver el desglose por categoría.</p>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div id="flota-ranking-autorizado" class="px-6 divide-y divide-outline-variant"></div>
+          </section>
+        </div>
+
+        <div id="flota-area-distrito" class="flota-area" style="display:none;">
+          <button onclick="cerrarAreaFlota()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Flota Vehicular
+          </button>
+          <div class="mb-6">
+            <h2 class="font-gordita-bold text-2xl text-primary">Por Distrito</h2>
+            <p class="text-sm text-on-surface-variant mt-1">Composición de flota y alertas operativas por distrito.</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Pólizas de Seguro por Vencer</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Vencidas o que vencen en los próximos 30 días.</p>
+              </div>
+              <div style="max-height:420px; overflow-y:auto;">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Vencimiento</th>
+                    </tr>
+                  </thead>
+                  <tbody id="flota-alertas-polizas-body" class="divide-y divide-outline-variant"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Mantenimientos Pendientes/Atrasados</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Atrasados o con compromiso en los próximos 15 días.</p>
+              </div>
+              <div style="max-height:420px; overflow-y:auto;">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                      <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Compromiso</th>
+                    </tr>
+                  </thead>
+                  <tbody id="flota-alertas-mantenimiento-body" class="divide-y divide-outline-variant"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Composición por Distrito</h3>
+            </div>
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Activo</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Baja</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Inactivo</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="flota-tabla-composicion-body" class="text-sm divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <div id="flota-area-inventario" class="flota-area" style="display:none;">
+          <button onclick="cerrarAreaFlota()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Flota Vehicular
+          </button>
+          <div class="mb-6">
+            <h2 class="font-gordita-bold text-2xl text-primary">Inventario</h2>
+            <p class="text-sm text-on-surface-variant mt-1">Condición de la flota activa: antigüedad, kilometraje, marcas y comparación por distrito.</p>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Antigüedad Promedio</p>
+              <h2 id="flota-inv-kpi-antiguedad" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Kilometraje Promedio</p>
+              <h2 id="flota-inv-kpi-km" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades +150K Km</p>
+              <h2 id="flota-inv-kpi-altokm" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Con Kilometraje Reportado</p>
+              <h2 id="flota-inv-kpi-pctkm" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-lg">
+            <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución por Antigüedad</h3>
+              <p class="text-xs text-on-surface-variant mb-3">Unidades activas por años de modelo.</p>
+              <div style="height:220px;"><canvas id="flota-inv-grafica-antiguedad"></canvas></div>
+            </section>
+            <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución por Kilometraje</h3>
+              <p class="text-xs text-on-surface-variant mb-3">Unidades activas por rango de último kilometraje.</p>
+              <div style="height:220px;"><canvas id="flota-inv-grafica-kilometraje"></canvas></div>
+            </section>
+            <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Marcas</h3>
+              <p class="text-xs text-on-surface-variant mb-3">Composición de la flota activa por marca.</p>
+              <div style="height:220px;"><canvas id="flota-inv-grafica-marcas"></canvas></div>
+            </section>
+          </div>
+
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Condición de Flota por Distrito</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ordenado por mayor antigüedad promedio.</p>
+            </div>
+            <div style="max-height:420px; overflow-y:auto;">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                    <th class="px-8 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Antigüedad Prom.</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Km Promedio</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades +150K Km</th>
+                  </tr>
+                </thead>
+                <tbody id="flota-inv-tabla-distrito-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="mb-4 flex items-center justify-between flex-wrap gap-3">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Detalle a Nivel Vehículo</h3>
+            <div class="flex items-center gap-3 flex-wrap">
+              <input type="text" id="flota-inventario-buscar" oninput="renderizarAreaFlotaInventario()" placeholder="Buscar placa, empleado, marca..." class="px-3 py-2 border border-outline-variant rounded-lg text-sm w-64">
+              <select id="flota-inventario-distrito" onchange="renderizarAreaFlotaInventario()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm">
+                <option value="">Todos los distritos</option>
+              </select>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div style="max-height:600px; overflow-y:auto;">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Marca / Modelo</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Año</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Empleado Asignado</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Estatus</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Último Km</th>
+                  </tr>
+                </thead>
+                <tbody id="flota-inventario-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </div>
+            <p id="flota-inventario-contador" class="px-6 py-3 text-xs text-on-surface-variant border-t border-outline-variant"></p>
+          </section>
+        </div>
       </div>
 
       <div class="vista" id="vista-pilar-capitalhumano">
@@ -1325,6 +1609,51 @@
   </div>
 </div>
 
+<div id="modal-drilldown-folios" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p id="drilldown-folios-subtitulo" class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">-</p>
+        <h3 id="drilldown-folios-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownFolios()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <div style="height:320px;"><canvas id="grafica-drilldown-folios"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-drilldown-flota" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Real vs. Autorizado por categoría</p>
+        <h3 id="drilldown-flota-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownFlotaAutorizado()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest">Categoría</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest">Tipo</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Autorizado</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Real</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Faltante/Sobrante</th>
+          </tr>
+        </thead>
+        <tbody id="drilldown-flota-body" class="divide-y divide-outline-variant"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://fnatpzeccnkurzqbhyfq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYXRwemVjY25rdXJ6cWJoeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjExMjEsImV4cCI6MjA5ODkzNzEyMX0.Ucc_4EmEGMZuSAOjdK3Q0fvvXi9Mga0F7heAIrLSqaA';
@@ -1376,6 +1705,7 @@ async function cargarSesion() {
   if (perfil.rol !== 'admin') {
     document.getElementById('config-tab-cargar').style.display = 'none';
     document.getElementById('config-tab-flota').style.display = 'none';
+    document.getElementById('config-tab-unidades').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   } else {
@@ -1427,7 +1757,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'flota', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'flota', 'unidades', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -1723,6 +2053,70 @@ async function confirmarCargaFlota() {
   invalidarCache('flota_vehicular');
   document.getElementById('estado-carga-flota').textContent = 'Carga completada: ' + filasParaCargarFlota.length + ' vehículos.';
   document.getElementById('preview-carga-flota').style.display = 'none';
+}
+
+const MAPEO_COLUMNAS_UNIDADES_AUTORIZADAS = [
+  { columna: 'PI AUTO', categoria: 'PI', tipo_unidad: 'AUTO' },
+  { columna: 'PI MOTO', categoria: 'PI', tipo_unidad: 'MOTO' },
+  { columna: 'RECOLECCION MOTO', categoria: 'RECOLECCION', tipo_unidad: 'MOTO' },
+  { columna: 'MULTIDISTRITO AUTO', categoria: 'MULTIDISTRITO', tipo_unidad: 'AUTO' },
+  { columna: 'STBY', categoria: 'STBY', tipo_unidad: 'AUTO' },
+  { columna: 'STAFF', categoria: 'STAFF', tipo_unidad: 'AUTO' },
+  { columna: 'ALMACEN', categoria: 'ALMACEN', tipo_unidad: 'AUTO' },
+  { columna: 'DESTAJO', categoria: 'DESTAJO', tipo_unidad: 'AUTO' },
+  { columna: 'TEMPORAL', categoria: 'TEMPORAL', tipo_unidad: 'AUTO' },
+];
+
+let filasParaCargarUnidadesAutorizadas = null;
+
+document.getElementById('input-excel-unidades').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja);
+
+      const vigenteDesde = document.getElementById('unidades-vigente-desde').value;
+      if (!vigenteDesde) {
+        document.getElementById('estado-carga-unidades').textContent = 'Selecciona la vigencia antes de subir el archivo.';
+        return;
+      }
+
+      const combinaciones = [];
+      filas.forEach((fila) => {
+        const distrito = fila['SUCURSAL'];
+        if (!distrito) return;
+        MAPEO_COLUMNAS_UNIDADES_AUTORIZADAS.forEach((m) => {
+          const cantidad = Number(fila[m.columna]);
+          if (cantidad > 0) {
+            combinaciones.push({ distrito, categoria: m.categoria, tipo_unidad: m.tipo_unidad, unidades_autorizadas: cantidad, vigente_desde: vigenteDesde + '-01' });
+          }
+        });
+      });
+
+      filasParaCargarUnidadesAutorizadas = combinaciones;
+      document.getElementById('preview-filas-unidades').textContent = combinaciones.length;
+      document.getElementById('preview-carga-unidades').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga-unidades').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaUnidadesAutorizadas() {
+  document.getElementById('estado-carga-unidades').textContent = 'Cargando...';
+  const { error } = await supabaseClient.from('unidades_autorizadas').insert(filasParaCargarUnidadesAutorizadas);
+  if (error) {
+    document.getElementById('estado-carga-unidades').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('unidades_autorizadas');
+  document.getElementById('estado-carga-unidades').textContent = 'Vigencia agregada: ' + filasParaCargarUnidadesAutorizadas.length + ' combinaciones.';
+  document.getElementById('preview-carga-unidades').style.display = 'none';
 }
 
 let glosarioActual = [];
@@ -4112,13 +4506,13 @@ async function cargarOverview() {
   const inicioYTD = rangoDeMes(anioRef, 0).inicio;
   const finYTD = rangoDeMes(anioRef, mesRef).fin;
   const mesVigenteISO = claveMes(anioRef, mesRef) + '-01';
-  const claveMesVigente = claveMes(anioRef, mesRef);
 
-  const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
+  const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado, unidadesAutorizadas] = await Promise.all([
     obtenerFacturasEnRango(inicioYTD, finYTD, '*'),
     obtenerTablaCompleta('poliza_parametros'),
     obtenerTablaCompleta('multidistrito_bolsas'),
     obtenerTablaCompleta('hc_autorizado'),
+    obtenerTablaCompleta('unidades_autorizadas'),
   ]);
 
   const distritosSet = new Set();
@@ -4186,9 +4580,6 @@ async function cargarOverview() {
 
   const kpisGasto = Calc.calcularKPIs(facturasYTD, glosarioMap);
   const gastoTotalYTD = kpisGasto.totalPagado;
-  const facturasFlotaYTD = facturasYTD.filter((f) => (f.tipo_gasto_categoria || '').toUpperCase().includes('FLOTA'));
-  const gastoFlotaYTD = facturasFlotaYTD.reduce((s, f) => s + (f.subtotal || 0), 0);
-  const gastoFlotaMesVigente = facturasFlotaYTD.filter((f) => f.fecha_pago.slice(0, 7) === claveMesVigente).reduce((s, f) => s + (f.subtotal || 0), 0);
 
   const utilidadYTD = ingresoOperacionesYTD - gastoTotalYTD;
   const margenYTD = ingresoOperacionesYTD > 0 ? (utilidadYTD / ingresoOperacionesYTD) * 100 : null;
@@ -4198,8 +4589,8 @@ async function cargarOverview() {
     ingresoPorDistritoYTD, ytdPlantaInterna, ytdRecolecciones, ytdMultidistrito, ingresoOperacionesYTD,
     osPI, osRec, osMD, osTotalVigente, ingresoVigentePI, ingresoVigenteRec, ingresoVigenteMD,
     precioPromedioGeneral, alcancePromedio, distritosConPoliza,
-    facturasYTD, facturasFlotaYTD, gastoTotalYTD, kpisGasto, gastoFlotaYTD, gastoFlotaMesVigente,
-    utilidadYTD, margenYTD,
+    facturasYTD, gastoTotalYTD, kpisGasto,
+    utilidadYTD, margenYTD, unidadesAutorizadas,
   };
 
   const etiquetaPeriodo = 'Año en curso ' + anioRef + ' (Ene–' + MESES_LARGOS[mesRef] + ')' +
@@ -4281,10 +4672,11 @@ async function cargarOverview() {
   pintarVariacionFin('ov-fin-kpi-directo-yoy', kpisFinActual.costoDirecto, kpisFinAnioAnterior.costoDirecto);
   pintarVariacionFin('ov-fin-kpi-operativo-yoy', kpisFinActual.gastoOperativo, kpisFinAnioAnterior.gastoOperativo);
 
-  document.getElementById('ov-flota-kpi-ytd').textContent = formatoMoneda(gastoFlotaYTD);
-
   const flotaVehicular = await obtenerTablaCompleta('flota_vehicular');
   overviewDatos.flotaVehicular = flotaVehicular;
+  const resumenAutorizadoOv = calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesVigenteISO);
+  const faltanteTotalOv = Object.values(resumenAutorizadoOv).reduce((s, r) => s + Math.max(0, r.autorizado - r.real), 0);
+  document.getElementById('ov-flota-kpi-faltantes').textContent = faltanteTotalOv.toLocaleString('es-MX');
   const ESTATUS_ATENCION = ['CORRALON', 'ROBO', 'ALTO COSTO', 'PERDIDA TOTAL', 'TALLER INTERNO', 'TALLER ASEGURADORA', 'SINIESTRO'];
   const conteoClasificacion = { ACTIVO: 0, BAJA: 0, INACTIVO: 0 };
   let sumaAnios = 0, conteoAnios = 0, conteoAtencion = 0;
@@ -4356,20 +4748,16 @@ async function abrirPilar(nombre) {
   }
 }
 
+function textoAlcanceOp(pct) {
+  return pct === null ? '—' : pct.toFixed(1) + '%';
+}
+
 async function cargarPilarOperaciones() {
   const d = overviewDatos;
   const etiquetaPeriodo = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ') · parámetros vigentes de ' + MESES_LARGOS[d.mesRef] + ' ' + d.anioRef;
   document.getElementById('pilar-op-periodo').textContent = etiquetaPeriodo;
 
-  renderizarGraficaGaugeAlcance('op-gauge-pi', 'graficaOpGaugePI', d.foliosPoliza.planta.alcancePromedio, '#1B4F72');
-  renderizarGraficaGaugeAlcance('op-gauge-rec', 'graficaOpGaugeRec', d.foliosPoliza.recolecciones.alcancePromedio, '#2E86C1');
-  renderizarGraficaGaugeAlcance('op-gauge-md', 'graficaOpGaugeMD', d.foliosPoliza.multidistrito.alcancePromedio, '#85C1E9');
-  document.getElementById('op-kpi-dim-pi').textContent = Math.round(d.foliosPoliza.planta.totalDimensionados).toLocaleString('es-MX');
-  document.getElementById('op-kpi-real-pi').textContent = Math.round(d.foliosPoliza.planta.totalRealizados).toLocaleString('es-MX');
-  document.getElementById('op-kpi-dim-rec').textContent = Math.round(d.foliosPoliza.recolecciones.totalDimensionados).toLocaleString('es-MX');
-  document.getElementById('op-kpi-real-rec').textContent = Math.round(d.foliosPoliza.recolecciones.totalRealizados).toLocaleString('es-MX');
-  document.getElementById('op-kpi-dim-md').textContent = Math.round(d.foliosPoliza.multidistrito.totalDimensionados).toLocaleString('es-MX');
-  document.getElementById('op-kpi-real-md').textContent = Math.round(d.foliosPoliza.multidistrito.totalRealizados).toLocaleString('es-MX');
+  await renderizarRankingsAlcancePoliza();
 
   const rankingDistritos = Object.keys(d.foliosPoliza.porDistrito)
     .map((distrito) => ({ distrito, alcancePct: d.foliosPoliza.porDistrito[distrito].alcancePct }))
@@ -4421,17 +4809,488 @@ async function cargarPilarOperaciones() {
   document.getElementById('op-md-alcance').textContent = textoAlcanceOp(d.foliosPoliza.multidistrito.alcancePromedio);
   document.getElementById('op-md-os').textContent = Math.round(d.osMD).toLocaleString('es-MX');
   document.getElementById('op-md-precio').textContent = precioMD === null ? '—' : formatoMoneda(precioMD);
+}
 
-  renderizarGraficaFolioIndividual('op-grafica-pi', 'graficaOpPI', d.foliosPoliza.etiquetas, d.foliosPoliza.planta, '#1B4F72');
-  renderizarGraficaFolioIndividual('op-grafica-rec', 'graficaOpRec', d.foliosPoliza.etiquetas, d.foliosPoliza.recolecciones, '#2E86C1');
-  renderizarGraficaFolioIndividual('op-grafica-md', 'graficaOpMD', d.foliosPoliza.etiquetas, d.foliosPoliza.multidistrito, '#85C1E9');
+const POLIZAS_OP_RANKING = [
+  { poliza: 'PLANTA INTERNA', contenedor: 'op-ranking-alcance-pi', color: '#1B4F72' },
+  { poliza: 'RECOLECCIONES', contenedor: 'op-ranking-alcance-rec', color: '#2E86C1' },
+  { poliza: 'MULTIDISTRITO', contenedor: 'op-ranking-alcance-md', color: '#85C1E9' },
+];
 
-  const filas = Object.keys(d.ingresoPorDistritoYTD)
-    .map((distrito) => Object.assign({ distrito }, d.ingresoPorDistritoYTD[distrito]))
-    .sort((a, b) => b.total - a.total);
-  document.getElementById('tabla-op-distrito-body').innerHTML = filas.map((f) =>
-    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.plantaInterna)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.recolecciones)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.multidistrito)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(f.total)}</td></tr>`
+async function renderizarRankingsAlcancePoliza() {
+  const filasFolios = await obtenerTablaCompleta('folios_poliza');
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const clavesActivo = clavesMesesEnRango(rangos.actual);
+
+  POLIZAS_OP_RANKING.forEach((p) => {
+    const porDistrito = {};
+    filasFolios
+      .filter((f) => f.poliza === p.poliza && clavesActivo.includes(f.mes.slice(0, 7)))
+      .forEach((f) => {
+        if (f.folios_realizados === null || f.folios_realizados === undefined) return;
+        porDistrito[f.distrito] = porDistrito[f.distrito] || { dimensionados: 0, realizados: 0 };
+        porDistrito[f.distrito].dimensionados += f.folios_dimensionados || 0;
+        porDistrito[f.distrito].realizados += f.folios_realizados;
+      });
+    const ranking = Object.keys(porDistrito)
+      .map((distrito) => ({
+        distrito,
+        alcance: porDistrito[distrito].dimensionados > 0 ? (porDistrito[distrito].realizados / porDistrito[distrito].dimensionados) * 100 : null,
+      }))
+      .filter((r) => r.alcance !== null)
+      .sort((a, b) => b.alcance - a.alcance);
+
+    document.getElementById(p.contenedor).innerHTML = ranking.map((r, i) => {
+      const nombreCorto = r.distrito.replace(/^CTA-TPI-INT-[A-Z]+\s/, '');
+      const distritoEscapado = r.distrito.replace(/'/g, "\\'");
+      return `<div class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="abrirDrillDownFolios('${distritoEscapado}', '${p.poliza}')">
+        <span class="w-5 h-5 rounded-full bg-primary/10 text-primary font-gordita-bold text-[10px] flex items-center justify-center shrink-0">${i + 1}</span>
+        <span class="text-xs font-gordita-bold w-28 truncate shrink-0" title="${nombreCorto}">${nombreCorto}</span>
+        <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width:${Math.min(r.alcance, 100)}%; background-color:${p.color};"></div>
+        </div>
+        <span class="text-xs font-gordita-bold shrink-0 w-12 text-right">${r.alcance.toFixed(1)}%</span>
+      </div>`;
+    }).join('');
+  });
+}
+
+async function abrirDrillDownFolios(distrito, poliza) {
+  const filasFolios = await obtenerTablaCompleta('folios_poliza');
+  const colorPoliza = { 'PLANTA INTERNA': '#1B4F72', 'RECOLECCIONES': '#2E86C1', 'MULTIDISTRITO': '#85C1E9' };
+  const etiquetaPoliza = { 'PLANTA INTERNA': 'Planta Interna', 'RECOLECCIONES': 'Recolecciones', 'MULTIDISTRITO': 'Multidistrito' };
+
+  const filasDistrito = filasFolios
+    .filter((f) => f.distrito === distrito && f.poliza === poliza)
+    .sort((a, b) => a.mes.localeCompare(b.mes))
+    .slice(-12);
+
+  const etiquetas = filasDistrito.map((f) => {
+    const [anio, mes] = f.mes.slice(0, 7).split('-').map(Number);
+    return etiquetaMesCorta(anio, mes - 1);
+  });
+  const dimensionados = filasDistrito.map((f) => f.folios_dimensionados || 0);
+  const realizados = filasDistrito.map((f) => (f.folios_realizados === null || f.folios_realizados === undefined ? null : f.folios_realizados));
+  const alcance = filasDistrito.map((f) => (f.folios_realizados === null || f.folios_realizados === undefined || !f.folios_dimensionados ? null : (f.folios_realizados / f.folios_dimensionados) * 100));
+
+  document.getElementById('drilldown-folios-subtitulo').textContent = etiquetaPoliza[poliza] || poliza;
+  document.getElementById('drilldown-folios-titulo').textContent = distrito;
+
+  renderizarGraficaFolioIndividual('grafica-drilldown-folios', 'graficaDrilldownFolios', etiquetas, { dimensionados, realizados, alcance }, colorPoliza[poliza] || '#1B4F72');
+
+  document.getElementById('modal-drilldown-folios').style.display = 'flex';
+}
+
+function cerrarDrillDownFolios() {
+  document.getElementById('modal-drilldown-folios').style.display = 'none';
+}
+
+const CATEGORIAS_FLOTA_AUTORIZADAS = [
+  { categoria: 'PI', label: 'Planta Interna' },
+  { categoria: 'RECOLECCION', label: 'Recolecciones' },
+  { categoria: 'MULTIDISTRITO', label: 'Multidistrito' },
+  { categoria: 'STBY', label: 'Standby' },
+  { categoria: 'STAFF', label: 'Staff' },
+  { categoria: 'ALMACEN', label: 'Almacén' },
+  { categoria: 'DESTAJO', label: 'Destajo' },
+  { categoria: 'TEMPORAL', label: 'Temporal' },
+];
+
+const MODELOS_MOTO_CLAVE = ['ITALIKA', 'ECO 150 CARGO', 'RYDER'];
+
+function esUnidadMoto(modelo) {
+  const m = normalizarTexto(modelo);
+  return MODELOS_MOTO_CLAVE.some((clave) => m.includes(clave));
+}
+
+function categorizarTipoPolizaFlota(tipoPoliza) {
+  const t = normalizarTexto(tipoPoliza);
+  if (t.includes('MULTIDISTRITO')) return 'MULTIDISTRITO';
+  if (t.includes('RECOLECCION')) return 'RECOLECCION';
+  if (t.includes('STBY') || t.includes('STAND BY') || t.includes('STANDBY')) return 'STBY';
+  if (t.includes('STAFF')) return 'STAFF';
+  if (t.includes('ALMACEN')) return 'ALMACEN';
+  if (t.includes('DESTAJO')) return 'DESTAJO';
+  if (t.includes('TEMPORAL')) return 'TEMPORAL';
+  return 'PI';
+}
+
+function obtenerUnidadesAutorizadasVigentes(unidadesAutorizadas, mesISO) {
+  const grupos = {};
+  (unidadesAutorizadas || []).forEach((u) => {
+    const clave = u.distrito + '|' + u.categoria + '|' + u.tipo_unidad;
+    grupos[clave] = grupos[clave] || [];
+    grupos[clave].push(u);
+  });
+  return Object.values(grupos)
+    .map((registros) => Calc.obtenerParametroVigente(registros, mesISO))
+    .filter(Boolean);
+}
+
+function calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesISO) {
+  const vigentes = obtenerUnidadesAutorizadasVigentes(unidadesAutorizadas, mesISO);
+  const porDistrito = {};
+
+  vigentes.forEach((v) => {
+    porDistrito[v.distrito] = porDistrito[v.distrito] || { real: 0, autorizado: 0, detalle: {} };
+    porDistrito[v.distrito].autorizado += v.unidades_autorizadas;
+    const claveDetalle = v.categoria + '|' + v.tipo_unidad;
+    porDistrito[v.distrito].detalle[claveDetalle] = porDistrito[v.distrito].detalle[claveDetalle] || { categoria: v.categoria, tipo_unidad: v.tipo_unidad, autorizado: 0, real: 0 };
+    porDistrito[v.distrito].detalle[claveDetalle].autorizado += v.unidades_autorizadas;
+  });
+
+  (flotaVehicular || []).forEach((veh) => {
+    if ((veh.clasificacion || '').toUpperCase() !== 'ACTIVO') return;
+    const distrito = veh.sucursal;
+    if (!distrito) return;
+    const categoria = categorizarTipoPolizaFlota(veh.tipo_poliza);
+    const tipoUnidad = esUnidadMoto(veh.modelo) ? 'MOTO' : 'AUTO';
+    porDistrito[distrito] = porDistrito[distrito] || { real: 0, autorizado: 0, detalle: {} };
+    porDistrito[distrito].real += 1;
+    const claveDetalle = categoria + '|' + tipoUnidad;
+    porDistrito[distrito].detalle[claveDetalle] = porDistrito[distrito].detalle[claveDetalle] || { categoria, tipo_unidad: tipoUnidad, autorizado: 0, real: 0 };
+    porDistrito[distrito].detalle[claveDetalle].real += 1;
+  });
+
+  return porDistrito;
+}
+
+function formatoFechaCorta(fechaISO) {
+  if (!fechaISO) return '—';
+  const fecha = new Date(fechaISO + 'T00:00:00');
+  return fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function nombreCortoDistritoFlota(distrito) {
+  return (distrito || '').replace(/^CTA-TPI-(INT|MLT)-[A-Z]+\s/, '');
+}
+
+function calcularAlertasFlotaPolizas(flotaVehicular) {
+  const hoy = new Date();
+  const limite = new Date(hoy.getTime() + 30 * 24 * 60 * 60 * 1000);
+  return (flotaVehicular || [])
+    .filter((v) => v.fecha_vencimiento_poliza && new Date(v.fecha_vencimiento_poliza + 'T00:00:00') <= limite)
+    .sort((a, b) => new Date(a.fecha_vencimiento_poliza) - new Date(b.fecha_vencimiento_poliza));
+}
+
+function calcularAlertasFlotaMantenimiento(flotaVehicular) {
+  const hoy = new Date();
+  const limite = new Date(hoy.getTime() + 15 * 24 * 60 * 60 * 1000);
+  return (flotaVehicular || [])
+    .filter((v) => v.fecha_compromiso && new Date(v.fecha_compromiso + 'T00:00:00') <= limite)
+    .sort((a, b) => new Date(a.fecha_compromiso) - new Date(b.fecha_compromiso));
+}
+
+function calcularSegmentacionInventarioFlota(flotaVehicular) {
+  const anioActual = new Date().getFullYear();
+  const activos = (flotaVehicular || []).filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO');
+
+  const bucketsAntiguedad = [
+    { label: '0-2 años', min: 0, max: 2, valor: 0 },
+    { label: '3-5 años', min: 3, max: 5, valor: 0 },
+    { label: '6-8 años', min: 6, max: 8, valor: 0 },
+    { label: '9+ años', min: 9, max: Infinity, valor: 0 },
+  ];
+  const bucketsKm = [
+    { label: '<50K', min: 0, max: 50000, valor: 0 },
+    { label: '50K-100K', min: 50000, max: 100000, valor: 0 },
+    { label: '100K-150K', min: 100000, max: 150000, valor: 0 },
+    { label: '150K+', min: 150000, max: Infinity, valor: 0 },
+  ];
+  const marcasConteo = {};
+  const porDistrito = {};
+
+  let sumaAnios = 0, conteoAnios = 0, sumaKm = 0, conteoKm = 0, altoKmTotal = 0;
+
+  activos.forEach((v) => {
+    const distrito = v.sucursal || 'Sin Clasificar';
+    porDistrito[distrito] = porDistrito[distrito] || { total: 0, sumaAnios: 0, conteoAnios: 0, sumaKm: 0, conteoKm: 0, altoKm: 0 };
+    porDistrito[distrito].total += 1;
+
+    if (v.anio) {
+      const antiguedad = anioActual - Number(v.anio);
+      sumaAnios += antiguedad;
+      conteoAnios += 1;
+      porDistrito[distrito].sumaAnios += antiguedad;
+      porDistrito[distrito].conteoAnios += 1;
+      const bucket = bucketsAntiguedad.find((b) => antiguedad >= b.min && antiguedad <= b.max);
+      if (bucket) bucket.valor += 1;
+    }
+
+    if (v.ultimo_kilometraje !== null && v.ultimo_kilometraje !== undefined && v.ultimo_kilometraje !== '') {
+      const km = Number(v.ultimo_kilometraje);
+      sumaKm += km;
+      conteoKm += 1;
+      porDistrito[distrito].sumaKm += km;
+      porDistrito[distrito].conteoKm += 1;
+      if (km >= 150000) { altoKmTotal += 1; porDistrito[distrito].altoKm += 1; }
+      const bucket = bucketsKm.find((b) => km >= b.min && km < b.max);
+      if (bucket) bucket.valor += 1;
+    }
+
+    const marca = (v.marca || 'Sin Dato').trim().toUpperCase();
+    marcasConteo[marca] = (marcasConteo[marca] || 0) + 1;
+  });
+
+  const topMarcas = Object.keys(marcasConteo)
+    .map((marca) => ({ marca, valor: marcasConteo[marca] }))
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 8);
+
+  const distritos = Object.keys(porDistrito).map((distrito) => {
+    const r = porDistrito[distrito];
+    return {
+      distrito,
+      total: r.total,
+      antiguedadProm: r.conteoAnios > 0 ? r.sumaAnios / r.conteoAnios : null,
+      kmProm: r.conteoKm > 0 ? r.sumaKm / r.conteoKm : null,
+      altoKm: r.altoKm,
+    };
+  }).sort((a, b) => (b.antiguedadProm || 0) - (a.antiguedadProm || 0));
+
+  return {
+    totalActivos: activos.length,
+    antiguedadPromedio: conteoAnios > 0 ? sumaAnios / conteoAnios : null,
+    kmPromedio: conteoKm > 0 ? sumaKm / conteoKm : null,
+    altoKmTotal,
+    pctConKm: activos.length > 0 ? (conteoKm / activos.length) * 100 : 0,
+    bucketsAntiguedad,
+    bucketsKm,
+    topMarcas,
+    distritos,
+  };
+}
+
+let flotaAreaActual = null;
+
+async function abrirAreaFlota(area) {
+  flotaAreaActual = area;
+  document.getElementById('flota-areas-grid').style.display = 'none';
+  ['autorizado', 'distrito', 'inventario'].forEach((a) => {
+    document.getElementById('flota-area-' + a).style.display = a === area ? '' : 'none';
+  });
+  mostrarIndicadorCarga();
+  try {
+    if (area === 'autorizado') {
+      await renderizarAreaFlotaAutorizado();
+    } else if (area === 'distrito') {
+      await renderizarAreaFlotaDistrito();
+    } else if (area === 'inventario') {
+      await renderizarAreaFlotaInventario();
+    }
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+function cerrarAreaFlota() {
+  flotaAreaActual = null;
+  document.getElementById('flota-areas-grid').style.display = '';
+  ['autorizado', 'distrito', 'inventario'].forEach((a) => {
+    document.getElementById('flota-area-' + a).style.display = 'none';
+  });
+}
+
+async function renderizarFlotaTarjetasResumen() {
+  const d = overviewDatos;
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+
+  const ranking = Object.keys(resumen)
+    .map((distrito) => ({ distrito, faltante: resumen[distrito].autorizado - resumen[distrito].real }))
+    .sort((a, b) => b.faltante - a.faltante)
+    .slice(0, 5);
+
+  document.getElementById('flota-card-autorizado-ranking').innerHTML = ranking.map((r) => {
+    const nombreCorto = nombreCortoDistritoFlota(r.distrito);
+    const texto = r.faltante > 0 ? ('Faltan ' + r.faltante) : (r.faltante < 0 ? ('Sobran ' + Math.abs(r.faltante)) : 'Completo');
+    const clase = r.faltante > 0 ? 'text-error' : (r.faltante < 0 ? 'text-qiora-green' : 'text-on-surface-variant');
+    return `<div class="flex items-center justify-between text-xs py-1">
+      <span class="font-gordita-bold truncate" title="${nombreCorto}">${nombreCorto}</span>
+      <span class="${clase} font-gordita-bold shrink-0 ml-2">${texto}</span>
+    </div>`;
+  }).join('');
+  renderizarGraficaBarraHorizontalConteo(
+    'flota-card-autorizado-chart', 'graficaFlotaCardAutorizado',
+    ranking.map((r) => nombreCortoDistritoFlota(r.distrito)),
+    ranking.map((r) => Math.max(0, r.faltante)),
+    '#1B4F72'
+  );
+
+  const conteoNacional = { ACTIVO: 0, BAJA: 0, INACTIVO: 0 };
+  (d.flotaVehicular || []).forEach((v) => {
+    const clas = (v.clasificacion || '').toUpperCase();
+    if (conteoNacional[clas] !== undefined) conteoNacional[clas] += 1;
+  });
+  const totalComposicion = conteoNacional.ACTIVO + conteoNacional.BAJA + conteoNacional.INACTIVO;
+  const pctComposicion = (v) => (totalComposicion > 0 ? (v / totalComposicion) * 100 : 0);
+  renderizarGraficaDoughnutConteo('flota-card-composicion-chart', 'graficaFlotaCardComposicion', [
+    { label: 'Activo', valor: conteoNacional.ACTIVO, color: '#1B4F72', pct: pctComposicion(conteoNacional.ACTIVO) },
+    { label: 'Baja', valor: conteoNacional.BAJA, color: '#2E86C1', pct: pctComposicion(conteoNacional.BAJA) },
+    { label: 'Inactivo', valor: conteoNacional.INACTIVO, color: '#85C1E9', pct: pctComposicion(conteoNacional.INACTIVO) },
+  ], conteoNacional.ACTIVO.toLocaleString('es-MX'));
+
+  const polizas = calcularAlertasFlotaPolizas(d.flotaVehicular);
+  const mantenimientos = calcularAlertasFlotaMantenimiento(d.flotaVehicular);
+  document.getElementById('flota-card-polizas-count').textContent = polizas.length.toLocaleString('es-MX');
+  document.getElementById('flota-card-mantenimiento-count').textContent = mantenimientos.length.toLocaleString('es-MX');
+  document.getElementById('flota-card-inventario-total').textContent = (d.flotaVehicular || []).length.toLocaleString('es-MX');
+
+  const segInv = calcularSegmentacionInventarioFlota(d.flotaVehicular);
+  renderizarGraficaBarraConteo('flota-card-antiguedad-chart', 'graficaFlotaCardAntiguedad', segInv.bucketsAntiguedad.map((b) => b.label), segInv.bucketsAntiguedad.map((b) => b.valor), '#1B4F72');
+  document.getElementById('flota-card-km-promedio').textContent = segInv.kmPromedio !== null ? Math.round(segInv.kmPromedio).toLocaleString('es-MX') : '—';
+
+  document.getElementById('flota-kpi-activa').textContent = (d.flotaVehicular || []).filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO').length.toLocaleString('es-MX');
+  const faltanteTotal = Object.values(resumen).reduce((s, r) => s + Math.max(0, r.autorizado - r.real), 0);
+  document.getElementById('flota-kpi-faltantes').textContent = faltanteTotal.toLocaleString('es-MX');
+  document.getElementById('flota-kpi-alertas').textContent = (polizas.length + mantenimientos.length).toLocaleString('es-MX');
+}
+
+async function renderizarAreaFlotaAutorizado() {
+  const d = overviewDatos;
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+  const ranking = Object.keys(resumen).map((distrito) => {
+    const r = resumen[distrito];
+    return { distrito, real: r.real, autorizado: r.autorizado, faltante: r.autorizado - r.real };
+  }).sort((a, b) => b.faltante - a.faltante);
+
+  document.getElementById('flota-ranking-autorizado').innerHTML = ranking.map((r) => {
+    const nombreCorto = nombreCortoDistritoFlota(r.distrito);
+    const distritoEscapado = r.distrito.replace(/'/g, "\\'");
+    const texto = r.faltante > 0 ? ('Faltan ' + r.faltante) : (r.faltante < 0 ? ('Sobran ' + Math.abs(r.faltante)) : 'Completo');
+    const clase = r.faltante > 0 ? 'text-error' : (r.faltante < 0 ? 'text-qiora-green' : 'text-on-surface-variant');
+    const anchoBarra = r.autorizado > 0 ? Math.min((r.real / r.autorizado) * 100, 100) : (r.real > 0 ? 100 : 0);
+    return `<div class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="abrirDrillDownFlotaAutorizado('${distritoEscapado}')">
+      <span class="text-xs font-gordita-bold w-40 truncate shrink-0" title="${nombreCorto}">${nombreCorto}</span>
+      <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+        <div class="h-full rounded-full" style="width:${anchoBarra}%; background-color:#1B4F72;"></div>
+      </div>
+      <span class="text-[11px] text-on-surface-variant shrink-0 w-20 text-right">${r.real}/${r.autorizado}</span>
+      <span class="text-xs font-gordita-bold shrink-0 w-24 text-right ${clase}">${texto}</span>
+    </div>`;
+  }).join('');
+}
+
+async function abrirDrillDownFlotaAutorizado(distrito) {
+  const d = overviewDatos;
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+  const r = resumen[distrito] || { detalle: {} };
+  document.getElementById('drilldown-flota-titulo').textContent = nombreCortoDistritoFlota(distrito);
+
+  const filas = Object.values(r.detalle || {}).sort((a, b) => {
+    if (a.categoria !== b.categoria) return a.categoria.localeCompare(b.categoria);
+    return a.tipo_unidad.localeCompare(b.tipo_unidad);
+  });
+
+  const labelCategoria = (cat) => (CATEGORIAS_FLOTA_AUTORIZADAS.find((c) => c.categoria === cat) || {}).label || cat;
+
+  document.getElementById('drilldown-flota-body').innerHTML = filas.map((f) => {
+    const faltante = f.autorizado - f.real;
+    const texto = faltante > 0 ? ('Faltan ' + faltante) : (faltante < 0 ? ('Sobran ' + Math.abs(faltante)) : 'Completo');
+    const clase = faltante > 0 ? 'text-error' : (faltante < 0 ? 'text-qiora-green' : 'text-on-surface-variant');
+    return `<tr>
+      <td class="px-4 py-3 font-gordita-bold">${labelCategoria(f.categoria)}</td>
+      <td class="px-4 py-3">${f.tipo_unidad === 'MOTO' ? 'Moto' : 'Auto'}</td>
+      <td class="px-4 py-3 text-right">${f.autorizado}</td>
+      <td class="px-4 py-3 text-right">${f.real}</td>
+      <td class="px-4 py-3 text-right font-gordita-bold ${clase}">${texto}</td>
+    </tr>`;
+  }).join('') || '<tr><td class="px-4 py-6 text-center text-on-surface-variant" colspan="5">Sin datos para este distrito.</td></tr>';
+
+  document.getElementById('modal-drilldown-flota').style.display = 'flex';
+}
+
+function cerrarDrillDownFlotaAutorizado() {
+  document.getElementById('modal-drilldown-flota').style.display = 'none';
+}
+
+async function renderizarAreaFlotaDistrito() {
+  const d = overviewDatos;
+  const conteo = {};
+  (d.flotaVehicular || []).forEach((v) => {
+    const distrito = v.sucursal || 'Sin Clasificar';
+    conteo[distrito] = conteo[distrito] || { ACTIVO: 0, BAJA: 0, INACTIVO: 0 };
+    const clas = (v.clasificacion || '').toUpperCase();
+    if (conteo[distrito][clas] !== undefined) conteo[distrito][clas] += 1;
+  });
+  const filas = Object.keys(conteo).map((distrito) => {
+    const c = conteo[distrito];
+    return { distrito, activo: c.ACTIVO, baja: c.BAJA, inactivo: c.INACTIVO, total: c.ACTIVO + c.BAJA + c.INACTIVO };
+  }).sort((a, b) => b.total - a.total);
+
+  document.getElementById('flota-tabla-composicion-body').innerHTML = filas.map((f) =>
+    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${f.activo.toLocaleString('es-MX')}</td><td class="px-6 py-4 text-right">${f.baja.toLocaleString('es-MX')}</td><td class="px-6 py-4 text-right">${f.inactivo.toLocaleString('es-MX')}</td><td class="px-6 py-4 text-right font-gordita-bold">${f.total.toLocaleString('es-MX')}</td></tr>`
   ).join('');
+
+  const polizas = calcularAlertasFlotaPolizas(d.flotaVehicular);
+  document.getElementById('flota-alertas-polizas-body').innerHTML = polizas.map((v) =>
+    `<tr><td class="px-6 py-3">${v.sucursal || '—'}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_vencimiento_poliza)}</td></tr>`
+  ).join('') || '<tr><td class="px-6 py-6 text-center text-on-surface-variant" colspan="3">Sin pólizas por vencer.</td></tr>';
+
+  const mantenimientos = calcularAlertasFlotaMantenimiento(d.flotaVehicular);
+  document.getElementById('flota-alertas-mantenimiento-body').innerHTML = mantenimientos.map((v) =>
+    `<tr><td class="px-6 py-3">${v.sucursal || '—'}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_compromiso)}</td></tr>`
+  ).join('') || '<tr><td class="px-6 py-6 text-center text-on-surface-variant" colspan="3">Sin mantenimientos pendientes.</td></tr>';
+}
+
+async function renderizarAreaFlotaInventario() {
+  const d = overviewDatos;
+
+  const seg = calcularSegmentacionInventarioFlota(d.flotaVehicular);
+  document.getElementById('flota-inv-kpi-antiguedad').textContent = seg.antiguedadPromedio !== null ? seg.antiguedadPromedio.toFixed(1) + ' años' : '—';
+  document.getElementById('flota-inv-kpi-km').textContent = seg.kmPromedio !== null ? Math.round(seg.kmPromedio).toLocaleString('es-MX') + ' km' : '—';
+  document.getElementById('flota-inv-kpi-altokm').textContent = seg.altoKmTotal.toLocaleString('es-MX');
+  document.getElementById('flota-inv-kpi-pctkm').textContent = seg.pctConKm.toFixed(0) + '%';
+
+  renderizarGraficaBarraConteo('flota-inv-grafica-antiguedad', 'graficaFlotaInvAntiguedad', seg.bucketsAntiguedad.map((b) => b.label), seg.bucketsAntiguedad.map((b) => b.valor), '#1B4F72');
+  renderizarGraficaBarraConteo('flota-inv-grafica-kilometraje', 'graficaFlotaInvKilometraje', seg.bucketsKm.map((b) => b.label), seg.bucketsKm.map((b) => b.valor), '#2E86C1');
+  renderizarGraficaBarraHorizontalConteo('flota-inv-grafica-marcas', 'graficaFlotaInvMarcas', seg.topMarcas.map((m) => m.marca), seg.topMarcas.map((m) => m.valor), '#85C1E9');
+
+  document.getElementById('flota-inv-tabla-distrito-body').innerHTML = seg.distritos.map((f) =>
+    `<tr>
+      <td class="px-8 py-3 font-gordita-bold">${f.distrito}</td>
+      <td class="px-6 py-3 text-right">${f.total.toLocaleString('es-MX')}</td>
+      <td class="px-6 py-3 text-right">${f.antiguedadProm !== null ? f.antiguedadProm.toFixed(1) + ' años' : '—'}</td>
+      <td class="px-6 py-3 text-right">${f.kmProm !== null ? Math.round(f.kmProm).toLocaleString('es-MX') : '—'}</td>
+      <td class="px-6 py-3 text-right">${f.altoKm.toLocaleString('es-MX')}</td>
+    </tr>`
+  ).join('');
+
+  const selector = document.getElementById('flota-inventario-distrito');
+  if (selector.options.length <= 1) {
+    const distritos = Array.from(new Set((d.flotaVehicular || []).map((v) => v.sucursal).filter(Boolean))).sort();
+    distritos.forEach((distrito) => {
+      const opcion = document.createElement('option');
+      opcion.value = distrito;
+      opcion.textContent = distrito;
+      selector.appendChild(opcion);
+    });
+  }
+  const distritoFiltro = selector.value;
+  const busqueda = normalizarTexto(document.getElementById('flota-inventario-buscar').value);
+
+  const filas = (d.flotaVehicular || []).filter((v) => {
+    if (distritoFiltro && v.sucursal !== distritoFiltro) return false;
+    if (busqueda) {
+      const texto = normalizarTexto([v.placa, v.empleado_asignado, v.marca, v.modelo].filter(Boolean).join(' '));
+      if (!texto.includes(busqueda)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('flota-inventario-body').innerHTML = filas.slice(0, 500).map((v) =>
+    `<tr>
+      <td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td>
+      <td class="px-6 py-3">${v.sucursal || '—'}</td>
+      <td class="px-6 py-3">${[v.marca, v.modelo].filter(Boolean).join(' / ') || '—'}</td>
+      <td class="px-6 py-3 text-right">${v.anio || '—'}</td>
+      <td class="px-6 py-3">${v.empleado_asignado || '—'}</td>
+      <td class="px-6 py-3">${v.clasificacion || '—'}</td>
+      <td class="px-6 py-3 text-right">${v.ultimo_kilometraje ? Number(v.ultimo_kilometraje).toLocaleString('es-MX') : '—'}</td>
+    </tr>`
+  ).join('') || '<tr><td class="px-6 py-6 text-center text-on-surface-variant" colspan="7">Sin resultados.</td></tr>';
+
+  document.getElementById('flota-inventario-contador').textContent = filas.length.toLocaleString('es-MX') + ' vehículo(s)' + (filas.length > 500 ? ' — mostrando los primeros 500' : '');
 }
 
 let finDistritoSeleccionado = 'TODAS';
@@ -4491,6 +5350,19 @@ function obtenerFoliosPolizaDistrito(datosIngresos, poliza, distrito, region, me
   const candidatos = datosIngresos.polizaParametros.filter((p) => p.poliza === poliza && p.distrito === distrito);
   const vigente = Calc.obtenerParametroVigente(candidatos, mesISO);
   return vigente ? vigente.ordenes_dimensionadas : 0;
+}
+
+// Precio por folio vigente — Multidistrito usa el precio de la bolsa regional (no hay precio por sucursal).
+function obtenerPrecioPolizaDistrito(datosIngresos, poliza, distrito, region, mesISO) {
+  if (poliza === 'MULTIDISTRITO') {
+    const regionBolsa = Calc.bolsaMultidistritoDeRegion(region);
+    if (!regionBolsa) return null;
+    const vigenteBolsa = Calc.obtenerParametroVigente(datosIngresos.multidistritoBolsas.filter((b) => b.region_bolsa === regionBolsa), mesISO);
+    return vigenteBolsa ? vigenteBolsa.precio_por_orden : null;
+  }
+  const candidatos = datosIngresos.polizaParametros.filter((p) => p.poliza === poliza && p.distrito === distrito);
+  const vigente = Calc.obtenerParametroVigente(candidatos, mesISO);
+  return vigente ? vigente.precio_por_orden : null;
 }
 
 function pintarBadgeVariacion(idBadge, actual, anterior) {
@@ -4574,9 +5446,9 @@ async function renderizarFinKpis(distritoFiltro) {
   const margen = ingreso > 0 ? (utilidad / ingreso) * 100 : null;
 
   finKpisActuales = { ingreso, gasto, utilidad, margen, costoDirecto, gastoOperativo };
-  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(ingreso);
-  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(gasto);
-  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(utilidad);
+  document.getElementById('fin-kpi-ingresos').textContent = formatoCompacto(ingreso);
+  document.getElementById('fin-kpi-gastos').textContent = formatoCompacto(gasto);
+  document.getElementById('fin-kpi-utilidad').textContent = formatoCompacto(utilidad);
   document.getElementById('fin-kpi-margen').textContent = margen === null ? '—' : margen.toFixed(1) + '%';
 
   const etiquetaPeriodoKpi = modoPeriodoGlobal === 'ytd' ? 'YTD' : MESES_ABREV[d.mesRef].toUpperCase();
@@ -4593,15 +5465,14 @@ async function renderizarFinTarjetasResumen() {
   const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, d.anioRef, d.mesRef);
   const clavesActivo = clavesMesesEnRango(rangos.actual);
-  const clavesAnterior = clavesMesesEnRango(rangos.comparacionYoY);
 
-  // --- Ingresos: monto + YoY + composición por póliza (respeta Mes/YTD) ---
+  // --- Ingresos: monto + composición por póliza (respeta Mes/YTD) ---
   const POLIZAS_CARD = [
     { poliza: 'PLANTA INTERNA', label: 'Planta Interna', color: 'op-pi' },
     { poliza: 'RECOLECCIONES', label: 'Recolecciones', color: 'op-rec' },
     { poliza: 'MULTIDISTRITO', label: 'Multidistrito', color: 'op-md' },
   ];
-  const totalesPoliza = { 'PLANTA INTERNA': { monto: 0, montoAnt: 0, folios: 0 }, 'RECOLECCIONES': { monto: 0, montoAnt: 0, folios: 0 }, 'MULTIDISTRITO': { monto: 0, montoAnt: 0, folios: 0 } };
+  const totalesPoliza = { 'PLANTA INTERNA': { monto: 0, folios: 0 }, 'RECOLECCIONES': { monto: 0, folios: 0 }, 'MULTIDISTRITO': { monto: 0, folios: 0 } };
   clavesActivo.forEach((clave) => {
     const mesISO = clave + '-01';
     distritos.forEach((distrito) => {
@@ -4615,27 +5486,13 @@ async function renderizarFinTarjetasResumen() {
       });
     });
   });
-  clavesAnterior.forEach((clave) => {
-    const mesISO = clave + '-01';
-    distritos.forEach((distrito) => {
-      const region = d.regionPorDistrito[distrito];
-      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO);
-      totalesPoliza['PLANTA INTERNA'].montoAnt += r.plantaInterna;
-      totalesPoliza['RECOLECCIONES'].montoAnt += r.recolecciones;
-      totalesPoliza['MULTIDISTRITO'].montoAnt += r.multidistrito;
-    });
-  });
-  const ingresoAnterior = Object.values(totalesPoliza).reduce((s, p) => s + p.montoAnt, 0);
-  const variacionIngreso = Calc.calcularVariacionPct(finKpisActuales.ingreso, ingresoAnterior);
-  const textoVariacionIngreso = variacionIngreso === null ? '—' : (variacionIngreso >= 0 ? '↑+' : '↓') + Math.abs(variacionIngreso).toFixed(1) + '%';
-  const colorVariacionIngreso = variacionIngreso === null ? '#7e7576' : (variacionIngreso >= 0 ? '#ba1a1a' : '#2ECC71');
 
   renderizarGraficaPieConEtiquetas('fin-card-ingresos-pie', 'finCardIngresosPie', POLIZAS_CARD.map((p) => ({
     label: p.label,
     monto: totalesPoliza[p.poliza].monto,
     folios: totalesPoliza[p.poliza].folios,
     color: p.color === 'op-pi' ? '#1B4F72' : p.color === 'op-rec' ? '#2E86C1' : '#85C1E9',
-  })), formatoCompacto(finKpisActuales.ingreso), textoVariacionIngreso, colorVariacionIngreso);
+  })), formatoCompacto(finKpisActuales.ingreso));
 
   document.getElementById('fin-card-ingresos-tabla').innerHTML = POLIZAS_CARD.map((p) => `
     <div class="grid grid-cols-3 gap-2 text-[10px] items-center">
@@ -4863,6 +5720,47 @@ async function renderizarAreaIngresos() {
       </div>`;
     }).join('');
   }
+
+  renderizarTablasFoliosPrecio();
+
+  const filasIngresoDistrito = Object.keys(d.ingresoPorDistritoYTD)
+    .map((distritoIP) => Object.assign({ distrito: distritoIP }, d.ingresoPorDistritoYTD[distritoIP]))
+    .sort((a, b) => b.total - a.total);
+  document.getElementById('tabla-op-distrito-body').innerHTML = filasIngresoDistrito.map((f) =>
+    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.plantaInterna)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.recolecciones)}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.multidistrito)}</td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(f.total)}</td></tr>`
+  ).join('');
+}
+
+const POLIZAS_TABLA_FOLIOS = [
+  { poliza: 'PLANTA INTERNA', contenedor: 'fin-ingresos-tabla-pi' },
+  { poliza: 'RECOLECCIONES', contenedor: 'fin-ingresos-tabla-rec' },
+  { poliza: 'MULTIDISTRITO', contenedor: 'fin-ingresos-tabla-md' },
+];
+
+function renderizarTablasFoliosPrecio() {
+  const d = overviewDatos;
+  POLIZAS_TABLA_FOLIOS.forEach((p) => {
+    const filas = d.listaDistritos.map((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      return {
+        distrito,
+        folios: obtenerFoliosPolizaDistrito(d.datosIngresos, p.poliza, distrito, region, d.mesVigenteISO),
+        precio: obtenerPrecioPolizaDistrito(d.datosIngresos, p.poliza, distrito, region, d.mesVigenteISO),
+      };
+    }).filter((f) => f.folios > 0 || f.precio !== null)
+      .sort((a, b) => b.folios - a.folios);
+
+    document.getElementById(p.contenedor).innerHTML = filas.map((f) => {
+      const nombreCorto = f.distrito.replace(/^CTA-TPI-INT-[A-Z]+\s/, '');
+      const ingreso = f.precio === null ? null : f.folios * f.precio;
+      return `<tr class="hover:bg-surface-container-low/50 transition-colors">
+        <td class="px-4 py-2 font-gordita-bold truncate max-w-[120px]" title="${f.distrito}">${nombreCorto}</td>
+        <td class="px-3 py-2 text-right">${Math.round(f.folios).toLocaleString('es-MX')}</td>
+        <td class="px-3 py-2 text-right">${f.precio === null ? '—' : formatoMoneda(f.precio)}</td>
+        <td class="px-4 py-2 text-right font-gordita-bold text-primary">${ingreso === null ? '—' : formatoMoneda(ingreso)}</td>
+      </tr>`;
+    }).join('');
+  });
 }
 
 function normalizarTexto(valor) {
@@ -5111,6 +6009,181 @@ function renderizarGraficaBarraHorizontal(canvasId, refGrafica, etiquetas, datos
   });
 }
 
+// Barra vertical con conteos enteros (no moneda) y badge del total arriba de cada barra.
+function renderizarGraficaBarraConteo(canvasId, refGrafica, etiquetas, datos, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 34 }] },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 8,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => item.parsed.y.toLocaleString('es-MX') + ' vehículos' },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 } } },
+        y: { display: false, beginAtZero: true },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasBarraConteo',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((barra, i) => {
+          if (!datos[i]) return;
+          ctxDibujo.save();
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'bottom';
+          ctxDibujo.fillText(datos[i].toLocaleString('es-MX'), barra.x, barra.y - 6);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
+// Barra horizontal con conteos enteros, para rankings tipo "top marcas".
+function renderizarGraficaBarraHorizontalConteo(canvasId, refGrafica, etiquetas, datos, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 16 }] },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 8,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => item.parsed.x.toLocaleString('es-MX') + ' vehículos' },
+        },
+      },
+      scales: {
+        x: { display: false, beginAtZero: true },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 } } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasBarraHorizontalConteo',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((barra, i) => {
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'left';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(datos[i].toLocaleString('es-MX'), barra.x + 5, barra.y);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
+// Doughnut con conteos enteros y texto central, para composición (activo/baja/inactivo, etc).
+function renderizarGraficaDoughnutConteo(canvasId, refGrafica, datos, textoCentral) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  const conValor = datos.filter((d) => d.valor > 0);
+  window[refGrafica] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: conValor.map((d) => d.label),
+      datasets: [{ data: conValor.map((d) => d.valor), backgroundColor: conValor.map((d) => d.color), borderWidth: 2, borderColor: '#ffffff' }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      cutout: '62%',
+      layout: { padding: 36 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => conValor[item.dataIndex].valor.toLocaleString('es-MX') + ' vehículos' },
+        },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasDoughnutConteoCentro',
+      afterDraw(chart) {
+        if (!textoCentral) return;
+        const { ctx: ctxDibujo, chartArea } = chart;
+        const cx = (chartArea.left + chartArea.right) / 2;
+        const cy = (chartArea.top + chartArea.bottom) / 2;
+        ctxDibujo.save();
+        ctxDibujo.textAlign = 'center';
+        ctxDibujo.fillStyle = '#1b1b1b';
+        ctxDibujo.font = "bold 20px 'Gordita', sans-serif";
+        ctxDibujo.textBaseline = 'middle';
+        ctxDibujo.fillText(textoCentral, cx, cy);
+        ctxDibujo.restore();
+      },
+    }, {
+      id: 'etiquetasDoughnutConteoLeaderLine',
+      afterDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((arc, i) => {
+          const dd = conValor[i];
+          if (!dd) return;
+          const angulo = (arc.startAngle + arc.endAngle) / 2;
+          const rExterno = arc.outerRadius;
+          const xInicio = arc.x + Math.cos(angulo) * rExterno;
+          const yInicio = arc.y + Math.sin(angulo) * rExterno;
+          const xMedio = arc.x + Math.cos(angulo) * (rExterno + 14);
+          const yMedio = arc.y + Math.sin(angulo) * (rExterno + 14);
+          const ladoDerecho = Math.cos(angulo) >= 0;
+          const xFinal = xMedio + (ladoDerecho ? 18 : -18);
+
+          ctxDibujo.save();
+          ctxDibujo.strokeStyle = dd.color;
+          ctxDibujo.lineWidth = 1.5;
+          ctxDibujo.beginPath();
+          ctxDibujo.moveTo(xInicio, yInicio);
+          ctxDibujo.lineTo(xMedio, yMedio);
+          ctxDibujo.lineTo(xFinal, yMedio);
+          ctxDibujo.stroke();
+
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = ladoDerecho ? 'left' : 'right';
+          ctxDibujo.textBaseline = 'bottom';
+          ctxDibujo.fillText(dd.label, xFinal + (ladoDerecho ? 3 : -3), yMedio - 1);
+          ctxDibujo.font = "8px 'Gordita', sans-serif";
+          ctxDibujo.fillStyle = '#5a5a5a';
+          ctxDibujo.textBaseline = 'top';
+          ctxDibujo.fillText(dd.valor.toLocaleString('es-MX') + ' · ' + dd.pct.toFixed(0) + '%', xFinal + (ladoDerecho ? 3 : -3), yMedio + 1);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
 async function renderizarAreaGastos() {
   const d = overviewDatos;
   const glosarioMap = d.glosarioMap;
@@ -5203,9 +6276,9 @@ async function renderizarAreaGastos() {
 
   const etiquetaPeriodo = modoPeriodoGlobal === 'ytd' ? 'YTD ' + anioRef : MESES_LARGOS[mesRef] + ' ' + anioRef;
   document.getElementById('fin-gastos-periodo').textContent = etiquetaPeriodo;
-  document.getElementById('fin-gastos-total-periodo').textContent = formatoMoneda(gastoTotalPeriodo);
+  document.getElementById('fin-gastos-total-periodo').textContent = formatoCompacto(gastoTotalPeriodo);
   document.getElementById('fin-gastos-identificado-pct').textContent = pctIdentificado.toFixed(0) + '% del gasto total';
-  document.getElementById('fin-gastos-identificado-monto').textContent = formatoMoneda(totalIdentificado);
+  document.getElementById('fin-gastos-identificado-monto').textContent = formatoCompacto(totalIdentificado);
 
   renderizarTablaGastosClave(meses6, categorias, otros, ingresoYtdEstable);
 }
@@ -5284,39 +6357,8 @@ function renderizarTendenciaHistoricaMargen() {
 async function cargarPilarFlota() {
   const d = overviewDatos;
   document.getElementById('pilar-flota-periodo').textContent = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ')';
-  document.getElementById('flota-kpi-ytd').textContent = formatoMoneda(d.gastoFlotaYTD);
-  document.getElementById('flota-kpi-mes').textContent = formatoMoneda(d.gastoFlotaMesVigente);
-  const flotaActivaDetalle = d.flotaVehicular.filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO').length;
-  document.getElementById('flota-kpi-activa').textContent = d.flotaVehicular.length > 0 ? flotaActivaDetalle.toLocaleString('es-MX') : '—';
-
-  const meses = [];
-  for (let i = 11; i >= 0; i--) {
-    const base = new Date(d.anioRef, d.mesRef - i, 1);
-    meses.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
-  }
-  const inicioVentana = rangoDeMes(meses[0].anio, meses[0].mes).inicio;
-  const finVentana = rangoDeMes(meses[11].anio, meses[11].mes).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, tipo_gasto_categoria, subtotal, fecha_pago');
-  const facturasFlota = facturasVentana.filter((f) => (f.tipo_gasto_categoria || '').toUpperCase().includes('FLOTA'));
-  const porMes = {};
-  facturasFlota.forEach((f) => {
-    const clave = f.fecha_pago.slice(0, 7);
-    porMes[clave] = (porMes[clave] || 0) + (f.subtotal || 0);
-  });
-  renderizarGraficaTendenciaSimple('grafica-flota-tendencia', 'graficaFlotaTendencia', meses.map((m) => m.etiqueta), [
-    { label: 'Gasto Flota', datos: meses.map((m) => porMes[m.clave] || 0), color: '#E67E22' },
-  ]);
-
-  const porDistrito = {};
-  d.facturasFlotaYTD.forEach((f) => {
-    const entrada = d.glosarioMap[f.sucursal];
-    const distrito = (entrada && entrada.sucursal_secundaria) || f.sucursal || 'Sin Clasificar';
-    porDistrito[distrito] = (porDistrito[distrito] || 0) + (f.subtotal || 0);
-  });
-  const filas = Object.keys(porDistrito).map((distrito) => ({ distrito, monto: porDistrito[distrito] })).sort((a, b) => b.monto - a.monto);
-  document.getElementById('tabla-flota-distrito-body').innerHTML = filas.map((f) =>
-    `<tr><td class="px-8 py-4 font-gordita-bold">${f.distrito}</td><td class="px-6 py-4 text-right">${formatoMoneda(f.monto)}</td></tr>`
-  ).join('');
+  await renderizarFlotaTarjetasResumen();
+  if (flotaAreaActual) await abrirAreaFlota(flotaAreaActual);
 }
 
 async function cargarPilarCapitalHumano() {}
