@@ -910,28 +910,28 @@
             <div class="p-2 bg-op-pi/10 rounded-lg inline-flex mb-3">
               <span class="material-symbols-outlined text-op-pi">payments</span>
             </div>
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingresos YTD</p>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingresos <span id="fin-kpi-etiqueta-periodo-1">YTD</span></p>
             <h2 id="fin-kpi-ingresos" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <div class="p-2 bg-op-rec/10 rounded-lg inline-flex mb-3">
               <span class="material-symbols-outlined text-op-rec">receipt_long</span>
             </div>
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gastos YTD</p>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gastos <span id="fin-kpi-etiqueta-periodo-2">YTD</span></p>
             <h2 id="fin-kpi-gastos" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <div class="p-2 bg-op-md/10 rounded-lg inline-flex mb-3">
               <span class="material-symbols-outlined text-op-md">trending_up</span>
             </div>
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Utilidad YTD</p>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Utilidad <span id="fin-kpi-etiqueta-periodo-3">YTD</span></p>
             <h2 id="fin-kpi-utilidad" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <div class="p-2 bg-primary/10 rounded-lg inline-flex mb-3">
               <span class="material-symbols-outlined text-primary">percent</span>
             </div>
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Margen YTD</p>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Margen Operación <span id="fin-kpi-etiqueta-periodo-4">YTD</span></p>
             <h2 id="fin-kpi-margen" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
         </div>
@@ -944,14 +944,12 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Ingresos</h3>
             <p class="text-xs text-on-surface-variant mb-3">Desglose por póliza, tendencias, nacional o por distrito.</p>
-            <div class="flex items-baseline gap-2 mb-3">
-              <h2 id="fin-card-ingresos-monto" class="font-gordita-bold text-xl text-primary">-</h2>
-              <span id="fin-card-ingresos-yoy" class="text-[9px] font-gordita-bold"></span>
-            </div>
-            <div class="w-full h-4 rounded-lg overflow-hidden flex text-[8px] font-gordita-bold text-white mt-auto">
-              <div id="fin-card-ingresos-seg-pi" class="h-full bg-op-pi flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
-              <div id="fin-card-ingresos-seg-rec" class="h-full bg-op-rec flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
-              <div id="fin-card-ingresos-seg-md" class="h-full bg-op-md flex items-center justify-center overflow-hidden whitespace-nowrap" style="width:0%;"></div>
+            <div style="height:280px;"><canvas id="fin-card-ingresos-pie"></canvas></div>
+            <div class="mt-auto pt-4">
+              <div class="grid grid-cols-3 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Póliza</span><span class="text-right"># Folios</span><span class="text-right">Ingreso</span>
+              </div>
+              <div id="fin-card-ingresos-tabla" class="space-y-1"></div>
             </div>
           </button>
 
@@ -962,8 +960,14 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Gastos</h3>
             <p class="text-xs text-on-surface-variant mb-3">Nómina, comisiones, flota y más — últimos 6 meses.</p>
-            <h2 id="fin-card-gastos-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
-            <div style="height:56px;" class="mt-auto"><canvas id="fin-card-gastos-sparkline"></canvas></div>
+            <p class="text-center mb-2"><span id="fin-card-gastos-pct-ingreso" class="font-gordita-bold text-lg text-primary">-</span> <span class="text-[10px] text-on-surface-variant">del ingreso son estos 9 rubros</span></p>
+            <div style="height:130px;"><canvas id="fin-card-gastos-sparkline"></canvas></div>
+            <div class="mt-auto pt-4">
+              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Rubro</span><span class="text-right">% Ingreso</span>
+              </div>
+              <div id="fin-card-gastos-tabla" class="space-y-1"></div>
+            </div>
           </button>
 
           <button onclick="abrirAreaFinanciera('rentabilidad')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
@@ -973,15 +977,20 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rentabilidad</h3>
             <p class="text-xs text-on-surface-variant mb-3">Márgenes y utilidad en el tiempo, por distrito.</p>
-            <div class="flex items-center gap-3 mb-2">
-              <div style="height:44px; width:80px;"><canvas id="fin-card-gauge-margen-bruto"></canvas></div>
-              <div style="height:44px; width:80px;"><canvas id="fin-card-gauge-margen-operacion"></canvas></div>
-              <div class="flex-1 text-[9px] text-on-surface-variant">
-                <p class="text-op-pi font-gordita-bold">Bruto</p>
-                <p class="text-op-md font-gordita-bold mt-2">Operación</p>
+            <div class="flex flex-col items-center gap-3">
+              <div class="text-center">
+                <div style="height:110px; width:190px;"><canvas id="fin-card-gauge-margen-bruto"></canvas></div>
+                <p class="text-[10px] text-op-pi font-gordita-bold uppercase tracking-wide mt-1">Margen Bruto</p>
+              </div>
+              <div class="text-center">
+                <div style="height:110px; width:190px;"><canvas id="fin-card-gauge-margen-operacion"></canvas></div>
+                <p class="text-[10px] text-op-md font-gordita-bold uppercase tracking-wide mt-1">Margen de Operación</p>
               </div>
             </div>
-            <div style="height:36px;" class="mt-auto"><canvas id="fin-card-sparkline-margen"></canvas></div>
+            <div class="mt-auto pt-4">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">Top 5 Distritos por Margen de Operación</p>
+              <div id="fin-card-rentabilidad-ranking" class="space-y-1"></div>
+            </div>
           </button>
 
           <button onclick="abrirAreaFinanciera('proveedores')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
@@ -991,8 +1000,14 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Proveedores</h3>
             <p class="text-xs text-on-surface-variant mb-3">Drill down completo: Familia → Gasto → Proveedor.</p>
-            <h2 id="fin-card-proveedores-monto" class="font-gordita-bold text-xl text-primary mb-2">-</h2>
-            <div id="fin-card-proveedores-ranking" class="space-y-2 mt-auto"></div>
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1">Top 5 por Costo Directo (periodo activo)</p>
+            <div style="height:120px;"><canvas id="fin-card-proveedores-chart"></canvas></div>
+            <div class="mt-auto pt-4">
+              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Proveedor</span><span class="text-right">Monto</span>
+              </div>
+              <div id="fin-card-proveedores-ranking" class="space-y-1.5"></div>
+            </div>
           </button>
         </div>
 
@@ -1052,17 +1067,20 @@
             </div>
           </div>
 
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-            <h3 class="font-gordita-bold text-lg text-primary mb-1">Nómina y Cuadrillas</h3>
-            <p class="text-xs text-on-surface-variant mb-6">Desglosado por gasto específico (no por familia). Últimos 6 meses, mes contra mes.</p>
-            <div id="fin-gastos-nomina-filas" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter"></div>
-          </div>
-
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-lg text-primary mb-1">Otros Gastos Operativos Clave</h3>
-            <p class="text-xs text-on-surface-variant mb-6">Familias de gasto con mayor peso en la operación. Últimos 6 meses, mes contra mes.</p>
-            <div id="fin-gastos-operativas-filas" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter"></div>
-          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-lg text-primary">Desglose de Gastos Clave</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Columnas: últimos 6 meses. La variación (Δ% / Δ MX$) compara el YTD actual contra el mismo YTD del año anterior. "Otros Costos y Gastos" agrupa todo lo que no está entre los 9 rubros principales, para que la tabla reconcilie con el gasto total.</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr id="tabla-gastos-clave-encabezado" class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant"></tr>
+                </thead>
+                <tbody id="tabla-gastos-clave-body" class="text-sm divide-y divide-outline-variant"></tbody>
+              </table>
+            </div>
+          </section>
         </div>
 
         <div id="fin-area-rentabilidad" class="fin-area" style="display:none;">
@@ -1819,7 +1837,14 @@ async function cambiarMesGlobal(delta) {
 
 async function recargarVistaActiva() {
   const vistaActiva = document.querySelector('#sidebar button.activo');
-  if (vistaActiva) await mostrarVista(vistaActiva.dataset.vista);
+  if (!vistaActiva) return;
+  const nombre = vistaActiva.dataset.vista;
+  const esPilar = ['operaciones', 'financieros', 'capitalhumano', 'flota', 'presupuesto'].includes(nombre);
+  if (esPilar) {
+    await abrirPilar(nombre);
+  } else {
+    await mostrarVista(nombre);
+  }
 }
 
 async function cambiarModoPeriodoGlobal(modo) {
@@ -4427,11 +4452,7 @@ async function cargarPilarFinancieros() {
   }
   selector.value = finDistritoSeleccionado;
 
-  if (finDistritoSeleccionado === 'TODAS') {
-    renderizarFinKpisTodas();
-  } else {
-    await renderizarFinKpisDistrito(finDistritoSeleccionado);
-  }
+  await renderizarFinKpis(finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado);
   await renderizarFinTarjetasResumen();
 
   if (finAreaActual) await abrirAreaFinanciera(finAreaActual);
@@ -4448,6 +4469,29 @@ async function cambiarDistritoFinancieros(valor) {
 }
 
 let finKpisActuales = null;
+
+// Folios (órdenes) por póliza/distrito/mes — misma lógica que Calc.calcularIngresoPolizaDistrito /
+// Calc.calcularIngresoMultidistritoDistrito, pero exponiendo el conteo de órdenes en vez del monto.
+function obtenerFoliosPolizaDistrito(datosIngresos, poliza, distrito, region, mesISO) {
+  if (poliza === 'MULTIDISTRITO') {
+    const regionBolsa = Calc.bolsaMultidistritoDeRegion(region);
+    if (!regionBolsa) return 0;
+    const vigenteBolsa = Calc.obtenerParametroVigente(datosIngresos.multidistritoBolsas.filter((b) => b.region_bolsa === regionBolsa), mesISO);
+    if (!vigenteBolsa) return 0;
+    const distritosBolsa = datosIngresos.todosLosDistritos.filter((dd) => Calc.bolsaMultidistritoDeRegion(datosIngresos.regionPorDistrito[dd]) === regionBolsa);
+    let totalCuadrillas = 0, cuadrillasDistrito = 0;
+    distritosBolsa.forEach((dd) => {
+      const cuadrillas = Calc.obtenerCuadrillasMultidistrito(datosIngresos.hcAutorizado, dd, mesISO);
+      totalCuadrillas += cuadrillas;
+      if (dd === distrito) cuadrillasDistrito = cuadrillas;
+    });
+    if (totalCuadrillas === 0) return 0;
+    return (cuadrillasDistrito / totalCuadrillas) * vigenteBolsa.ordenes_dimensionadas;
+  }
+  const candidatos = datosIngresos.polizaParametros.filter((p) => p.poliza === poliza && p.distrito === distrito);
+  const vigente = Calc.obtenerParametroVigente(candidatos, mesISO);
+  return vigente ? vigente.ordenes_dimensionadas : 0;
+}
 
 function pintarBadgeVariacion(idBadge, actual, anterior) {
   const el = document.getElementById(idBadge);
@@ -4474,62 +4518,72 @@ function renderizarSparkline(canvasId, refGrafica, datos, color) {
   });
 }
 
-function renderizarFinKpisTodas() {
-  const d = overviewDatos;
-  finKpisActuales = {
-    ingreso: d.ingresoOperacionesYTD,
-    gasto: d.gastoTotalYTD,
-    utilidad: d.utilidadYTD,
-    margen: d.margenYTD,
-    costoDirecto: d.kpisGasto.costoDirecto,
-    gastoOperativo: d.kpisGasto.gastoOperativo,
-  };
-  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(d.ingresoOperacionesYTD);
-  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(d.gastoTotalYTD);
-  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(d.utilidadYTD);
-  document.getElementById('fin-kpi-margen').textContent = d.margenYTD === null ? '—' : d.margenYTD.toFixed(1) + '%';
+// Claves de mes (YYYY-MM) cubiertas por un rango {inicio, fin} (ISO yyyy-mm-dd).
+function clavesMesesEnRango(rango) {
+  const claves = [];
+  let cursor = new Date(rango.inicio + 'T00:00:00');
+  const fin = new Date(rango.fin + 'T00:00:00');
+  while (cursor <= fin) {
+    claves.push(claveMes(cursor.getFullYear(), cursor.getMonth()));
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+  return claves;
 }
 
-async function renderizarFinKpisDistrito(distrito) {
+// KPIs de Financieros para el periodo activo (respeta el toggle Mes/YTD), nacional o de un distrito.
+async function renderizarFinKpis(distritoFiltro) {
   const d = overviewDatos;
   const glosarioMap = d.glosarioMap;
-  const region = d.regionPorDistrito[distrito];
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, d.anioRef, d.mesRef);
+  const clavesMeses = clavesMesesEnRango(rangos.actual);
 
-  const mesesYTD = [];
-  for (let mes = 0; mes <= d.mesRef; mes++) mesesYTD.push(claveMes(d.anioRef, mes));
-  const inicioYTD = rangoDeMes(d.anioRef, 0).inicio;
-  const finYTD = rangoDeMes(d.anioRef, d.mesRef).fin;
-  const facturasYTD = await obtenerFacturasEnRango(inicioYTD, finYTD, '*');
-  const porMesFacturas = {};
-  facturasYTD.forEach((f) => {
-    const clave = f.fecha_pago.slice(0, 7);
-    porMesFacturas[clave] = porMesFacturas[clave] || [];
-    porMesFacturas[clave].push(f);
+  const facturasPeriodo = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
+  const clasificadas = facturasPeriodo
+    .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
+
+  let ingreso = 0, costoDirecto = 0, gastoOperativo = 0;
+  if (distritoFiltro) {
+    const region = d.regionPorDistrito[distritoFiltro];
+    const porMesLocal = {};
+    clasificadas.forEach((f) => {
+      const clave = f.fecha_pago.slice(0, 7);
+      porMesLocal[clave] = porMesLocal[clave] || [];
+      porMesLocal[clave].push(f);
+    });
+    clavesMeses.forEach((clave) => {
+      const r = Calc.calcularRentabilidadDistritoMes(porMesLocal[clave] || [], d.datosIngresos, glosarioMap, distritoFiltro, region, clave + '-01');
+      ingreso += r.totalIngresos;
+      costoDirecto += r.totalCD;
+      gastoOperativo += r.totalGO;
+    });
+  } else {
+    const kpisGasto = Calc.calcularKPIs(clasificadas, glosarioMap);
+    costoDirecto = kpisGasto.costoDirecto;
+    gastoOperativo = kpisGasto.gastoOperativo;
+    clavesMeses.forEach((clave) => {
+      d.listaDistritos.forEach((distrito) => {
+        const region = d.regionPorDistrito[distrito];
+        ingreso += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, clave + '-01').total;
+      });
+    });
+  }
+
+  const gasto = costoDirecto + gastoOperativo;
+  const utilidad = ingreso - gasto;
+  const margen = ingreso > 0 ? (utilidad / ingreso) * 100 : null;
+
+  finKpisActuales = { ingreso, gasto, utilidad, margen, costoDirecto, gastoOperativo };
+  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(ingreso);
+  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(gasto);
+  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(utilidad);
+  document.getElementById('fin-kpi-margen').textContent = margen === null ? '—' : margen.toFixed(1) + '%';
+
+  const etiquetaPeriodoKpi = modoPeriodoGlobal === 'ytd' ? 'YTD' : MESES_ABREV[d.mesRef].toUpperCase();
+  [1, 2, 3, 4].forEach((n) => {
+    const el = document.getElementById('fin-kpi-etiqueta-periodo-' + n);
+    if (el) el.textContent = etiquetaPeriodoKpi;
   });
-
-  let ytdIngreso = 0, ytdCD = 0, ytdGO = 0;
-  mesesYTD.forEach((clave) => {
-    const mesISO = clave + '-01';
-    const r = Calc.calcularRentabilidadDistritoMes(porMesFacturas[clave] || [], d.datosIngresos, glosarioMap, distrito, region, mesISO);
-    ytdIngreso += r.totalIngresos;
-    ytdCD += r.totalCD;
-    ytdGO += r.totalGO;
-  });
-  const ytdUtilidadOperacion = ytdIngreso - ytdCD - ytdGO;
-  const ytdMargenOperacion = ytdIngreso > 0 ? (ytdUtilidadOperacion / ytdIngreso) * 100 : null;
-
-  finKpisActuales = {
-    ingreso: ytdIngreso,
-    gasto: ytdCD + ytdGO,
-    utilidad: ytdUtilidadOperacion,
-    margen: ytdMargenOperacion,
-    costoDirecto: ytdCD,
-    gastoOperativo: ytdGO,
-  };
-  document.getElementById('fin-kpi-ingresos').textContent = formatoMoneda(ytdIngreso);
-  document.getElementById('fin-kpi-gastos').textContent = formatoMoneda(ytdCD + ytdGO);
-  document.getElementById('fin-kpi-utilidad').textContent = formatoMoneda(ytdUtilidadOperacion);
-  document.getElementById('fin-kpi-margen').textContent = ytdMargenOperacion === null ? '—' : ytdMargenOperacion.toFixed(1) + '%';
 }
 
 async function renderizarFinTarjetasResumen() {
@@ -4537,44 +4591,69 @@ async function renderizarFinTarjetasResumen() {
   const glosarioMap = d.glosarioMap;
   const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
   const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, d.anioRef, d.mesRef);
+  const clavesActivo = clavesMesesEnRango(rangos.actual);
+  const clavesAnterior = clavesMesesEnRango(rangos.comparacionYoY);
 
-  // --- Ingresos: monto + YoY + composición por póliza ---
-  document.getElementById('fin-card-ingresos-monto').textContent = formatoMoneda(finKpisActuales.ingreso);
-  let ytdPI = 0, ytdRec = 0, ytdMD = 0, ytdPIAnt = 0, ytdRecAnt = 0, ytdMDAnt = 0;
-  for (let mes = 0; mes <= d.mesRef; mes++) {
-    const mesISO = claveMes(d.anioRef, mes) + '-01';
-    const mesISOAnt = claveMes(d.anioRef - 1, mes) + '-01';
+  // --- Ingresos: monto + YoY + composición por póliza (respeta Mes/YTD) ---
+  const POLIZAS_CARD = [
+    { poliza: 'PLANTA INTERNA', label: 'Planta Interna', color: 'op-pi' },
+    { poliza: 'RECOLECCIONES', label: 'Recolecciones', color: 'op-rec' },
+    { poliza: 'MULTIDISTRITO', label: 'Multidistrito', color: 'op-md' },
+  ];
+  const totalesPoliza = { 'PLANTA INTERNA': { monto: 0, montoAnt: 0, folios: 0 }, 'RECOLECCIONES': { monto: 0, montoAnt: 0, folios: 0 }, 'MULTIDISTRITO': { monto: 0, montoAnt: 0, folios: 0 } };
+  clavesActivo.forEach((clave) => {
+    const mesISO = clave + '-01';
     distritos.forEach((distrito) => {
       const region = d.regionPorDistrito[distrito];
       const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO);
-      ytdPI += r.plantaInterna;
-      ytdRec += r.recolecciones;
-      ytdMD += r.multidistrito;
-      const rAnt = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISOAnt);
-      ytdPIAnt += rAnt.plantaInterna;
-      ytdRecAnt += rAnt.recolecciones;
-      ytdMDAnt += rAnt.multidistrito;
+      totalesPoliza['PLANTA INTERNA'].monto += r.plantaInterna;
+      totalesPoliza['RECOLECCIONES'].monto += r.recolecciones;
+      totalesPoliza['MULTIDISTRITO'].monto += r.multidistrito;
+      POLIZAS_CARD.forEach((p) => {
+        totalesPoliza[p.poliza].folios += obtenerFoliosPolizaDistrito(d.datosIngresos, p.poliza, distrito, region, mesISO);
+      });
     });
-  }
-  pintarBadgeVariacion('fin-card-ingresos-yoy', finKpisActuales.ingreso, ytdPIAnt + ytdRecAnt + ytdMDAnt);
-  const pctIngreso = (v) => (finKpisActuales.ingreso > 0 ? (v / finKpisActuales.ingreso) * 100 : 0);
-  const pctPI = pctIngreso(ytdPI), pctRec = pctIngreso(ytdRec), pctMD = pctIngreso(ytdMD);
-  document.getElementById('fin-card-ingresos-seg-pi').style.width = pctPI + '%';
-  document.getElementById('fin-card-ingresos-seg-rec').style.width = pctRec + '%';
-  document.getElementById('fin-card-ingresos-seg-md').style.width = pctMD + '%';
-  document.getElementById('fin-card-ingresos-seg-pi').textContent = pctPI >= 15 ? pctPI.toFixed(0) + '%' : '';
-  document.getElementById('fin-card-ingresos-seg-rec').textContent = pctRec >= 15 ? pctRec.toFixed(0) + '%' : '';
-  document.getElementById('fin-card-ingresos-seg-md').textContent = pctMD >= 15 ? pctMD.toFixed(0) + '%' : '';
+  });
+  clavesAnterior.forEach((clave) => {
+    const mesISO = clave + '-01';
+    distritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO);
+      totalesPoliza['PLANTA INTERNA'].montoAnt += r.plantaInterna;
+      totalesPoliza['RECOLECCIONES'].montoAnt += r.recolecciones;
+      totalesPoliza['MULTIDISTRITO'].montoAnt += r.multidistrito;
+    });
+  });
+  const ingresoAnterior = Object.values(totalesPoliza).reduce((s, p) => s + p.montoAnt, 0);
+  const variacionIngreso = Calc.calcularVariacionPct(finKpisActuales.ingreso, ingresoAnterior);
+  const textoVariacionIngreso = variacionIngreso === null ? '—' : (variacionIngreso >= 0 ? '↑+' : '↓') + Math.abs(variacionIngreso).toFixed(1) + '%';
+  const colorVariacionIngreso = variacionIngreso === null ? '#7e7576' : (variacionIngreso >= 0 ? '#ba1a1a' : '#2ECC71');
 
-  // --- Ventana de 12 meses compartida: Top Gastos, Rentabilidad, Proveedores ---
+  renderizarGraficaPieConEtiquetas('fin-card-ingresos-pie', 'finCardIngresosPie', POLIZAS_CARD.map((p) => ({
+    label: p.label,
+    monto: totalesPoliza[p.poliza].monto,
+    folios: totalesPoliza[p.poliza].folios,
+    color: p.color === 'op-pi' ? '#1B4F72' : p.color === 'op-rec' ? '#2E86C1' : '#85C1E9',
+  })), formatoCompacto(finKpisActuales.ingreso), textoVariacionIngreso, colorVariacionIngreso);
+
+  document.getElementById('fin-card-ingresos-tabla').innerHTML = POLIZAS_CARD.map((p) => `
+    <div class="grid grid-cols-3 gap-2 text-[10px] items-center">
+      <span class="font-gordita-bold text-${p.color}">${p.label}</span>
+      <span class="text-right">${Math.round(totalesPoliza[p.poliza].folios).toLocaleString('es-MX')}</span>
+      <span class="text-right font-gordita-bold text-primary">${formatoCompacto(totalesPoliza[p.poliza].monto)}</span>
+    </div>`).join('');
+
+  // --- Ventana de 12 meses compartida: Top Gastos (tendencia), Rentabilidad, Proveedores ---
   const meses = [];
   for (let i = 11; i >= 0; i--) {
     const base = new Date(d.anioRef, d.mesRef - i, 1);
     meses.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
   }
   const inicioVentana = rangoDeMes(meses[0].anio, meses[0].mes).inicio;
-  const finVentana = rangoDeMes(meses[11].anio, meses[11].mes).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
+  const finVentanaBase = rangoDeMes(meses[11].anio, meses[11].mes).fin;
+  const finVentana = finVentanaBase > rangos.actual.fin ? finVentanaBase : rangos.actual.fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana < rangos.actual.inicio ? inicioVentana : rangos.actual.inicio, finVentana, '*');
   const clasificadas = facturasVentana
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
     .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
@@ -4585,8 +4664,7 @@ async function renderizarFinTarjetasResumen() {
     porMes[clave].push(f);
   });
 
-  // --- Top Gastos: monto + tendencia de 6 meses de los rubros clave ---
-  document.getElementById('fin-card-gastos-monto').textContent = formatoMoneda(finKpisActuales.gasto);
+  // --- Top Gastos: % del ingreso + tendencia de 6 meses de los rubros clave ---
   const meses6 = meses.slice(6);
   const serieGastosClave = meses6.map((m) => {
     const facturasDelMes = porMes[m.clave] || [];
@@ -4595,43 +4673,86 @@ async function renderizarFinTarjetasResumen() {
       return s + (cat.test(valor) ? (f.monto || 0) : 0);
     }, 0), 0);
   });
-  renderizarGraficaBarraSimple('fin-card-gastos-sparkline', 'finCardGastosSparkline', meses6.map((m) => m.etiqueta), serieGastosClave, '#2E86C1');
-
-  // --- Rentabilidad: gauges + sparkline ---
-  const margenBruto = finKpisActuales.ingreso > 0 ? ((finKpisActuales.ingreso - finKpisActuales.costoDirecto) / finKpisActuales.ingreso) * 100 : null;
-  const margenOperacion = finKpisActuales.margen;
-  document.getElementById('fin-card-rentabilidad-monto').textContent = margenOperacion === null ? '—' : margenOperacion.toFixed(1) + '%';
-  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-bruto', 'finCardGaugeMargenBruto', margenBruto, '#1B4F72', 11);
-  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-operacion', 'finCardGaugeMargenOperacion', margenOperacion, '#2E86C1', 11);
-
-  const serieMargenSparkline = meses.map((m) => {
-    const kpisMes = Calc.calcularKPIs(porMes[m.clave] || [], glosarioMap);
+  const ingresoPorMes6 = meses6.map((m) => {
     let ingresoMes = 0;
     distritos.forEach((distrito) => {
       const region = d.regionPorDistrito[distrito];
       ingresoMes += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01').total;
     });
-    const utilidadBruta = ingresoMes - kpisMes.costoDirecto;
-    const utilidadOperacion = utilidadBruta - kpisMes.gastoOperativo;
-    return ingresoMes > 0 ? (utilidadOperacion / ingresoMes) * 100 : null;
+    return ingresoMes;
   });
-  renderizarSparkline('fin-card-sparkline-margen', 'finCardSparklineMargen', serieMargenSparkline, '#2E86C1');
+  const seriePctGastosClave = serieGastosClave.map((v, i) => (ingresoPorMes6[i] > 0 ? (v / ingresoPorMes6[i]) * 100 : null));
+  renderizarGraficaBarraSimple('fin-card-gastos-sparkline', 'finCardGastosSparkline', meses6.map((m) => m.etiqueta), serieGastosClave, '#2E86C1', seriePctGastosClave);
 
-  // --- Proveedores: top 3 (YTD, Costos Directos) ---
-  const clasificadasYtd = clasificadas.filter((f) => f.fecha_pago.slice(0, 4) === String(d.anioRef) && f.tipo_gasto === 'COSTOS DIRECTOS');
+  const sumaCategoriaActivoCard = (cat) => clavesActivo.reduce((s, clave) => s + (porMes[clave] || []).reduce((s2, f) => {
+    const valor = normalizarTexto(f[cat.campo]);
+    return s2 + (cat.test(valor) ? (f.monto || 0) : 0);
+  }, 0), 0);
+  const categoriasCard = FAMILIAS_CLAVE_TODAS.map((cat) => {
+    const montoActivo = sumaCategoriaActivoCard(cat);
+    return { label: cat.label, monto: montoActivo, pct: finKpisActuales.ingreso > 0 ? (montoActivo / finKpisActuales.ingreso) * 100 : 0 };
+  }).sort((a, b) => b.pct - a.pct);
+  const pctIdentificadoCard = categoriasCard.reduce((s, c) => s + c.pct, 0);
+  document.getElementById('fin-card-gastos-pct-ingreso').textContent = pctIdentificadoCard.toFixed(1) + '%';
+  document.getElementById('fin-card-gastos-tabla').innerHTML = categoriasCard.map((c) => `
+    <div class="grid grid-cols-2 gap-2 text-[10px]">
+      <span class="truncate">${c.label}</span>
+      <span class="text-right font-gordita-bold text-primary">${c.pct.toFixed(1)}%</span>
+    </div>`).join('');
+
+  // --- Rentabilidad: gauges ---
+  const margenBruto = finKpisActuales.ingreso > 0 ? ((finKpisActuales.ingreso - finKpisActuales.costoDirecto) / finKpisActuales.ingreso) * 100 : null;
+  const margenOperacion = finKpisActuales.margen;
+  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-bruto', 'finCardGaugeMargenBruto', margenBruto, '#1B4F72', 20);
+  renderizarGraficaGaugeAlcance('fin-card-gauge-margen-operacion', 'finCardGaugeMargenOperacion', margenOperacion, '#2E86C1', 20);
+
+  // --- Rentabilidad: top 5 distritos por margen de operación (siempre nacional, periodo activo) ---
+  const clasificadasNacional = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
+  const porMesNacional = {};
+  clasificadasNacional.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesNacional[clave] = porMesNacional[clave] || [];
+    porMesNacional[clave].push(f);
+  });
+  const rankingMargenDistritos = d.listaDistritos.map((distrito) => {
+    const region = d.regionPorDistrito[distrito];
+    let ingresoD = 0, cdD = 0, goD = 0;
+    clavesActivo.forEach((clave) => {
+      const mesISO = clave + '-01';
+      const r = Calc.calcularRentabilidadDistritoMes(porMesNacional[clave] || [], d.datosIngresos, glosarioMap, distrito, region, mesISO);
+      ingresoD += r.totalIngresos;
+      cdD += r.totalCD;
+      goD += r.totalGO;
+    });
+    const margenOperacionDistrito = ingresoD > 0 ? ((ingresoD - cdD - goD) / ingresoD) * 100 : null;
+    return { distrito, margenOperacion: margenOperacionDistrito };
+  }).filter((r) => r.margenOperacion !== null)
+    .sort((a, b) => b.margenOperacion - a.margenOperacion)
+    .slice(0, 5);
+  document.getElementById('fin-card-rentabilidad-ranking').innerHTML = rankingMargenDistritos.map((r, i) => `
+    <div class="flex items-center justify-between text-[10px]">
+      <span class="flex items-center gap-1.5 truncate"><span class="w-4 h-4 rounded-full bg-primary/10 text-primary font-gordita-bold text-[8px] flex items-center justify-center shrink-0">${i + 1}</span><span class="truncate">${r.distrito}</span></span>
+      <span class="font-gordita-bold ${r.margenOperacion >= 0 ? 'text-qiora-green' : 'text-error'} shrink-0 ml-1">${r.margenOperacion.toFixed(1)}%</span>
+    </div>`).join('');
+
+  // --- Proveedores: top 5 (periodo activo, Costos Directos) ---
+  const clasificadasActivo = clasificadas.filter((f) => enRangoActivo(f, rangos.actual) && f.tipo_gasto === 'COSTOS DIRECTOS');
   const porProveedor = {};
-  clasificadasYtd.forEach((f) => {
+  clasificadasActivo.forEach((f) => {
     const proveedor = f.proveedor || 'Sin proveedor';
     porProveedor[proveedor] = (porProveedor[proveedor] || 0) + (f.monto || 0);
   });
-  const topProveedores = Object.keys(porProveedor).map((proveedor) => ({ proveedor, monto: porProveedor[proveedor] })).sort((a, b) => b.monto - a.monto).slice(0, 3);
-  document.getElementById('fin-card-proveedores-monto').textContent = formatoMoneda(finKpisActuales.costoDirecto);
-  const maxProveedor = Math.max(...topProveedores.map((p) => p.monto), 1);
+  const topProveedores = Object.keys(porProveedor).map((proveedor) => ({ proveedor, monto: porProveedor[proveedor] })).sort((a, b) => b.monto - a.monto).slice(0, 5);
+  renderizarGraficaBarraHorizontal('fin-card-proveedores-chart', 'finCardProveedoresChart', topProveedores.map((p) => p.proveedor), topProveedores.map((p) => p.monto), '#1B4F72');
   document.getElementById('fin-card-proveedores-ranking').innerHTML = topProveedores.map((p) => `
-    <div>
-      <div class="flex justify-between text-[9px] mb-0.5"><span class="truncate">${p.proveedor}</span><span class="font-gordita-bold shrink-0 ml-1">${formatoCompacto(p.monto)}</span></div>
-      <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:${(p.monto / maxProveedor) * 100}%;"></div></div>
+    <div class="grid grid-cols-2 gap-2 text-[10px]">
+      <span class="truncate">${p.proveedor}</span>
+      <span class="text-right font-gordita-bold text-primary">${formatoCompacto(p.monto)}</span>
     </div>`).join('');
+}
+
+function enRangoActivo(f, rango) {
+  return f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
 }
 
 async function abrirAreaFinanciera(area) {
@@ -4670,6 +4791,9 @@ async function renderizarAreaIngresos() {
   const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
   document.getElementById('fin-ingresos-titulo').textContent = distritoFiltro ? 'Ingresos — ' + distritoFiltro : 'Ingresos — Nacional (todos los distritos)';
 
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, d.anioRef, d.mesRef);
+  const clavesActivo = clavesMesesEnRango(rangos.actual);
+
   const meses = [];
   for (let i = 11; i >= 0; i--) {
     const base = new Date(d.anioRef, d.mesRef - i, 1);
@@ -4677,8 +4801,9 @@ async function renderizarAreaIngresos() {
   }
 
   const seriePI = [], serieRec = [], serieMD = [];
-  let ytdPI = 0, ytdRec = 0, ytdMD = 0;
+  let totalPI = 0, totalRec = 0, totalMD = 0;
   const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  const totalesPorDistrito = {};
   meses.forEach((m) => {
     const mesISO = m.clave + '-01';
     let pi = 0, rec = 0, md = 0;
@@ -4688,23 +4813,26 @@ async function renderizarAreaIngresos() {
       pi += r.plantaInterna;
       rec += r.recolecciones;
       md += r.multidistrito;
+      if (clavesActivo.includes(m.clave)) {
+        totalesPorDistrito[distrito] = (totalesPorDistrito[distrito] || 0) + r.total;
+      }
     });
     seriePI.push(pi);
     serieRec.push(rec);
     serieMD.push(md);
-    if (m.anio === d.anioRef) {
-      ytdPI += pi;
-      ytdRec += rec;
-      ytdMD += md;
+    if (clavesActivo.includes(m.clave)) {
+      totalPI += pi;
+      totalRec += rec;
+      totalMD += md;
     }
   });
 
-  const totalYtd = ytdPI + ytdRec + ytdMD;
-  const pct = (v) => (totalYtd > 0 ? (v / totalYtd) * 100 : 0);
+  const totalActivo = totalPI + totalRec + totalMD;
+  const pct = (v) => (totalActivo > 0 ? (v / totalActivo) * 100 : 0);
   [
-    { id: 'pi', monto: ytdPI },
-    { id: 'rec', monto: ytdRec },
-    { id: 'md', monto: ytdMD },
+    { id: 'pi', monto: totalPI },
+    { id: 'rec', monto: totalRec },
+    { id: 'md', monto: totalMD },
   ].forEach((f) => {
     document.getElementById('fin-ingresos-' + f.id + '-monto').textContent = formatoMoneda(f.monto);
     document.getElementById('fin-ingresos-' + f.id + '-pct').textContent = pct(f.monto).toFixed(1) + '%';
@@ -4722,7 +4850,7 @@ async function renderizarAreaIngresos() {
     contenedorRanking.style.display = 'none';
   } else {
     contenedorRanking.style.display = '';
-    const filas = d.listaDistritos.map((distrito) => ({ distrito, total: d.ingresoPorDistritoYTD[distrito].total })).sort((a, b) => b.total - a.total);
+    const filas = Object.keys(totalesPorDistrito).map((distrito) => ({ distrito, total: totalesPorDistrito[distrito] })).sort((a, b) => b.total - a.total);
     const maxTotal = Math.max(...filas.map((f) => f.total), 1);
     document.getElementById('fin-ingresos-ranking').innerHTML = filas.map((f, i) => {
       const pctBarra = (f.total / maxTotal) * 100;
@@ -4756,15 +4884,17 @@ const FAMILIAS_CLAVE_OPERATIVAS = [
 ];
 const FAMILIAS_CLAVE_TODAS = FAMILIAS_CLAVE_NOMINA.concat(FAMILIAS_CLAVE_OPERATIVAS);
 
-function renderizarGraficaBarraSimple(canvasId, refGrafica, etiquetas, datos, color) {
+function renderizarGraficaBarraSimple(canvasId, refGrafica, etiquetas, datos, color, datosPct) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
   if (window[refGrafica]) window[refGrafica].destroy();
+  const ALTURA_MINIMA_MONTO_DENTRO = 18;
   window[refGrafica] = new Chart(ctx, {
     type: 'bar',
     data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 28 }] },
     options: {
       maintainAspectRatio: false,
+      layout: { padding: { top: 26 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -4780,6 +4910,204 @@ function renderizarGraficaBarraSimple(canvasId, refGrafica, etiquetas, datos, co
         y: { display: false, beginAtZero: true },
       },
     },
+    plugins: [{
+      id: 'etiquetasBarraSimple',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((barra, i) => {
+          if (datosPct && datosPct[i] != null) {
+            const texto = datosPct[i].toFixed(1) + '%';
+            ctxDibujo.save();
+            ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+            const anchoTexto = ctxDibujo.measureText(texto).width;
+            const padX = 5, altoBadge = 14;
+            const anchoBadge = anchoTexto + padX * 2;
+            const xBadge = barra.x - anchoBadge / 2;
+            const yBadge = barra.y - 8 - altoBadge;
+            ctxDibujo.fillStyle = 'rgba(27,79,114,0.12)';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(xBadge, yBadge, anchoBadge, altoBadge, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#1b1b1b';
+            ctxDibujo.textAlign = 'center';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(texto, barra.x, yBadge + altoBadge / 2);
+            ctxDibujo.restore();
+          }
+
+          const altura = Math.abs(barra.base - barra.y);
+          const textoMonto = formatoCompacto(datos[i]);
+          ctxDibujo.save();
+          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+          const anchoMonto = ctxDibujo.measureText(textoMonto).width;
+          const padXMonto = 5, altoBadgeMonto = 14;
+          const anchoBadgeMonto = anchoMonto + padXMonto * 2;
+          const xBadgeMonto = barra.x - anchoBadgeMonto / 2;
+          ctxDibujo.textAlign = 'center';
+          if (altura >= ALTURA_MINIMA_MONTO_DENTRO) {
+            const yCentro = (barra.y + barra.base) / 2;
+            ctxDibujo.fillStyle = 'rgba(0,0,0,0.18)';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(xBadgeMonto, yCentro - altoBadgeMonto / 2, anchoBadgeMonto, altoBadgeMonto, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#ffffff';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(textoMonto, barra.x, yCentro);
+          } else {
+            const yBadgeMonto = barra.y - 16 - altoBadgeMonto / 2;
+            ctxDibujo.fillStyle = 'rgba(27,79,114,0.12)';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(xBadgeMonto, yBadgeMonto, anchoBadgeMonto, altoBadgeMonto, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#1b1b1b';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(textoMonto, barra.x, yBadgeMonto + altoBadgeMonto / 2);
+          }
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
+// Pie con etiquetas externas (línea + póliza + folios + monto), para tarjetas resumen.
+function renderizarGraficaPieConEtiquetas(canvasId, refGrafica, datos, textoCentral, textoCentralSecundario, colorCentralSecundario) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  const conValor = datos.filter((d) => d.monto > 0);
+  window[refGrafica] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: conValor.map((d) => d.label),
+      datasets: [{ data: conValor.map((d) => d.monto), backgroundColor: conValor.map((d) => d.color), borderWidth: 2, borderColor: '#ffffff' }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      cutout: '62%',
+      layout: { padding: 40 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: {
+            label: (item) => {
+              const dd = conValor[item.dataIndex];
+              return [formatoCompacto(dd.monto), Math.round(dd.folios).toLocaleString('es-MX') + ' folios'];
+            },
+          },
+        },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasDoughnutCentro',
+      afterDraw(chart) {
+        if (!textoCentral) return;
+        const { ctx: ctxDibujo, chartArea } = chart;
+        const cx = (chartArea.left + chartArea.right) / 2;
+        const cy = (chartArea.top + chartArea.bottom) / 2;
+        ctxDibujo.save();
+        ctxDibujo.textAlign = 'center';
+        ctxDibujo.fillStyle = '#1b1b1b';
+        ctxDibujo.font = "bold 20px 'Gordita', sans-serif";
+        ctxDibujo.textBaseline = 'bottom';
+        ctxDibujo.fillText(textoCentral, cx, cy + (textoCentralSecundario ? 0 : 6));
+        if (textoCentralSecundario) {
+          ctxDibujo.font = "bold 11px 'Gordita', sans-serif";
+          ctxDibujo.fillStyle = colorCentralSecundario || '#7e7576';
+          ctxDibujo.textBaseline = 'top';
+          ctxDibujo.fillText(textoCentralSecundario, cx, cy + 4);
+        }
+        ctxDibujo.restore();
+      },
+    }, {
+      id: 'etiquetasPieLeaderLine',
+      afterDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((arc, i) => {
+          const dd = conValor[i];
+          if (!dd) return;
+          const angulo = (arc.startAngle + arc.endAngle) / 2;
+          const rExterno = arc.outerRadius;
+          const xInicio = arc.x + Math.cos(angulo) * rExterno;
+          const yInicio = arc.y + Math.sin(angulo) * rExterno;
+          const xMedio = arc.x + Math.cos(angulo) * (rExterno + 16);
+          const yMedio = arc.y + Math.sin(angulo) * (rExterno + 16);
+          const ladoDerecho = Math.cos(angulo) >= 0;
+          const xFinal = xMedio + (ladoDerecho ? 22 : -22);
+
+          ctxDibujo.save();
+          ctxDibujo.strokeStyle = dd.color;
+          ctxDibujo.lineWidth = 1.5;
+          ctxDibujo.beginPath();
+          ctxDibujo.moveTo(xInicio, yInicio);
+          ctxDibujo.lineTo(xMedio, yMedio);
+          ctxDibujo.lineTo(xFinal, yMedio);
+          ctxDibujo.stroke();
+
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = ladoDerecho ? 'left' : 'right';
+          ctxDibujo.textBaseline = 'bottom';
+          ctxDibujo.fillText(dd.label, xFinal + (ladoDerecho ? 3 : -3), yMedio - 1);
+          ctxDibujo.font = "8px 'Gordita', sans-serif";
+          ctxDibujo.fillStyle = '#5a5a5a';
+          ctxDibujo.textBaseline = 'top';
+          ctxDibujo.fillText(Math.round(dd.folios).toLocaleString('es-MX') + ' folios · ' + formatoCompacto(dd.monto), xFinal + (ladoDerecho ? 3 : -3), yMedio + 1);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
+// Barra horizontal compacta para rankings (proveedores, etc.) en tarjetas resumen.
+function renderizarGraficaBarraHorizontal(canvasId, refGrafica, etiquetas, datos, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 16 }] },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 8,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => formatoMoneda(item.parsed.x) },
+        },
+      },
+      scales: {
+        x: { display: false, beginAtZero: true },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 8 }, callback: function (v) { const l = this.getLabelForValue(v); return l.length > 16 ? l.slice(0, 15) + '…' : l; } } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasBarraHorizontal',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((barra, i) => {
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.font = "bold 8px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'left';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(formatoCompacto(datos[i]), barra.x + 4, barra.y);
+          ctxDibujo.restore();
+        });
+      },
+    }],
   });
 }
 
@@ -4796,9 +5124,10 @@ async function renderizarAreaGastos() {
     meses6.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
   }
   const inicio6 = rangoDeMes(new Date(anioRef, mesRef - 5, 1).getFullYear(), new Date(anioRef, mesRef - 5, 1).getMonth()).inicio;
-  const fin6 = rangoDeMes(anioRef, mesRef).fin;
-  const inicioVentana = inicio6 < rangos.actual.inicio ? inicio6 : rangos.actual.inicio;
-  const finVentana = fin6 > rangos.actual.fin ? fin6 : rangos.actual.fin;
+  const inicioYTDAnterior = rangoDeMes(anioRef - 1, 0).inicio;
+  const finYTDActual = rangoDeMes(anioRef, mesRef).fin;
+  const inicioVentana = inicio6 < inicioYTDAnterior ? inicio6 : inicioYTDAnterior;
+  const finVentana = finYTDActual > rangos.actual.fin ? finYTDActual : rangos.actual.fin;
 
   const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
   const clasificadas = facturas
@@ -4816,20 +5145,59 @@ async function renderizarAreaGastos() {
     porMes[clave].push(f);
   });
 
+  const mesesYTDActual = [];
+  for (let m = 0; m <= mesRef; m++) mesesYTDActual.push(claveMes(anioRef, m));
+  const mesesYTDAnterior = [];
+  for (let m = 0; m <= mesRef; m++) mesesYTDAnterior.push(claveMes(anioRef - 1, m));
+
   const sumaCategoriaEnLista = (cat, lista) => lista.reduce((s, f) => {
     const valor = normalizarTexto(f[cat.campo]);
     return s + (cat.test(valor) ? (f.monto || 0) : 0);
   }, 0);
+  const sumaCategoriaMeses = (cat, clavesMeses) => clavesMeses.reduce((s, clave) => s + sumaCategoriaEnLista(cat, porMes[clave] || []), 0);
 
   const calcularCategoria = (cat) => {
-    const serie = meses6.map((m) => sumaCategoriaEnLista(cat, porMes[m.clave] || []));
-    const montoActual = serie[5];
-    const montoAnterior = serie[4];
-    return Object.assign({}, cat, { serie, monto: montoActual, variacion: Calc.calcularVariacionPct(montoActual, montoAnterior) });
+    const serieMensual = meses6.map((m) => sumaCategoriaEnLista(cat, porMes[m.clave] || []));
+    const ytdActual = sumaCategoriaMeses(cat, mesesYTDActual);
+    const ytdAnterior = sumaCategoriaMeses(cat, mesesYTDAnterior);
+    return Object.assign({}, cat, {
+      serieMensual,
+      ytdActual,
+      variacionPct: Calc.calcularVariacionPct(ytdActual, ytdAnterior),
+      variacionMonto: ytdActual - ytdAnterior,
+    });
   };
 
-  const nomina = FAMILIAS_CLAVE_NOMINA.map(calcularCategoria);
-  const operativas = FAMILIAS_CLAVE_OPERATIVAS.map(calcularCategoria);
+  const categorias = FAMILIAS_CLAVE_TODAS.map(calcularCategoria).sort((a, b) => b.ytdActual - a.ytdActual);
+
+  // Ingreso YTD estable (Ene–mesRef), independiente del toggle Mes/YTD — para que "% Ingreso YTD" no se distorsione en modo Mes.
+  const listaDistritosIngreso = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  let ingresoYtdEstable = 0;
+  mesesYTDActual.forEach((clave) => {
+    const mesISO = clave + '-01';
+    listaDistritosIngreso.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      ingresoYtdEstable += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO).total;
+    });
+  });
+
+  // --- Otros: todo lo que no cae en los 9 rubros clave, para que la tabla reconcilie al 100% del gasto ---
+  const totalMesTodas = (clave) => (porMes[clave] || []).reduce((s, f) => s + (f.monto || 0), 0);
+  const serieClaveMensual = meses6.map((_, i) => categorias.reduce((s, c) => s + c.serieMensual[i], 0));
+  const serieOtrosMensual = meses6.map((m, i) => totalMesTodas(m.clave) - serieClaveMensual[i]);
+  const totalYTDActualTodas = mesesYTDActual.reduce((s, clave) => s + totalMesTodas(clave), 0);
+  const totalYTDAnteriorTodas = mesesYTDAnterior.reduce((s, clave) => s + totalMesTodas(clave), 0);
+  const claveYTDActual = categorias.reduce((s, c) => s + sumaCategoriaMeses(c, mesesYTDActual), 0);
+  const claveYTDAnterior = categorias.reduce((s, c) => s + sumaCategoriaMeses(c, mesesYTDAnterior), 0);
+  const otrosYtdActual = totalYTDActualTodas - claveYTDActual;
+  const otrosYtdAnterior = totalYTDAnteriorTodas - claveYTDAnterior;
+  const otros = {
+    serieMensual: serieOtrosMensual,
+    ytdActual: otrosYtdActual,
+    variacionPct: Calc.calcularVariacionPct(otrosYtdActual, otrosYtdAnterior),
+    variacionMonto: otrosYtdActual - otrosYtdAnterior,
+  };
+
   const totalIdentificado = FAMILIAS_CLAVE_TODAS.reduce((s, cat) => s + sumaCategoriaEnLista(cat, actualPeriodo), 0);
   const pctIdentificado = gastoTotalPeriodo > 0 ? (totalIdentificado / gastoTotalPeriodo) * 100 : 0;
 
@@ -4839,27 +5207,51 @@ async function renderizarAreaGastos() {
   document.getElementById('fin-gastos-identificado-pct').textContent = pctIdentificado.toFixed(0) + '% del gasto total';
   document.getElementById('fin-gastos-identificado-monto').textContent = formatoMoneda(totalIdentificado);
 
-  const etiquetasMeses = meses6.map((m) => m.etiqueta);
-  const renderizarFilas = (contenedorId, categorias) => {
-    const contenedor = document.getElementById(contenedorId);
-    contenedor.innerHTML = categorias.map((c) => {
-      const v = c.variacion;
-      const claseVar = v === null ? 'text-on-surface-variant' : (v >= 0 ? 'text-error' : 'text-qiora-green');
-      const textoVar = v === null ? '—' : (v >= 0 ? '↑+' : '↓') + Math.abs(v).toFixed(1) + '%';
-      return `<div class="bg-surface-container-low p-4 rounded-lg">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-gordita-bold text-sm">${c.label}</span>
-          <span class="flex items-center gap-2 text-xs"><span class="font-gordita-bold text-primary">${formatoMoneda(c.monto)}</span><span class="font-gordita-bold ${claseVar}">${textoVar}</span></span>
-        </div>
-        <div style="height:90px;"><canvas id="fin-gasto-chart-${c.id}"></canvas></div>
-      </div>`;
-    }).join('');
-    categorias.forEach((c) => {
-      renderizarGraficaBarraSimple('fin-gasto-chart-' + c.id, 'finGastoChart' + c.id, etiquetasMeses, c.serie, '#2E86C1');
-    });
+  renderizarTablaGastosClave(meses6, categorias, otros, ingresoYtdEstable);
+}
+
+function renderizarTablaGastosClave(meses6, categorias, otros, ingresoYtd) {
+  const claseVar = (v) => (v === null ? 'text-on-surface-variant' : (v >= 0 ? 'text-error' : 'text-qiora-green'));
+  const textoPctIngreso = (ytdActual) => (ingresoYtd > 0 ? ((ytdActual / ingresoYtd) * 100).toFixed(1) + '%' : '—');
+  const textoVarPct = (v) => (v === null ? '—' : (v >= 0 ? '▲+' : '▼') + Math.abs(v).toFixed(1) + '%');
+  const textoVarMonto = (v) => (v >= 0 ? '+' : '') + formatoCompacto(v);
+
+  const filaCategoria = (cat) => {
+    const celdasMeses = cat.serieMensual.map((v) => `<td class="px-3 py-3 text-right text-sm">${formatoCompacto(v)}</td>`).join('');
+    return `<tr class="bg-white hover:bg-surface-container-low/50 transition-colors">
+      <td class="px-6 py-3 font-gordita-bold text-sm">${cat.label}</td>
+      ${celdasMeses}
+      <td class="px-3 py-3 text-right font-gordita-bold text-primary">${formatoCompacto(cat.ytdActual)}</td>
+      <td class="px-3 py-3 text-right font-gordita-bold ${claseVar(cat.variacionPct)}">${textoVarPct(cat.variacionPct)}</td>
+      <td class="px-3 py-3 text-right font-gordita-bold ${claseVar(cat.variacionMonto)}">${textoVarMonto(cat.variacionMonto)}</td>
+      <td class="px-3 py-3 text-right text-on-surface-variant">${textoPctIngreso(cat.ytdActual)}</td>
+    </tr>`;
   };
-  renderizarFilas('fin-gastos-nomina-filas', nomina);
-  renderizarFilas('fin-gastos-operativas-filas', operativas);
+
+  const filaOtros = (label, grupo) => {
+    const celdasMeses = grupo.serieMensual.map((v) => `<td class="px-3 py-3 text-right text-on-surface-variant">${formatoCompacto(v)}</td>`).join('');
+    return `<tr class="bg-surface-container-low">
+      <td class="px-6 py-3 text-on-surface-variant italic">${label}</td>
+      ${celdasMeses}
+      <td class="px-3 py-3 text-right text-on-surface-variant">${formatoCompacto(grupo.ytdActual)}</td>
+      <td class="px-3 py-3 text-right ${claseVar(grupo.variacionPct)}">${textoVarPct(grupo.variacionPct)}</td>
+      <td class="px-3 py-3 text-right ${claseVar(grupo.variacionMonto)}">${textoVarMonto(grupo.variacionMonto)}</td>
+      <td class="px-3 py-3 text-right text-on-surface-variant">${textoPctIngreso(grupo.ytdActual)}</td>
+    </tr>`;
+  };
+
+  const encabezadoMeses = meses6.map((m) => `<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('');
+  document.getElementById('tabla-gastos-clave-encabezado').innerHTML =
+    '<th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-left">Concepto</th>' +
+    encabezadoMeses +
+    '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest text-right">Suma YTD</th>' +
+    '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest text-right">Δ% YTD</th>' +
+    '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest text-right">Δ MX$ YTD</th>' +
+    '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest text-right">% Ingreso YTD</th>';
+
+  document.getElementById('tabla-gastos-clave-body').innerHTML =
+    categorias.map(filaCategoria).join('') +
+    filaOtros('Otros Costos y Gastos', otros);
 }
 
 function renderizarTendenciaHistoricaMargen() {
