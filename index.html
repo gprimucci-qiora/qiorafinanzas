@@ -118,6 +118,9 @@
         <li><button data-vista="flota" onclick="abrirPilar('flota')" title="Flota Vehicular" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">local_shipping</span><span class="text-sm sidebar-texto">Flota Vehicular</span>
         </button></li>
+        <li><button data-vista="presupuesto" onclick="abrirPilar('presupuesto')" title="Presupuesto" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">request_quote</span><span class="text-sm sidebar-texto">Presupuesto</span>
+        </button></li>
         <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" title="Configuración" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">settings</span><span class="text-sm sidebar-texto">Configuración</span>
         </button></li>
@@ -145,12 +148,22 @@
             <span class="material-symbols-outlined text-lg">chevron_right</span>
           </button>
         </div>
+        <div id="filtro-rango" class="flex items-center gap-2 bg-white border border-outline-variant rounded-full px-4 py-1" style="display:none;">
+          <span class="text-[10px] text-on-surface-variant uppercase tracking-wide">Desde</span>
+          <input type="month" id="rango-global-desde" onchange="cambiarRangoGlobal()" class="text-xs font-gordita-bold border-0 focus:outline-none bg-transparent cursor-pointer">
+          <span class="text-on-surface-variant text-xs">–</span>
+          <span class="text-[10px] text-on-surface-variant uppercase tracking-wide">Hasta</span>
+          <input type="month" id="rango-global-hasta" onchange="cambiarRangoGlobal()" class="text-xs font-gordita-bold border-0 focus:outline-none bg-transparent cursor-pointer">
+        </div>
         <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
           <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
             <input type="radio" name="modo-periodo-global" value="mes" checked onchange="cambiarModoPeriodoGlobal('mes')" class="hidden"> Mes
           </label>
           <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
             <input type="radio" name="modo-periodo-global" value="ytd" onchange="cambiarModoPeriodoGlobal('ytd')" class="hidden"> YTD
+          </label>
+          <label class="px-4 py-1.5 text-xs font-gordita-bold rounded cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary text-on-surface-variant">
+            <input type="radio" name="modo-periodo-global" value="rango" onchange="cambiarModoPeriodoGlobal('rango')" class="hidden"> Rango
           </label>
         </div>
       </div>
@@ -355,6 +368,9 @@
               <div class="p-2 bg-brand-teal/10 rounded-lg"><span class="material-symbols-outlined text-brand-teal">groups</span></div>
               <h2 class="font-gordita-bold text-xl text-primary">Capital Humano</h2>
             </div>
+            <button onclick="abrirPilar('capitalhumano')" class="flex items-center gap-1 text-xs font-gordita-bold text-on-surface-variant hover:text-qiora-blue transition-colors">
+              Ver desglose completo <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
             <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">HeadCount</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
@@ -369,24 +385,6 @@
           </div>
         </section>
 
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 mb-lg">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-              <div class="p-2 bg-totalplay-cyan/10 rounded-lg"><span class="material-symbols-outlined text-totalplay-cyan">request_quote</span></div>
-              <h2 class="font-gordita-bold text-xl text-primary">Presupuesto</h2>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Presupuestado</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Real</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Variación</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-          </div>
-          <div class="bg-surface-container-low p-8 rounded-lg flex flex-col items-center text-center">
-            <span class="material-symbols-outlined text-totalplay-cyan mb-2" style="font-size:32px;">database</span>
-            <h3 class="font-gordita-bold text-primary mb-1">Falta conectar la fuente de datos</h3>
-            <p class="text-sm text-on-surface-variant max-w-md">En cuanto tengamos el presupuesto por distrito/categoría, esta sección compara real vs. presupuestado.</p>
-          </div>
-        </section>
       </div>
 
       <div class="vista" id="vista-resumen">
@@ -621,6 +619,7 @@
           <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
           <button id="config-tab-flota" onclick="mostrarSubConfig('flota')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Flota Vehicular</button>
           <button id="config-tab-unidades" onclick="mostrarSubConfig('unidades')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Unidades Autorizadas</button>
+          <button id="config-tab-presupuesto" onclick="mostrarSubConfig('presupuesto')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Presupuesto</button>
           <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
 
@@ -660,8 +659,12 @@
 
         <div id="config-sub-cargar" class="config-sub" style="display:none;">
           <p class="text-on-surface-variant text-sm mb-6">Sube el Excel completo descargado de Siva (mínimo últimos 6 meses o año en curso).</p>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <input type="file" id="input-excel" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+          <div id="dropzone-cargar" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
             <div id="preview-carga" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
               <p class="text-sm mb-1">Rango detectado: <strong id="preview-rango" class="font-gordita-bold text-primary"></strong></p>
               <p class="text-sm mb-3">Filas a cargar: <strong id="preview-filas" class="font-gordita-bold text-primary"></strong></p>
@@ -674,8 +677,12 @@
 
         <div id="config-sub-flota" class="config-sub" style="display:none;">
           <p class="text-on-surface-variant text-sm mb-6">Sube el "REPORTE SUCURSAL DETALLE" descargado de FFM. Este reporte es una fotografía completa de la flota al momento de la descarga — cada carga <strong>reemplaza todo</strong> el inventario anterior, no se acumula por fecha.</p>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <input type="file" id="input-excel-flota" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+          <div id="dropzone-flota" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel-flota" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
             <div id="preview-carga-flota" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
               <p class="text-sm mb-3">Vehículos a cargar: <strong id="preview-filas-flota" class="font-gordita-bold text-primary"></strong></p>
               <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará por completo el inventario de flota vehicular existente.</p>
@@ -687,17 +694,38 @@
 
         <div id="config-sub-unidades" class="config-sub" style="display:none;">
           <p class="text-on-surface-variant text-sm mb-6">Sube el Excel de "Unidades autorizadas" (una fila por sucursal, columnas PI AUTO / PI MOTO / RECOLECCION MOTO / MULTIDISTRITO AUTO / STBY / STAFF / ALMACEN / DESTAJO / TEMPORAL). Cada carga <strong>agrega una nueva vigencia</strong> — no reemplaza las anteriores, igual que HC Autorizado.</p>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+          <div id="dropzone-unidades" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
             <div class="mb-4">
               <label class="block text-xs font-gordita-bold text-on-surface-variant uppercase tracking-widest mb-2">Vigente desde</label>
               <input type="month" id="unidades-vigente-desde" class="px-3 py-2 border border-outline-variant rounded text-sm">
             </div>
-            <input type="file" id="input-excel-unidades" accept=".xlsx,.xls" class="block text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel-unidades" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
             <div id="preview-carga-unidades" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
               <p class="text-sm mb-3">Combinaciones distrito/categoría/tipo a cargar: <strong id="preview-filas-unidades" class="font-gordita-bold text-primary"></strong></p>
               <button onclick="confirmarCargaUnidadesAutorizadas()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y agregar vigencia</button>
             </div>
             <p id="estado-carga-unidades" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
+        <div id="config-sub-presupuesto" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el Excel de "Presupuesto" (columnas P&amp;L / Familia / Gasto / Negocio / Sucursal + 12 meses). Es un presupuesto anual único: cada carga <strong>reemplaza todo</strong> el presupuesto existente.</p>
+          <div id="dropzone-presupuesto" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel-presupuesto" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-presupuesto" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-3">Filas de presupuesto a cargar (ya transpuestas por mes): <strong id="preview-filas-presupuesto" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará por completo el presupuesto existente.</p>
+              <button onclick="confirmarCargaPresupuesto()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga-presupuesto" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
           </div>
         </div>
 
@@ -1223,14 +1251,18 @@
           <p id="pilar-flota-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"># Flota Activa</p>
             <h2 id="flota-kpi-activa" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades Faltantes vs. Autorizado</p>
-            <h2 id="flota-kpi-faltantes" class="font-gordita-bold text-2xl text-primary">-</h2>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Cobertura vs. Autorizado</p>
+            <h2 id="flota-kpi-cobertura" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Distritos con Déficit</p>
+            <h2 id="flota-kpi-distritos-deficit" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Alertas Activas</p>
@@ -1245,11 +1277,12 @@
               <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Real vs. Autorizado</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor faltante de unidades.</p>
+            <p class="text-xs text-on-surface-variant mb-1">Top 5 distritos con mayor desbalance de unidades.</p>
+            <p class="text-xs mb-3"><span id="flota-card-autorizado-resumen" class="font-gordita-bold text-error">-</span></p>
             <div style="height:130px;"><canvas id="flota-card-autorizado-chart"></canvas></div>
             <div class="mt-auto pt-4">
               <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
-                <span>Distrito</span><span class="text-right">Real / Autorizado</span>
+                <span>Distrito</span><span class="text-right">Faltante</span>
               </div>
               <div id="flota-card-autorizado-ranking" class="space-y-1"></div>
             </div>
@@ -1261,7 +1294,8 @@
               <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Composición nacional de la flota y alertas operativas.</p>
+            <p class="text-xs text-on-surface-variant mb-1">Composición nacional de la flota y alertas operativas.</p>
+            <p class="text-xs mb-3">Más alertas: <span id="flota-card-distrito-mas-alertas" class="font-gordita-bold text-primary">-</span></p>
             <div style="height:160px;"><canvas id="flota-card-composicion-chart"></canvas></div>
             <div class="mt-auto pt-4 space-y-2">
               <div class="flex items-center justify-between text-xs">
@@ -1281,7 +1315,8 @@
               <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Inventario</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Antigüedad, kilometraje, marcas y condición por distrito.</p>
+            <p class="text-xs text-on-surface-variant mb-1">Antigüedad, modelos y tipo de flota por distrito.</p>
+            <p class="text-xs mb-3">Flota más envejecida: <span id="flota-card-distrito-mas-viejo" class="font-gordita-bold text-primary">-</span></p>
             <div style="height:130px;"><canvas id="flota-card-antiguedad-chart"></canvas></div>
             <div class="mt-auto pt-4 flex items-end justify-between">
               <div>
@@ -1289,8 +1324,8 @@
                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">vehículos registrados</p>
               </div>
               <div class="text-right">
-                <p class="text-lg font-gordita-bold text-primary" id="flota-card-km-promedio">-</p>
-                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">km promedio</p>
+                <p class="text-sm font-gordita-bold text-primary" id="flota-card-modelo-comun">-</p>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">modelo más común</p>
               </div>
             </div>
           </button>
@@ -1383,60 +1418,55 @@
           </button>
           <div class="mb-6">
             <h2 class="font-gordita-bold text-2xl text-primary">Inventario</h2>
-            <p class="text-sm text-on-surface-variant mt-1">Condición de la flota activa: antigüedad, kilometraje, marcas y comparación por distrito.</p>
+            <p class="text-sm text-on-surface-variant mt-1">Qué tipo de flota tiene cada distrito: antigüedad y modelos. Clic en un distrito para ver su desglose completo por modelo.</p>
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades Activas</p>
+              <h2 id="flota-inv-kpi-total" class="font-gordita-bold text-xl text-primary">-</h2>
+            </div>
             <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
               <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Antigüedad Promedio</p>
               <h2 id="flota-inv-kpi-antiguedad" class="font-gordita-bold text-xl text-primary">-</h2>
             </div>
             <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
-              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Kilometraje Promedio</p>
-              <h2 id="flota-inv-kpi-km" class="font-gordita-bold text-xl text-primary">-</h2>
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Modelos Distintos</p>
+              <h2 id="flota-inv-kpi-modelos" class="font-gordita-bold text-xl text-primary">-</h2>
             </div>
             <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
-              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades +150K Km</p>
-              <h2 id="flota-inv-kpi-altokm" class="font-gordita-bold text-xl text-primary">-</h2>
-            </div>
-            <div class="bg-white p-5 border border-outline-variant rounded-xl shadow-sm">
-              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Con Kilometraje Reportado</p>
-              <h2 id="flota-inv-kpi-pctkm" class="font-gordita-bold text-xl text-primary">-</h2>
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Modelo Más Común</p>
+              <h2 id="flota-inv-kpi-modelo-comun" class="font-gordita-bold text-lg text-primary">-</h2>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-lg">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
             <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
               <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución por Antigüedad</h3>
               <p class="text-xs text-on-surface-variant mb-3">Unidades activas por años de modelo.</p>
-              <div style="height:220px;"><canvas id="flota-inv-grafica-antiguedad"></canvas></div>
+              <div style="height:240px;"><canvas id="flota-inv-grafica-antiguedad"></canvas></div>
             </section>
             <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución por Kilometraje</h3>
-              <p class="text-xs text-on-surface-variant mb-3">Unidades activas por rango de último kilometraje.</p>
-              <div style="height:220px;"><canvas id="flota-inv-grafica-kilometraje"></canvas></div>
-            </section>
-            <section class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Marcas</h3>
-              <p class="text-xs text-on-surface-variant mb-3">Composición de la flota activa por marca.</p>
-              <div style="height:220px;"><canvas id="flota-inv-grafica-marcas"></canvas></div>
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Modelos (Nacional)</h3>
+              <p class="text-xs text-on-surface-variant mb-3">Composición de la flota activa por modelo de vehículo.</p>
+              <div style="height:240px;"><canvas id="flota-inv-grafica-modelos"></canvas></div>
             </section>
           </div>
 
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
             <div class="px-6 py-4 border-b border-outline-variant">
-              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Condición de Flota por Distrito</h3>
-              <p class="text-xs text-on-surface-variant mt-1">Ordenado por mayor antigüedad promedio.</p>
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Flota por Distrito</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ordenado por mayor número de unidades. Clic en un distrito para ver su desglose por modelo.</p>
             </div>
-            <div style="max-height:420px; overflow-y:auto;">
+            <div style="max-height:440px; overflow-y:auto;">
               <table class="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant sticky top-0">
                     <th class="px-8 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Antigüedad Prom.</th>
-                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Km Promedio</th>
-                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades +150K Km</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Modelo Predominante</th>
+                    <th class="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody id="flota-inv-tabla-distrito-body" class="divide-y divide-outline-variant"></tbody>
@@ -1475,27 +1505,6 @@
         </div>
       </div>
 
-      <div class="vista" id="vista-pilar-capitalhumano">
-        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
-        </button>
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Capital Humano</h1>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">HeadCount</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Nómina Pagada</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Bono Pagado</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Rotación (Altas/Bajas)</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-        </div>
-        <div class="bg-white p-12 border border-outline-variant rounded-xl shadow-sm flex flex-col items-center text-center">
-          <span class="material-symbols-outlined text-brand-teal mb-3" style="font-size:40px;">database</span>
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Falta conectar la fuente de datos</h3>
-          <p class="text-sm text-on-surface-variant max-w-md">En cuanto compartas la base de HeadCount, nómina, bonos y movimientos de altas/bajas, esta vista se conecta con datos reales — el diseño y la navegación ya están listos.</p>
-        </div>
-      </div>
-
       <div class="vista" id="vista-pilar-presupuesto">
         <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
@@ -1503,16 +1512,214 @@
         <div class="mb-8">
           <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
           <h1 class="font-gordita-bold text-4xl text-primary mt-1">Presupuesto</h1>
+          <p id="pilar-presupuesto-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
         </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Presupuestado</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Real</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Variación</p><h2 class="font-gordita-bold text-2xl text-on-surface-variant">-</h2></div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-ingreso-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-ingreso-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-ingreso-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Gasto</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-gasto-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-gasto-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-gasto-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Utilidad</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestada</p><h2 id="presupuesto-kpi-utilidad-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-utilidad-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-utilidad-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
         </div>
+
+        <div id="presupuesto-areas-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <button onclick="abrirAreaPresupuesto('resumen')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">show_chart</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rolling Forecast</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Real ejecutado + proyección al cierre de año.</p>
+            <div style="height:130px;"><canvas id="presupuesto-card-ingreso-chart"></canvas></div>
+          </button>
+
+          <button onclick="abrirAreaPresupuesto('categoria')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">category</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Categoría</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Top 5 categorías con mayor variación vs. presupuesto.</p>
+            <div id="presupuesto-card-categoria-ranking" class="space-y-1"></div>
+          </button>
+
+          <button onclick="abrirAreaPresupuesto('distrito')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">location_on</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor variación de utilidad vs. presupuesto.</p>
+            <div id="presupuesto-card-distrito-ranking" class="space-y-1"></div>
+          </button>
+        </div>
+
+        <div id="presupuesto-area-resumen" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Rolling Forecast</h2>
+              <p id="presupuesto-forecast-nota" class="text-sm text-on-surface-variant mt-1">-</p>
+            </div>
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+              <button id="presupuesto-forecast-btn-mensual" onclick="cambiarVistaForecastPresupuesto('mensual')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Mensual</button>
+              <button id="presupuesto-forecast-btn-acumulado" onclick="cambiarVistaForecastPresupuesto('acumulado')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Acumulado</button>
+            </div>
+          </div>
+
+          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-4">Ingreso</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-ingreso-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-ingreso-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-ingreso-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-ingreso-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
+            </div>
+            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-ingreso"></canvas></div>
+            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
+            </div>
+          </section>
+
+          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-lg text-primary mb-4">Gasto</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-gasto-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-gasto-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-gasto-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-gasto-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
+            </div>
+            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-gasto"></canvas></div>
+            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
+            </div>
+          </section>
+        </div>
+
+        <div id="presupuesto-area-categoria" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Por Categoría</h2>
+              <p class="text-sm text-on-surface-variant mt-1">Clic en una categoría para ver el desglose por gasto y por distrito.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap" id="presupuesto-categoria-orden-botones">
+              <button onclick="cambiarOrdenPresupuestoCategoria('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Mayor desviación $</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('var_pct')" data-orden="var_pct" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor desviación %</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <div class="col-span-2">Categoría</div>
+              <div class="text-right">Presupuesto</div>
+              <div class="text-right">Real</div>
+              <div class="text-right">Variación</div>
+              <div class="text-right">Ejecutado</div>
+            </div>
+            <div id="presupuesto-tabla-categoria"></div>
+          </section>
+        </div>
+
+        <div id="presupuesto-area-distrito" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Por Distrito</h2>
+              <p class="text-sm text-on-surface-variant mt-1">Utilidad presupuestada vs. real por distrito (solo distritos operativos). Clic para ver el desglose por categoría.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap" id="presupuesto-distrito-orden-botones">
+              <button onclick="cambiarOrdenPresupuestoDistrito('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Peor variación</button>
+              <button onclick="cambiarOrdenPresupuestoDistrito('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto real</button>
+              <button onclick="cambiarOrdenPresupuestoDistrito('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <div class="col-span-2">Distrito</div>
+              <div class="text-right">Utilidad Ppto.</div>
+              <div class="text-right">Utilidad Real</div>
+              <div class="text-right">Variación</div>
+              <div class="text-right">Gasto Ejecutado</div>
+            </div>
+            <div id="presupuesto-tabla-distrito"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="vista" id="vista-pilar-capitalhumano">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Capital Humano</h1>
+          <p id="pilar-ch-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Personas Autorizadas (Total)</p>
+            <h2 id="ch-kpi-total" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Distritos con HC Autorizado</p>
+            <h2 id="ch-kpi-distritos" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Puestos Distintos</p>
+            <h2 id="ch-kpi-puestos" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+        </div>
+
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+          <div class="px-6 py-4 border-b border-outline-variant">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Personas Autorizadas por Distrito y Puesto</h3>
+            <p class="text-xs text-on-surface-variant mt-1">Vigencia aplicable al periodo activo.</p>
+          </div>
+          <div style="max-height:520px; overflow-y:auto; overflow-x:auto;">
+            <table class="w-full text-left border-collapse text-sm whitespace-nowrap">
+              <thead>
+                <tr id="ch-tabla-autorizado-head" class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant sticky top-0"></tr>
+              </thead>
+              <tbody id="ch-tabla-autorizado-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </div>
+        </section>
+
         <div class="bg-white p-12 border border-outline-variant rounded-xl shadow-sm flex flex-col items-center text-center">
-          <span class="material-symbols-outlined text-totalplay-cyan mb-3" style="font-size:40px;">database</span>
-          <h3 class="font-gordita-bold text-lg text-primary mb-1">Falta conectar la fuente de datos</h3>
-          <p class="text-sm text-on-surface-variant max-w-md">En cuanto tengamos el presupuesto por distrito/categoría, esta vista compara real vs. presupuestado — el diseño y la navegación ya están listos.</p>
+          <span class="material-symbols-outlined text-brand-teal mb-3" style="font-size:40px;">database</span>
+          <h3 class="font-gordita-bold text-lg text-primary mb-1">Falta el HeadCount real, nómina y bonos</h3>
+          <p class="text-sm text-on-surface-variant max-w-md">Por lo pronto esta vista muestra el HC Autorizado vigente. En cuanto compartas la base de HeadCount real, nómina, bonos y movimientos de altas/bajas, agregamos la comparación real vs. autorizado — igual que en Flota Vehicular.</p>
         </div>
       </div>
 
@@ -1654,6 +1861,52 @@
   </div>
 </div>
 
+<div id="modal-drilldown-flota-distrito" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Flota por modelo</p>
+        <h3 id="drilldown-flota-distrito-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownFlotaDistrito()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades</p>
+          <h4 id="drilldown-flota-distrito-kpi-unidades" class="font-gordita-bold text-lg text-primary">-</h4>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Antigüedad Prom.</p>
+          <h4 id="drilldown-flota-distrito-kpi-antiguedad" class="font-gordita-bold text-lg text-primary">-</h4>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Rango de Años</p>
+          <h4 id="drilldown-flota-distrito-kpi-rango" class="font-gordita-bold text-lg text-primary">-</h4>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Modelo Predominante</p>
+          <h4 id="drilldown-flota-distrito-kpi-predominante" class="font-gordita-bold text-lg text-primary">-</h4>
+        </div>
+      </div>
+      <div style="height:280px;"><canvas id="grafica-drilldown-flota-distrito"></canvas></div>
+      <table class="w-full text-left border-collapse text-sm mt-6">
+        <thead>
+          <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest">Modelo</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">% del Distrito</th>
+            <th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">Antigüedad Prom.</th>
+          </tr>
+        </thead>
+        <tbody id="drilldown-flota-distrito-body" class="divide-y divide-outline-variant"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://fnatpzeccnkurzqbhyfq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuYXRwemVjY25rdXJ6cWJoeWZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjExMjEsImV4cCI6MjA5ODkzNzEyMX0.Ucc_4EmEGMZuSAOjdK3Q0fvvXi9Mga0F7heAIrLSqaA';
@@ -1662,6 +1915,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let usuarioActual = null;
 let ultimaFechaConDatos = null;
 let modoPeriodoGlobal = 'mes';
+let rangoGlobalDesde = null;
+let rangoGlobalHasta = null;
 
 async function iniciarSesion() {
   const email = document.getElementById('login-email').value;
@@ -1706,6 +1961,7 @@ async function cargarSesion() {
     document.getElementById('config-tab-cargar').style.display = 'none';
     document.getElementById('config-tab-flota').style.display = 'none';
     document.getElementById('config-tab-unidades').style.display = 'none';
+    document.getElementById('config-tab-presupuesto').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   } else {
@@ -1757,7 +2013,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'flota', 'unidades', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'flota', 'unidades', 'presupuesto', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -2119,6 +2375,87 @@ async function confirmarCargaUnidadesAutorizadas() {
   document.getElementById('preview-carga-unidades').style.display = 'none';
 }
 
+let filasParaCargarPresupuesto = null;
+
+document.getElementById('input-excel-presupuesto').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: null });
+
+      const encabezado = filas[0] || [];
+      const columnasMes = [];
+      for (let c = 6; c <= 17; c++) {
+        const valorEncabezado = encabezado[c];
+        if (typeof valorEncabezado === 'number') {
+          columnasMes.push({ col: c, mesISO: fechaISODesdeCelda(valorEncabezado).slice(0, 7) + '-01' });
+        }
+      }
+      if (columnasMes.length === 0) {
+        throw new Error('No se detectaron columnas de mes (se esperaban fechas en las columnas 7 a 18).');
+      }
+
+      const combinaciones = [];
+      for (let i = 1; i < filas.length; i++) {
+        const fila = filas[i];
+        if (!fila) continue;
+        const tipoGastoCategoria = fila[0] || null;
+        const familia = fila[1] || null;
+        const gasto = fila[2] || null;
+        if (!tipoGastoCategoria && !familia && !gasto) continue;
+        const negocio = fila[3] != null ? String(fila[3]) : null;
+        const distrito = fila[4] || null;
+        columnasMes.forEach((m) => {
+          const monto = fila[m.col];
+          combinaciones.push({
+            tipo_gasto_categoria: tipoGastoCategoria,
+            familia,
+            gasto,
+            negocio,
+            distrito,
+            mes: m.mesISO,
+            monto: typeof monto === 'number' ? monto : 0,
+          });
+        });
+      }
+
+      filasParaCargarPresupuesto = combinaciones;
+      document.getElementById('preview-filas-presupuesto').textContent = combinaciones.length.toLocaleString('es-MX');
+      document.getElementById('preview-carga-presupuesto').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga-presupuesto').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaPresupuesto() {
+  const TAMANO_LOTE = 5000;
+  const total = filasParaCargarPresupuesto.length;
+  try {
+    for (let i = 0; i < total; i += TAMANO_LOTE) {
+      const lote = filasParaCargarPresupuesto.slice(i, i + TAMANO_LOTE);
+      document.getElementById('estado-carga-presupuesto').textContent = 'Cargando ' + Math.min(i + TAMANO_LOTE, total).toLocaleString('es-MX') + ' de ' + total.toLocaleString('es-MX') + '...';
+      const nombreRpc = i === 0 ? 'reemplazar_presupuesto' : 'agregar_lote_presupuesto';
+      const { error } = await supabaseClient.rpc(nombreRpc, { filas: lote });
+      if (error) {
+        document.getElementById('estado-carga-presupuesto').textContent = 'Error: ' + error.message;
+        return;
+      }
+    }
+  } catch (error) {
+    document.getElementById('estado-carga-presupuesto').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('presupuesto');
+  document.getElementById('estado-carga-presupuesto').textContent = 'Carga completada: ' + total.toLocaleString('es-MX') + ' filas.';
+  document.getElementById('preview-carga-presupuesto').style.display = 'none';
+}
+
 let glosarioActual = [];
 
 async function cargarGlosario() {
@@ -2176,11 +2513,29 @@ function calcularRangosPeriodo(modo, anioRef, mesRef) {
       comparacionYoY: { inicio: rangoDeMes(anioRef - 1, 0).inicio, fin: rangoDeMes(anioRef - 1, mesRef).fin },
     };
   }
+  if (modo === 'rango' && rangoGlobalDesde && rangoGlobalHasta) {
+    const numMeses = (rangoGlobalHasta.anio - rangoGlobalDesde.anio) * 12 + (rangoGlobalHasta.mes - rangoGlobalDesde.mes) + 1;
+    const finAnteriorBase = new Date(rangoGlobalDesde.anio, rangoGlobalDesde.mes - 1, 1);
+    const inicioAnteriorBase = new Date(rangoGlobalDesde.anio, rangoGlobalDesde.mes - numMeses, 1);
+    return {
+      actual: { inicio: rangoDeMes(rangoGlobalDesde.anio, rangoGlobalDesde.mes).inicio, fin: rangoDeMes(rangoGlobalHasta.anio, rangoGlobalHasta.mes).fin },
+      comparacionMoM: { inicio: rangoDeMes(inicioAnteriorBase.getFullYear(), inicioAnteriorBase.getMonth()).inicio, fin: rangoDeMes(finAnteriorBase.getFullYear(), finAnteriorBase.getMonth()).fin },
+      comparacionYoY: { inicio: rangoDeMes(rangoGlobalDesde.anio - 1, rangoGlobalDesde.mes).inicio, fin: rangoDeMes(rangoGlobalHasta.anio - 1, rangoGlobalHasta.mes).fin },
+    };
+  }
   return {
     actual: rangoDeMes(anioRef, mesRef),
     comparacionMoM: rangoDeMes(anioRef, mesRef - 1),
     comparacionYoY: rangoDeMes(anioRef - 1, mesRef),
   };
+}
+
+function textoPeriodoActivo(anioRef, mesRef) {
+  if (modoPeriodoGlobal === 'ytd') return 'YTD ' + anioRef;
+  if (modoPeriodoGlobal === 'rango' && rangoGlobalDesde && rangoGlobalHasta) {
+    return MESES_ABREV[rangoGlobalDesde.mes] + ' ' + rangoGlobalDesde.anio + ' – ' + MESES_ABREV[rangoGlobalHasta.mes] + ' ' + rangoGlobalHasta.anio;
+  }
+  return MESES_LARGOS[mesRef] + ' ' + anioRef;
 }
 
 async function obtenerUltimoMesConDatos() {
@@ -2243,6 +2598,43 @@ async function recargarVistaActiva() {
 
 async function cambiarModoPeriodoGlobal(modo) {
   modoPeriodoGlobal = modo;
+  document.getElementById('filtro-tiempo').style.display = modo === 'rango' ? 'none' : 'flex';
+  document.getElementById('filtro-rango').style.display = modo === 'rango' ? 'flex' : 'none';
+  if (modo === 'rango' && (!rangoGlobalDesde || !rangoGlobalHasta)) {
+    rangoGlobalDesde = { anio: mesGlobalSeleccionado.anio, mes: 0 };
+    rangoGlobalHasta = { anio: mesGlobalSeleccionado.anio, mes: mesGlobalSeleccionado.mes };
+    actualizarInputsRangoGlobal();
+  }
+  mostrarIndicadorCarga();
+  try {
+    if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
+      await renderizarDetalleDistrito();
+    } else {
+      await recargarVistaActiva();
+    }
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+function actualizarInputsRangoGlobal() {
+  document.getElementById('rango-global-desde').value = rangoGlobalDesde.anio + '-' + String(rangoGlobalDesde.mes + 1).padStart(2, '0');
+  document.getElementById('rango-global-hasta').value = rangoGlobalHasta.anio + '-' + String(rangoGlobalHasta.mes + 1).padStart(2, '0');
+}
+
+async function cambiarRangoGlobal() {
+  const desdeVal = document.getElementById('rango-global-desde').value;
+  const hastaVal = document.getElementById('rango-global-hasta').value;
+  if (!desdeVal || !hastaVal) return;
+  const [anioD, mesD] = desdeVal.split('-').map(Number);
+  const [anioH, mesH] = hastaVal.split('-').map(Number);
+  let desde = { anio: anioD, mes: mesD - 1 };
+  let hasta = { anio: anioH, mes: mesH - 1 };
+  const ordenInvertido = desde.anio > hasta.anio || (desde.anio === hasta.anio && desde.mes > hasta.mes);
+  if (ordenInvertido) { const tmp = desde; desde = hasta; hasta = tmp; }
+  rangoGlobalDesde = desde;
+  rangoGlobalHasta = hasta;
+  if (ordenInvertido) actualizarInputsRangoGlobal();
   mostrarIndicadorCarga();
   try {
     if (document.getElementById('vista-detalle-distrito').classList.contains('activa')) {
@@ -4305,9 +4697,9 @@ async function obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodo) {
   const filas = await obtenerTablaCompleta('folios_poliza');
   const mesCorte = claveMes(anioRef, mesRef);
   const filasVentana = filas.filter((f) => f.mes.slice(0, 7) <= mesCorte);
-  const filasPeriodo = modoPeriodo === 'ytd'
-    ? filasVentana.filter((f) => f.mes.slice(0, 4) === String(anioRef))
-    : filasVentana.filter((f) => f.mes.slice(0, 7) === mesCorte);
+  const rangoPeriodo = calcularRangosPeriodo(modoPeriodo, anioRef, mesRef);
+  const clavesPeriodo = clavesMesesEnRango(rangoPeriodo.actual);
+  const filasPeriodo = filasVentana.filter((f) => clavesPeriodo.includes(f.mes.slice(0, 7)));
 
   const porMes = {};
   filasVentana.forEach((f) => {
@@ -4507,12 +4899,13 @@ async function cargarOverview() {
   const finYTD = rangoDeMes(anioRef, mesRef).fin;
   const mesVigenteISO = claveMes(anioRef, mesRef) + '-01';
 
-  const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado, unidadesAutorizadas] = await Promise.all([
+  const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado, unidadesAutorizadas, presupuesto] = await Promise.all([
     obtenerFacturasEnRango(inicioYTD, finYTD, '*'),
     obtenerTablaCompleta('poliza_parametros'),
     obtenerTablaCompleta('multidistrito_bolsas'),
     obtenerTablaCompleta('hc_autorizado'),
     obtenerTablaCompleta('unidades_autorizadas'),
+    obtenerTablaCompleta('presupuesto'),
   ]);
 
   const distritosSet = new Set();
@@ -4590,7 +4983,7 @@ async function cargarOverview() {
     osPI, osRec, osMD, osTotalVigente, ingresoVigentePI, ingresoVigenteRec, ingresoVigenteMD,
     precioPromedioGeneral, alcancePromedio, distritosConPoliza,
     facturasYTD, gastoTotalYTD, kpisGasto,
-    utilidadYTD, margenYTD, unidadesAutorizadas,
+    utilidadYTD, margenYTD, unidadesAutorizadas, presupuesto,
   };
 
   const etiquetaPeriodo = 'Año en curso ' + anioRef + ' (Ene–' + MESES_LARGOS[mesRef] + ')' +
@@ -4674,7 +5067,7 @@ async function cargarOverview() {
 
   const flotaVehicular = await obtenerTablaCompleta('flota_vehicular');
   overviewDatos.flotaVehicular = flotaVehicular;
-  const resumenAutorizadoOv = calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesVigenteISO);
+  const resumenAutorizadoOv = calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesVigenteISO, glosarioMap);
   const faltanteTotalOv = Object.values(resumenAutorizadoOv).reduce((s, r) => s + Math.max(0, r.autorizado - r.real), 0);
   document.getElementById('ov-flota-kpi-faltantes').textContent = faltanteTotalOv.toLocaleString('es-MX');
   const ESTATUS_ATENCION = ['CORRALON', 'ROBO', 'ALTO COSTO', 'PERDIDA TOTAL', 'TALLER INTERNO', 'TALLER ASEGURADORA', 'SINIESTRO'];
@@ -4928,7 +5321,12 @@ function obtenerUnidadesAutorizadasVigentes(unidadesAutorizadas, mesISO) {
     .filter(Boolean);
 }
 
-function calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesISO) {
+function distritoDeVehiculoFlota(veh, glosarioMap) {
+  const entrada = (glosarioMap || {})[veh.sucursal];
+  return (entrada && entrada.sucursal_secundaria) || 'OTROS NEGOCIOS';
+}
+
+function calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesISO, glosarioMap) {
   const vigentes = obtenerUnidadesAutorizadasVigentes(unidadesAutorizadas, mesISO);
   const porDistrito = {};
 
@@ -4942,8 +5340,7 @@ function calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas
 
   (flotaVehicular || []).forEach((veh) => {
     if ((veh.clasificacion || '').toUpperCase() !== 'ACTIVO') return;
-    const distrito = veh.sucursal;
-    if (!distrito) return;
+    const distrito = distritoDeVehiculoFlota(veh, glosarioMap);
     const categoria = categorizarTipoPolizaFlota(veh.tipo_poliza);
     const tipoUnidad = esUnidadMoto(veh.modelo) ? 'MOTO' : 'AUTO';
     porDistrito[distrito] = porDistrito[distrito] || { real: 0, autorizado: 0, detalle: {} };
@@ -4963,7 +5360,7 @@ function formatoFechaCorta(fechaISO) {
 }
 
 function nombreCortoDistritoFlota(distrito) {
-  return (distrito || '').replace(/^CTA-TPI-(INT|MLT)-[A-Z]+\s/, '');
+  return (distrito || '').replace(/^CTA-TPI-[A-Z]+-[A-Z]+\s/, '');
 }
 
 function calcularAlertasFlotaPolizas(flotaVehicular) {
@@ -4982,7 +5379,7 @@ function calcularAlertasFlotaMantenimiento(flotaVehicular) {
     .sort((a, b) => new Date(a.fecha_compromiso) - new Date(b.fecha_compromiso));
 }
 
-function calcularSegmentacionInventarioFlota(flotaVehicular) {
+function calcularSegmentacionInventarioFlota(flotaVehicular, glosarioMap) {
   const anioActual = new Date().getFullYear();
   const activos = (flotaVehicular || []).filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO');
 
@@ -4992,72 +5389,69 @@ function calcularSegmentacionInventarioFlota(flotaVehicular) {
     { label: '6-8 años', min: 6, max: 8, valor: 0 },
     { label: '9+ años', min: 9, max: Infinity, valor: 0 },
   ];
-  const bucketsKm = [
-    { label: '<50K', min: 0, max: 50000, valor: 0 },
-    { label: '50K-100K', min: 50000, max: 100000, valor: 0 },
-    { label: '100K-150K', min: 100000, max: 150000, valor: 0 },
-    { label: '150K+', min: 150000, max: Infinity, valor: 0 },
-  ];
-  const marcasConteo = {};
+  const modelosConteo = {};
   const porDistrito = {};
 
-  let sumaAnios = 0, conteoAnios = 0, sumaKm = 0, conteoKm = 0, altoKmTotal = 0;
+  let sumaAnios = 0, conteoAnios = 0;
 
   activos.forEach((v) => {
-    const distrito = v.sucursal || 'Sin Clasificar';
-    porDistrito[distrito] = porDistrito[distrito] || { total: 0, sumaAnios: 0, conteoAnios: 0, sumaKm: 0, conteoKm: 0, altoKm: 0 };
+    const distrito = distritoDeVehiculoFlota(v, glosarioMap);
+    porDistrito[distrito] = porDistrito[distrito] || { total: 0, sumaAnios: 0, conteoAnios: 0, anioMin: null, anioMax: null, modelos: {} };
     porDistrito[distrito].total += 1;
 
+    const modelo = (v.modelo || 'Sin Dato').trim().toUpperCase();
+    modelosConteo[modelo] = (modelosConteo[modelo] || 0) + 1;
+    porDistrito[distrito].modelos[modelo] = porDistrito[distrito].modelos[modelo] || { valor: 0, sumaAnios: 0, conteoAnios: 0 };
+    porDistrito[distrito].modelos[modelo].valor += 1;
+
     if (v.anio) {
-      const antiguedad = anioActual - Number(v.anio);
+      const anioVehiculo = Number(v.anio);
+      const antiguedad = anioActual - anioVehiculo;
       sumaAnios += antiguedad;
       conteoAnios += 1;
       porDistrito[distrito].sumaAnios += antiguedad;
       porDistrito[distrito].conteoAnios += 1;
+      porDistrito[distrito].anioMin = porDistrito[distrito].anioMin === null ? anioVehiculo : Math.min(porDistrito[distrito].anioMin, anioVehiculo);
+      porDistrito[distrito].anioMax = porDistrito[distrito].anioMax === null ? anioVehiculo : Math.max(porDistrito[distrito].anioMax, anioVehiculo);
+      porDistrito[distrito].modelos[modelo].sumaAnios += antiguedad;
+      porDistrito[distrito].modelos[modelo].conteoAnios += 1;
       const bucket = bucketsAntiguedad.find((b) => antiguedad >= b.min && antiguedad <= b.max);
       if (bucket) bucket.valor += 1;
     }
-
-    if (v.ultimo_kilometraje !== null && v.ultimo_kilometraje !== undefined && v.ultimo_kilometraje !== '') {
-      const km = Number(v.ultimo_kilometraje);
-      sumaKm += km;
-      conteoKm += 1;
-      porDistrito[distrito].sumaKm += km;
-      porDistrito[distrito].conteoKm += 1;
-      if (km >= 150000) { altoKmTotal += 1; porDistrito[distrito].altoKm += 1; }
-      const bucket = bucketsKm.find((b) => km >= b.min && km < b.max);
-      if (bucket) bucket.valor += 1;
-    }
-
-    const marca = (v.marca || 'Sin Dato').trim().toUpperCase();
-    marcasConteo[marca] = (marcasConteo[marca] || 0) + 1;
   });
 
-  const topMarcas = Object.keys(marcasConteo)
-    .map((marca) => ({ marca, valor: marcasConteo[marca] }))
+  const topModelos = Object.keys(modelosConteo)
+    .map((modelo) => ({ modelo, valor: modelosConteo[modelo] }))
     .sort((a, b) => b.valor - a.valor)
-    .slice(0, 8);
+    .slice(0, 10);
 
   const distritos = Object.keys(porDistrito).map((distrito) => {
     const r = porDistrito[distrito];
+    const modeloPredominante = Object.keys(r.modelos).sort((a, b) => r.modelos[b].valor - r.modelos[a].valor)[0] || '—';
     return {
       distrito,
       total: r.total,
       antiguedadProm: r.conteoAnios > 0 ? r.sumaAnios / r.conteoAnios : null,
-      kmProm: r.conteoKm > 0 ? r.sumaKm / r.conteoKm : null,
-      altoKm: r.altoKm,
+      anioMin: r.anioMin,
+      anioMax: r.anioMax,
+      modeloPredominante,
+      modelos: Object.keys(r.modelos)
+        .map((modelo) => ({
+          modelo,
+          valor: r.modelos[modelo].valor,
+          antiguedadProm: r.modelos[modelo].conteoAnios > 0 ? r.modelos[modelo].sumaAnios / r.modelos[modelo].conteoAnios : null,
+        }))
+        .sort((a, b) => b.valor - a.valor),
     };
-  }).sort((a, b) => (b.antiguedadProm || 0) - (a.antiguedadProm || 0));
+  }).sort((a, b) => b.total - a.total);
 
   return {
     totalActivos: activos.length,
     antiguedadPromedio: conteoAnios > 0 ? sumaAnios / conteoAnios : null,
-    kmPromedio: conteoKm > 0 ? sumaKm / conteoKm : null,
-    altoKmTotal,
-    pctConKm: activos.length > 0 ? (conteoKm / activos.length) * 100 : 0,
+    modelosDistintos: Object.keys(modelosConteo).length,
+    modeloMasComun: topModelos[0] || null,
     bucketsAntiguedad,
-    bucketsKm,
-    topMarcas,
+    topModelos,
     distritos,
   };
 }
@@ -5094,18 +5488,26 @@ function cerrarAreaFlota() {
 
 async function renderizarFlotaTarjetasResumen() {
   const d = overviewDatos;
-  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO, d.glosarioMap);
 
-  const ranking = Object.keys(resumen)
-    .map((distrito) => ({ distrito, faltante: resumen[distrito].autorizado - resumen[distrito].real }))
-    .sort((a, b) => b.faltante - a.faltante)
-    .slice(0, 5);
+  const rankingCompleto = Object.keys(resumen)
+    .map((distrito) => ({ distrito, real: resumen[distrito].real, autorizado: resumen[distrito].autorizado, faltante: resumen[distrito].autorizado - resumen[distrito].real }))
+    .sort((a, b) => Math.abs(b.faltante) - Math.abs(a.faltante));
+  const ranking = rankingCompleto.slice(0, 5);
+
+  const distritosConDeficit = rankingCompleto.filter((r) => r.faltante > 0).length;
+  document.getElementById('flota-card-autorizado-resumen').textContent = distritosConDeficit + ' de ' + rankingCompleto.length + ' distritos con déficit';
+  const sumaReal = rankingCompleto.reduce((s, r) => s + r.real, 0);
+  const sumaAutorizado = rankingCompleto.reduce((s, r) => s + r.autorizado, 0);
+  const pctCobertura = sumaAutorizado > 0 ? (sumaReal / sumaAutorizado) * 100 : null;
+  document.getElementById('flota-kpi-cobertura').textContent = pctCobertura !== null ? pctCobertura.toFixed(0) + '%' : '—';
+  document.getElementById('flota-kpi-distritos-deficit').textContent = distritosConDeficit.toLocaleString('es-MX');
 
   document.getElementById('flota-card-autorizado-ranking').innerHTML = ranking.map((r) => {
     const nombreCorto = nombreCortoDistritoFlota(r.distrito);
     const texto = r.faltante > 0 ? ('Faltan ' + r.faltante) : (r.faltante < 0 ? ('Sobran ' + Math.abs(r.faltante)) : 'Completo');
     const clase = r.faltante > 0 ? 'text-error' : (r.faltante < 0 ? 'text-qiora-green' : 'text-on-surface-variant');
-    return `<div class="flex items-center justify-between text-xs py-1">
+    return `<div class="flex items-center justify-between text-xs py-1.5">
       <span class="font-gordita-bold truncate" title="${nombreCorto}">${nombreCorto}</span>
       <span class="${clase} font-gordita-bold shrink-0 ml-2">${texto}</span>
     </div>`;
@@ -5113,7 +5515,7 @@ async function renderizarFlotaTarjetasResumen() {
   renderizarGraficaBarraHorizontalConteo(
     'flota-card-autorizado-chart', 'graficaFlotaCardAutorizado',
     ranking.map((r) => nombreCortoDistritoFlota(r.distrito)),
-    ranking.map((r) => Math.max(0, r.faltante)),
+    ranking.map((r) => Math.abs(r.faltante)),
     '#1B4F72'
   );
 
@@ -5136,19 +5538,32 @@ async function renderizarFlotaTarjetasResumen() {
   document.getElementById('flota-card-mantenimiento-count').textContent = mantenimientos.length.toLocaleString('es-MX');
   document.getElementById('flota-card-inventario-total').textContent = (d.flotaVehicular || []).length.toLocaleString('es-MX');
 
-  const segInv = calcularSegmentacionInventarioFlota(d.flotaVehicular);
+  const alertasPorDistrito = {};
+  [...polizas, ...mantenimientos].forEach((v) => {
+    const distrito = distritoDeVehiculoFlota(v, d.glosarioMap);
+    alertasPorDistrito[distrito] = (alertasPorDistrito[distrito] || 0) + 1;
+  });
+  const distritoMasAlertas = Object.keys(alertasPorDistrito).sort((a, b) => alertasPorDistrito[b] - alertasPorDistrito[a])[0];
+  document.getElementById('flota-card-distrito-mas-alertas').textContent = distritoMasAlertas
+    ? nombreCortoDistritoFlota(distritoMasAlertas) + ' (' + alertasPorDistrito[distritoMasAlertas] + ')'
+    : '—';
+
+  const segInv = calcularSegmentacionInventarioFlota(d.flotaVehicular, d.glosarioMap);
   renderizarGraficaBarraConteo('flota-card-antiguedad-chart', 'graficaFlotaCardAntiguedad', segInv.bucketsAntiguedad.map((b) => b.label), segInv.bucketsAntiguedad.map((b) => b.valor), '#1B4F72');
-  document.getElementById('flota-card-km-promedio').textContent = segInv.kmPromedio !== null ? Math.round(segInv.kmPromedio).toLocaleString('es-MX') : '—';
+  document.getElementById('flota-card-modelo-comun').textContent = segInv.modeloMasComun ? segInv.modeloMasComun.modelo : '—';
+
+  const distritoMasViejo = segInv.distritos.filter((f) => f.antiguedadProm !== null).sort((a, b) => b.antiguedadProm - a.antiguedadProm)[0];
+  document.getElementById('flota-card-distrito-mas-viejo').textContent = distritoMasViejo
+    ? nombreCortoDistritoFlota(distritoMasViejo.distrito) + ' (' + distritoMasViejo.antiguedadProm.toFixed(1) + ' años)'
+    : '—';
 
   document.getElementById('flota-kpi-activa').textContent = (d.flotaVehicular || []).filter((v) => (v.clasificacion || '').toUpperCase() === 'ACTIVO').length.toLocaleString('es-MX');
-  const faltanteTotal = Object.values(resumen).reduce((s, r) => s + Math.max(0, r.autorizado - r.real), 0);
-  document.getElementById('flota-kpi-faltantes').textContent = faltanteTotal.toLocaleString('es-MX');
   document.getElementById('flota-kpi-alertas').textContent = (polizas.length + mantenimientos.length).toLocaleString('es-MX');
 }
 
 async function renderizarAreaFlotaAutorizado() {
   const d = overviewDatos;
-  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO, d.glosarioMap);
   const ranking = Object.keys(resumen).map((distrito) => {
     const r = resumen[distrito];
     return { distrito, real: r.real, autorizado: r.autorizado, faltante: r.autorizado - r.real };
@@ -5173,7 +5588,7 @@ async function renderizarAreaFlotaAutorizado() {
 
 async function abrirDrillDownFlotaAutorizado(distrito) {
   const d = overviewDatos;
-  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO);
+  const resumen = calcularRealVsAutorizadoPorDistrito(d.flotaVehicular, d.unidadesAutorizadas, d.mesVigenteISO, d.glosarioMap);
   const r = resumen[distrito] || { detalle: {} };
   document.getElementById('drilldown-flota-titulo').textContent = nombreCortoDistritoFlota(distrito);
 
@@ -5204,11 +5619,42 @@ function cerrarDrillDownFlotaAutorizado() {
   document.getElementById('modal-drilldown-flota').style.display = 'none';
 }
 
+function abrirDrillDownFlotaDistrito(distrito) {
+  const d = overviewDatos;
+  const seg = calcularSegmentacionInventarioFlota(d.flotaVehicular, d.glosarioMap);
+  const f = seg.distritos.find((r) => r.distrito === distrito);
+  const modelos = (f && f.modelos) || [];
+  const total = (f && f.total) || 0;
+
+  document.getElementById('drilldown-flota-distrito-titulo').textContent = distrito;
+  document.getElementById('drilldown-flota-distrito-kpi-unidades').textContent = total.toLocaleString('es-MX');
+  document.getElementById('drilldown-flota-distrito-kpi-antiguedad').textContent = f && f.antiguedadProm !== null ? f.antiguedadProm.toFixed(1) + ' años' : '—';
+  document.getElementById('drilldown-flota-distrito-kpi-rango').textContent = f && f.anioMin !== null ? f.anioMin + '–' + f.anioMax : '—';
+  document.getElementById('drilldown-flota-distrito-kpi-predominante').textContent = (f && f.modeloPredominante) || '—';
+
+  renderizarGraficaBarraHorizontalConteo(
+    'grafica-drilldown-flota-distrito', 'graficaDrilldownFlotaDistrito',
+    modelos.slice(0, 12).map((m) => m.modelo),
+    modelos.slice(0, 12).map((m) => m.valor),
+    '#1B4F72'
+  );
+
+  document.getElementById('drilldown-flota-distrito-body').innerHTML = modelos.map((m) =>
+    `<tr><td class="px-4 py-3 font-gordita-bold">${m.modelo}</td><td class="px-4 py-3 text-right">${m.valor.toLocaleString('es-MX')}</td><td class="px-4 py-3 text-right">${total > 0 ? ((m.valor / total) * 100).toFixed(1) + '%' : '—'}</td><td class="px-4 py-3 text-right">${m.antiguedadProm !== null ? m.antiguedadProm.toFixed(1) + ' años' : '—'}</td></tr>`
+  ).join('') || '<tr><td class="px-4 py-6 text-center text-on-surface-variant" colspan="4">Sin datos para este distrito.</td></tr>';
+
+  document.getElementById('modal-drilldown-flota-distrito').style.display = 'flex';
+}
+
+function cerrarDrillDownFlotaDistrito() {
+  document.getElementById('modal-drilldown-flota-distrito').style.display = 'none';
+}
+
 async function renderizarAreaFlotaDistrito() {
   const d = overviewDatos;
   const conteo = {};
   (d.flotaVehicular || []).forEach((v) => {
-    const distrito = v.sucursal || 'Sin Clasificar';
+    const distrito = distritoDeVehiculoFlota(v, d.glosarioMap);
     conteo[distrito] = conteo[distrito] || { ACTIVO: 0, BAJA: 0, INACTIVO: 0 };
     const clas = (v.clasificacion || '').toUpperCase();
     if (conteo[distrito][clas] !== undefined) conteo[distrito][clas] += 1;
@@ -5224,41 +5670,41 @@ async function renderizarAreaFlotaDistrito() {
 
   const polizas = calcularAlertasFlotaPolizas(d.flotaVehicular);
   document.getElementById('flota-alertas-polizas-body').innerHTML = polizas.map((v) =>
-    `<tr><td class="px-6 py-3">${v.sucursal || '—'}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_vencimiento_poliza)}</td></tr>`
+    `<tr><td class="px-6 py-3">${distritoDeVehiculoFlota(v, d.glosarioMap)}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_vencimiento_poliza)}</td></tr>`
   ).join('') || '<tr><td class="px-6 py-6 text-center text-on-surface-variant" colspan="3">Sin pólizas por vencer.</td></tr>';
 
   const mantenimientos = calcularAlertasFlotaMantenimiento(d.flotaVehicular);
   document.getElementById('flota-alertas-mantenimiento-body').innerHTML = mantenimientos.map((v) =>
-    `<tr><td class="px-6 py-3">${v.sucursal || '—'}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_compromiso)}</td></tr>`
+    `<tr><td class="px-6 py-3">${distritoDeVehiculoFlota(v, d.glosarioMap)}</td><td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td><td class="px-6 py-3 text-right">${formatoFechaCorta(v.fecha_compromiso)}</td></tr>`
   ).join('') || '<tr><td class="px-6 py-6 text-center text-on-surface-variant" colspan="3">Sin mantenimientos pendientes.</td></tr>';
 }
 
 async function renderizarAreaFlotaInventario() {
   const d = overviewDatos;
 
-  const seg = calcularSegmentacionInventarioFlota(d.flotaVehicular);
+  const seg = calcularSegmentacionInventarioFlota(d.flotaVehicular, d.glosarioMap);
+  document.getElementById('flota-inv-kpi-total').textContent = seg.totalActivos.toLocaleString('es-MX');
   document.getElementById('flota-inv-kpi-antiguedad').textContent = seg.antiguedadPromedio !== null ? seg.antiguedadPromedio.toFixed(1) + ' años' : '—';
-  document.getElementById('flota-inv-kpi-km').textContent = seg.kmPromedio !== null ? Math.round(seg.kmPromedio).toLocaleString('es-MX') + ' km' : '—';
-  document.getElementById('flota-inv-kpi-altokm').textContent = seg.altoKmTotal.toLocaleString('es-MX');
-  document.getElementById('flota-inv-kpi-pctkm').textContent = seg.pctConKm.toFixed(0) + '%';
+  document.getElementById('flota-inv-kpi-modelos').textContent = seg.modelosDistintos.toLocaleString('es-MX');
+  document.getElementById('flota-inv-kpi-modelo-comun').textContent = seg.modeloMasComun ? seg.modeloMasComun.modelo : '—';
 
   renderizarGraficaBarraConteo('flota-inv-grafica-antiguedad', 'graficaFlotaInvAntiguedad', seg.bucketsAntiguedad.map((b) => b.label), seg.bucketsAntiguedad.map((b) => b.valor), '#1B4F72');
-  renderizarGraficaBarraConteo('flota-inv-grafica-kilometraje', 'graficaFlotaInvKilometraje', seg.bucketsKm.map((b) => b.label), seg.bucketsKm.map((b) => b.valor), '#2E86C1');
-  renderizarGraficaBarraHorizontalConteo('flota-inv-grafica-marcas', 'graficaFlotaInvMarcas', seg.topMarcas.map((m) => m.marca), seg.topMarcas.map((m) => m.valor), '#85C1E9');
+  renderizarGraficaBarraHorizontalConteo('flota-inv-grafica-modelos', 'graficaFlotaInvModelos', seg.topModelos.map((m) => m.modelo), seg.topModelos.map((m) => m.valor), '#1B4F72');
 
-  document.getElementById('flota-inv-tabla-distrito-body').innerHTML = seg.distritos.map((f) =>
-    `<tr>
+  document.getElementById('flota-inv-tabla-distrito-body').innerHTML = seg.distritos.map((f) => {
+    const distritoEscapado = f.distrito.replace(/'/g, "\\'");
+    return `<tr class="cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="abrirDrillDownFlotaDistrito('${distritoEscapado}')">
       <td class="px-8 py-3 font-gordita-bold">${f.distrito}</td>
       <td class="px-6 py-3 text-right">${f.total.toLocaleString('es-MX')}</td>
       <td class="px-6 py-3 text-right">${f.antiguedadProm !== null ? f.antiguedadProm.toFixed(1) + ' años' : '—'}</td>
-      <td class="px-6 py-3 text-right">${f.kmProm !== null ? Math.round(f.kmProm).toLocaleString('es-MX') : '—'}</td>
-      <td class="px-6 py-3 text-right">${f.altoKm.toLocaleString('es-MX')}</td>
-    </tr>`
-  ).join('');
+      <td class="px-6 py-3">${f.modeloPredominante}</td>
+      <td class="px-6 py-3 text-right"><span class="material-symbols-outlined text-on-surface-variant/50 text-sm">chevron_right</span></td>
+    </tr>`;
+  }).join('');
 
   const selector = document.getElementById('flota-inventario-distrito');
   if (selector.options.length <= 1) {
-    const distritos = Array.from(new Set((d.flotaVehicular || []).map((v) => v.sucursal).filter(Boolean))).sort();
+    const distritos = Array.from(new Set((d.flotaVehicular || []).map((v) => distritoDeVehiculoFlota(v, d.glosarioMap)))).sort();
     distritos.forEach((distrito) => {
       const opcion = document.createElement('option');
       opcion.value = distrito;
@@ -5270,7 +5716,7 @@ async function renderizarAreaFlotaInventario() {
   const busqueda = normalizarTexto(document.getElementById('flota-inventario-buscar').value);
 
   const filas = (d.flotaVehicular || []).filter((v) => {
-    if (distritoFiltro && v.sucursal !== distritoFiltro) return false;
+    if (distritoFiltro && distritoDeVehiculoFlota(v, d.glosarioMap) !== distritoFiltro) return false;
     if (busqueda) {
       const texto = normalizarTexto([v.placa, v.empleado_asignado, v.marca, v.modelo].filter(Boolean).join(' '));
       if (!texto.includes(busqueda)) return false;
@@ -5281,7 +5727,7 @@ async function renderizarAreaFlotaInventario() {
   document.getElementById('flota-inventario-body').innerHTML = filas.slice(0, 500).map((v) =>
     `<tr>
       <td class="px-6 py-3 font-gordita-bold">${v.placa || '—'}</td>
-      <td class="px-6 py-3">${v.sucursal || '—'}</td>
+      <td class="px-6 py-3">${distritoDeVehiculoFlota(v, d.glosarioMap)}</td>
       <td class="px-6 py-3">${[v.marca, v.modelo].filter(Boolean).join(' / ') || '—'}</td>
       <td class="px-6 py-3 text-right">${v.anio || '—'}</td>
       <td class="px-6 py-3">${v.empleado_asignado || '—'}</td>
@@ -5975,6 +6421,7 @@ function renderizarGraficaBarraHorizontal(canvasId, refGrafica, etiquetas, datos
     options: {
       indexAxis: 'y',
       maintainAspectRatio: false,
+      layout: { padding: { right: 38 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -6066,6 +6513,7 @@ function renderizarGraficaBarraHorizontalConteo(canvasId, refGrafica, etiquetas,
     options: {
       indexAxis: 'y',
       maintainAspectRatio: false,
+      layout: { padding: { right: 34 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -6078,7 +6526,7 @@ function renderizarGraficaBarraHorizontalConteo(canvasId, refGrafica, etiquetas,
       },
       scales: {
         x: { display: false, beginAtZero: true },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 } } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 }, callback: function (v) { const l = this.getLabelForValue(v); return l.length > 18 ? l.slice(0, 17) + '…' : l; } } },
       },
     },
     plugins: [{
@@ -6361,9 +6809,852 @@ async function cargarPilarFlota() {
   if (flotaAreaActual) await abrirAreaFlota(flotaAreaActual);
 }
 
-async function cargarPilarCapitalHumano() {}
+function calcularPresupuestoAgregado(presupuesto, clavesMeses) {
+  let ingresoPresupuestado = 0;
+  let gastoPresupuestado = 0;
+  const porDistrito = {};
+  const porCategoria = {};
 
-async function cargarPilarPresupuesto() {}
+  (presupuesto || []).forEach((p) => {
+    if (!clavesMeses.includes((p.mes || '').slice(0, 7))) return;
+    const monto = Number(p.monto) || 0;
+    const categoria = p.tipo_gasto_categoria || 'SIN CATEGORIA';
+    const esIngreso = categoria === 'INGRESOS';
+    const distrito = p.distrito || 'SIN DISTRITO';
+    const gastoNombre = p.gasto || 'SIN GASTO';
+
+    if (esIngreso) {
+      ingresoPresupuestado += monto;
+    } else {
+      gastoPresupuestado += monto;
+      porCategoria[categoria] = porCategoria[categoria] || { monto: 0, gastos: {}, distritos: {} };
+      porCategoria[categoria].monto += monto;
+      porCategoria[categoria].gastos[gastoNombre] = porCategoria[categoria].gastos[gastoNombre] || { monto: 0, distritos: {} };
+      porCategoria[categoria].gastos[gastoNombre].monto += monto;
+      porCategoria[categoria].gastos[gastoNombre].distritos[distrito] = (porCategoria[categoria].gastos[gastoNombre].distritos[distrito] || 0) + monto;
+      porCategoria[categoria].distritos[distrito] = (porCategoria[categoria].distritos[distrito] || 0) + monto;
+    }
+
+    porDistrito[distrito] = porDistrito[distrito] || { ingreso: 0, gasto: 0, categorias: {} };
+    if (esIngreso) {
+      porDistrito[distrito].ingreso += monto;
+    } else {
+      porDistrito[distrito].gasto += monto;
+      porDistrito[distrito].categorias[categoria] = (porDistrito[distrito].categorias[categoria] || 0) + monto;
+    }
+  });
+
+  return { ingresoPresupuestado, gastoPresupuestado, porDistrito, porCategoria };
+}
+
+function agruparGastoRealPorCategoriaYDistrito(facturas, glosarioMap) {
+  const porDistrito = {};
+  const porCategoria = {};
+
+  (facturas || []).forEach((f) => {
+    const categoria = f.tipo_gasto_categoria || 'SIN CATEGORIA';
+    const monto = f.subtotal || 0;
+    const gastoNombre = f.gasto || 'SIN GASTO';
+    const entrada = glosarioMap[f.sucursal];
+    const distrito = (entrada && entrada.sucursal_secundaria) || 'SIN DISTRITO';
+
+    porCategoria[categoria] = porCategoria[categoria] || { monto: 0, gastos: {}, distritos: {} };
+    porCategoria[categoria].monto += monto;
+    porCategoria[categoria].gastos[gastoNombre] = porCategoria[categoria].gastos[gastoNombre] || { monto: 0, distritos: {} };
+    porCategoria[categoria].gastos[gastoNombre].monto += monto;
+    porCategoria[categoria].gastos[gastoNombre].distritos[distrito] = (porCategoria[categoria].gastos[gastoNombre].distritos[distrito] || 0) + monto;
+    porCategoria[categoria].distritos[distrito] = (porCategoria[categoria].distritos[distrito] || 0) + monto;
+
+    porDistrito[distrito] = porDistrito[distrito] || { gasto: 0, categorias: {} };
+    porDistrito[distrito].gasto += monto;
+    porDistrito[distrito].categorias[categoria] = (porDistrito[distrito].categorias[categoria] || 0) + monto;
+  });
+
+  return { porDistrito, porCategoria };
+}
+
+function calcularIngresoRealPorDistrito(d, clavesMeses) {
+  const porDistrito = {};
+  let total = 0;
+  d.listaDistritos.forEach((distrito) => {
+    const region = d.regionPorDistrito[distrito];
+    let suma = 0;
+    clavesMeses.forEach((clave) => {
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, clave + '-01');
+      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
+    });
+    porDistrito[distrito] = suma;
+    total += suma;
+  });
+  return { porDistrito, total };
+}
+
+function claseVariacion(variacion, positivoEsBueno) {
+  if (variacion === null || variacion === undefined) return 'text-on-surface-variant';
+  const bueno = positivoEsBueno ? variacion >= 0 : variacion <= 0;
+  return bueno ? 'text-qiora-green' : 'text-error';
+}
+
+function textoVariacionMoneda(variacion) {
+  const signo = variacion >= 0 ? '+' : '';
+  return signo + formatoCompacto(variacion);
+}
+
+function textoVariacionPct(pctValor) {
+  if (pctValor === null || pctValor === undefined) return '—';
+  const signo = pctValor >= 0 ? '+' : '';
+  return signo + pctValor.toFixed(1) + '%';
+}
+
+function calcularVariacionPctPresupuesto(real, ppto) {
+  if (!ppto) return null;
+  return ((real / ppto) - 1) * 100;
+}
+
+async function obtenerDatosPresupuestoActivo() {
+  const d = overviewDatos;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const clavesActivo = clavesMesesEnRango(rangos.actual);
+  const presAgg = calcularPresupuestoAgregado(d.presupuesto, clavesActivo);
+  const facturasActivo = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
+  const realAgg = agruparGastoRealPorCategoriaYDistrito(facturasActivo, d.glosarioMap);
+  const ingresoReal = calcularIngresoRealPorDistrito(d, clavesActivo);
+  const gastoRealTotal = Object.values(realAgg.porCategoria).reduce((s, c) => s + c.monto, 0);
+  return { presAgg, realAgg, ingresoReal, gastoRealTotal, clavesActivo, rangos };
+}
+
+let presupuestoAreaActual = null;
+let presupuestoDatosActuales = null;
+let presupuestoForecastVista = 'mensual';
+let presupuestoCategoriaOrden = 'var_abs';
+let presupuestoCategoriaAbierta = null;
+let presupuestoCategoriaTabActiva = {};
+let presupuestoGastoAbierto = null;
+let presupuestoDistritoOrden = 'var_abs';
+let presupuestoDistritoAbierto = null;
+
+async function cargarPilarPresupuesto() {
+  const d = overviewDatos;
+  document.getElementById('pilar-presupuesto-periodo').textContent = 'Periodo activo: ' + textoPeriodoActivo(d.anioRef, d.mesRef);
+
+  presupuestoDatosActuales = await obtenerDatosPresupuestoActivo();
+  const { presAgg, ingresoReal, gastoRealTotal } = presupuestoDatosActuales;
+
+  const ingresoPpto = presAgg.ingresoPresupuestado;
+  const ingresoRealTotal = ingresoReal.total;
+  const gastoPpto = presAgg.gastoPresupuestado;
+  const utilidadPpto = ingresoPpto - gastoPpto;
+  const utilidadReal = ingresoRealTotal - gastoRealTotal;
+
+  document.getElementById('presupuesto-kpi-ingreso-ppto').textContent = formatoCompacto(ingresoPpto);
+  document.getElementById('presupuesto-kpi-ingreso-real').textContent = formatoCompacto(ingresoRealTotal);
+  const varIngreso = ingresoRealTotal - ingresoPpto;
+  const elVarIngreso = document.getElementById('presupuesto-kpi-ingreso-var');
+  elVarIngreso.textContent = textoVariacionMoneda(varIngreso);
+  elVarIngreso.className = 'font-gordita-bold text-lg ' + claseVariacion(varIngreso, true);
+
+  document.getElementById('presupuesto-kpi-gasto-ppto').textContent = formatoCompacto(gastoPpto);
+  document.getElementById('presupuesto-kpi-gasto-real').textContent = formatoCompacto(gastoRealTotal);
+  const varGasto = gastoRealTotal - gastoPpto;
+  const elVarGasto = document.getElementById('presupuesto-kpi-gasto-var');
+  elVarGasto.textContent = textoVariacionMoneda(varGasto);
+  elVarGasto.className = 'font-gordita-bold text-lg ' + claseVariacion(varGasto, false);
+
+  document.getElementById('presupuesto-kpi-utilidad-ppto').textContent = formatoCompacto(utilidadPpto);
+  document.getElementById('presupuesto-kpi-utilidad-real').textContent = formatoCompacto(utilidadReal);
+  const varUtilidad = utilidadReal - utilidadPpto;
+  const elVarUtilidad = document.getElementById('presupuesto-kpi-utilidad-var');
+  elVarUtilidad.textContent = textoVariacionMoneda(varUtilidad);
+  elVarUtilidad.className = 'font-gordita-bold text-lg ' + claseVariacion(varUtilidad, true);
+
+  await renderizarPresupuestoTarjetasResumen();
+  if (presupuestoAreaActual) await abrirAreaPresupuesto(presupuestoAreaActual);
+}
+
+async function renderizarPresupuestoTarjetasResumen() {
+  const d = overviewDatos;
+  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+
+  const meses6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    meses6.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
+  }
+  const pptoIngresoPorMes = {};
+  (d.presupuesto || []).forEach((p) => {
+    if (p.tipo_gasto_categoria !== 'INGRESOS') return;
+    const clave = (p.mes || '').slice(0, 7);
+    pptoIngresoPorMes[clave] = (pptoIngresoPorMes[clave] || 0) + (Number(p.monto) || 0);
+  });
+  const ingresoRealPorMes = meses6.map((m) => {
+    let suma = 0;
+    d.listaDistritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
+      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
+    });
+    return suma;
+  });
+  renderizarGraficaTendenciaSimple('presupuesto-card-ingreso-chart', 'graficaPresupuestoCardIngreso', meses6.map((m) => m.etiqueta), [
+    { label: 'Presupuesto', datos: meses6.map((m) => pptoIngresoPorMes[m.clave] || 0), color: '#85C1E9' },
+    { label: 'Real', datos: ingresoRealPorMes, color: '#1B4F72' },
+  ]);
+
+  const categorias = Object.keys(presAgg.porCategoria).map((cat) => {
+    const ppto = presAgg.porCategoria[cat].monto;
+    const real = (realAgg.porCategoria[cat] && realAgg.porCategoria[cat].monto) || 0;
+    return { categoria: cat, variacion: real - ppto };
+  });
+  Object.keys(realAgg.porCategoria).forEach((cat) => {
+    if (!presAgg.porCategoria[cat]) {
+      categorias.push({ categoria: cat, variacion: realAgg.porCategoria[cat].monto });
+    }
+  });
+  const rankingCategoria = categorias.sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion)).slice(0, 5);
+  document.getElementById('presupuesto-card-categoria-ranking').innerHTML = rankingCategoria.map((c) => {
+    const clase = claseVariacion(c.variacion, false);
+    return `<div class="flex items-center justify-between text-xs py-1">
+      <span class="font-gordita-bold truncate" title="${c.categoria}">${c.categoria}</span>
+      <span class="${clase} font-gordita-bold shrink-0 ml-2">${textoVariacionMoneda(c.variacion)}</span>
+    </div>`;
+  }).join('');
+
+  const rankingDistrito = d.listaDistritos.map((distrito) => {
+    const gastoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].gasto) || 0;
+    const ingresoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].ingreso) || 0;
+    const gastoReal = (realAgg.porDistrito[distrito] && realAgg.porDistrito[distrito].gasto) || 0;
+    const ingresoRealD = ingresoReal.porDistrito[distrito] || 0;
+    const variacion = (ingresoRealD - gastoReal) - (ingresoPpto - gastoPpto);
+    return { distrito, variacion };
+  }).sort((a, b) => a.variacion - b.variacion).slice(0, 5);
+  document.getElementById('presupuesto-card-distrito-ranking').innerHTML = rankingDistrito.map((r) => {
+    const nombreCorto = nombreCortoDistritoFlota(r.distrito);
+    const clase = claseVariacion(r.variacion, true);
+    return `<div class="flex items-center justify-between text-xs py-1">
+      <span class="font-gordita-bold truncate" title="${nombreCorto}">${nombreCorto}</span>
+      <span class="${clase} font-gordita-bold shrink-0 ml-2">${textoVariacionMoneda(r.variacion)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function abrirAreaPresupuesto(area) {
+  presupuestoAreaActual = area;
+  document.getElementById('presupuesto-areas-grid').style.display = 'none';
+  ['resumen', 'categoria', 'distrito'].forEach((a) => {
+    document.getElementById('presupuesto-area-' + a).style.display = a === area ? '' : 'none';
+  });
+  mostrarIndicadorCarga();
+  try {
+    if (area === 'resumen') {
+      await renderizarAreaPresupuestoResumen();
+    } else if (area === 'categoria') {
+      await renderizarAreaPresupuestoCategoria();
+    } else if (area === 'distrito') {
+      await renderizarAreaPresupuestoDistrito();
+    }
+  } finally {
+    ocultarIndicadorCarga();
+  }
+}
+
+function cerrarAreaPresupuesto() {
+  presupuestoAreaActual = null;
+  presupuestoCategoriaAbierta = null;
+  presupuestoGastoAbierto = null;
+  presupuestoDistritoAbierto = null;
+  document.getElementById('presupuesto-areas-grid').style.display = '';
+  ['resumen', 'categoria', 'distrito'].forEach((a) => {
+    document.getElementById('presupuesto-area-' + a).style.display = 'none';
+  });
+}
+
+function cambiarVistaForecastPresupuesto(vista) {
+  presupuestoForecastVista = vista;
+  const btnMensual = document.getElementById('presupuesto-forecast-btn-mensual');
+  const btnAcumulado = document.getElementById('presupuesto-forecast-btn-acumulado');
+  btnMensual.classList.toggle('bg-primary', vista === 'mensual');
+  btnMensual.classList.toggle('text-on-primary', vista === 'mensual');
+  btnMensual.classList.toggle('text-on-surface-variant', vista !== 'mensual');
+  btnAcumulado.classList.toggle('bg-primary', vista === 'acumulado');
+  btnAcumulado.classList.toggle('text-on-primary', vista === 'acumulado');
+  btnAcumulado.classList.toggle('text-on-surface-variant', vista !== 'acumulado');
+  renderizarAreaPresupuestoResumen();
+}
+
+async function renderizarAreaPresupuestoResumen() {
+  const d = overviewDatos;
+  const anioRef = d.anioRef;
+  const mesRef = d.mesRef;
+
+  const meses12 = [];
+  for (let m = 0; m <= 11; m++) meses12.push({ clave: claveMes(anioRef, m), etiqueta: etiquetaMesCorta(anioRef, m), cerrado: m <= mesRef });
+
+  document.getElementById('presupuesto-forecast-nota').textContent =
+    'Ene–' + MESES_LARGOS[mesRef] + ' = real ejecutado' + (mesRef < 11 ? ' · ' + MESES_LARGOS[mesRef + 1] + '–Dic = presupuesto proyectado' : ' · año completo ya cerrado');
+
+  const pptoIngresoPorMes = {};
+  const pptoGastoPorMes = {};
+  (d.presupuesto || []).forEach((p) => {
+    const clave = (p.mes || '').slice(0, 7);
+    const monto = Number(p.monto) || 0;
+    if (p.tipo_gasto_categoria === 'INGRESOS') {
+      pptoIngresoPorMes[clave] = (pptoIngresoPorMes[clave] || 0) + monto;
+    } else {
+      pptoGastoPorMes[clave] = (pptoGastoPorMes[clave] || 0) + monto;
+    }
+  });
+
+  const ingresoRealPorMes = meses12.map((m) => {
+    if (!m.cerrado) return 0;
+    let suma = 0;
+    d.listaDistritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
+      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
+    });
+    return suma;
+  });
+
+  const inicioAnio = rangoDeMes(anioRef, 0).inicio;
+  const finCerrado = rangoDeMes(anioRef, mesRef).fin;
+  const facturasCerradas = await obtenerFacturasEnRango(inicioAnio, finCerrado, 'subtotal, fecha_pago');
+  const gastoRealPorMesMap = {};
+  facturasCerradas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    gastoRealPorMesMap[clave] = (gastoRealPorMesMap[clave] || 0) + (f.subtotal || 0);
+  });
+  const gastoRealPorMes = meses12.map((m) => (m.cerrado ? (gastoRealPorMesMap[m.clave] || 0) : 0));
+
+  const pptoIngresoArr = meses12.map((m) => pptoIngresoPorMes[m.clave] || 0);
+  const pptoGastoArr = meses12.map((m) => pptoGastoPorMes[m.clave] || 0);
+
+  renderizarGraficaForecastPresupuesto('presupuesto-forecast-grafica-ingreso', 'graficaPresupuestoForecastIngreso', meses12, ingresoRealPorMes, pptoIngresoArr);
+  renderizarGraficaForecastPresupuesto('presupuesto-forecast-grafica-gasto', 'graficaPresupuestoForecastGasto', meses12, gastoRealPorMes, pptoGastoArr);
+
+  const realIngresoTotal = ingresoRealPorMes.reduce((s, v) => s + v, 0);
+  const pptoIngresoAnual = pptoIngresoArr.reduce((s, v) => s + v, 0);
+  const proyeccionIngresoRestante = meses12.filter((m) => !m.cerrado).reduce((s, m, i) => s + (pptoIngresoPorMes[m.clave] || 0), 0);
+  const forecastIngreso = realIngresoTotal + proyeccionIngresoRestante;
+  const varIngresoForecast = forecastIngreso - pptoIngresoAnual;
+
+  document.getElementById('presupuesto-forecast-ingreso-real').textContent = formatoCompacto(realIngresoTotal);
+  document.getElementById('presupuesto-forecast-ingreso-proyeccion').textContent = formatoCompacto(proyeccionIngresoRestante);
+  document.getElementById('presupuesto-forecast-ingreso-total').textContent = formatoCompacto(forecastIngreso);
+  const elVarIngresoF = document.getElementById('presupuesto-forecast-ingreso-var');
+  elVarIngresoF.textContent = 'vs. Ppto ' + formatoCompacto(pptoIngresoAnual) + ' · ' + textoVariacionMoneda(varIngresoForecast);
+  elVarIngresoF.className = 'text-xs font-gordita-bold mt-0.5 ' + claseVariacion(varIngresoForecast, true);
+
+  const realGastoTotal = gastoRealPorMes.reduce((s, v) => s + v, 0);
+  const pptoGastoAnual = pptoGastoArr.reduce((s, v) => s + v, 0);
+  const proyeccionGastoRestante = meses12.filter((m) => !m.cerrado).reduce((s, m) => s + (pptoGastoPorMes[m.clave] || 0), 0);
+  const forecastGasto = realGastoTotal + proyeccionGastoRestante;
+  const varGastoForecast = forecastGasto - pptoGastoAnual;
+
+  document.getElementById('presupuesto-forecast-gasto-real').textContent = formatoCompacto(realGastoTotal);
+  document.getElementById('presupuesto-forecast-gasto-proyeccion').textContent = formatoCompacto(proyeccionGastoRestante);
+  document.getElementById('presupuesto-forecast-gasto-total').textContent = formatoCompacto(forecastGasto);
+  const elVarGastoF = document.getElementById('presupuesto-forecast-gasto-var');
+  elVarGastoF.textContent = 'vs. Ppto ' + formatoCompacto(pptoGastoAnual) + ' · ' + textoVariacionMoneda(varGastoForecast);
+  elVarGastoF.className = 'text-xs font-gordita-bold mt-0.5 ' + claseVariacion(varGastoForecast, false);
+}
+
+function renderizarGraficaForecastPresupuesto(canvasId, refGrafica, meses12, realPorMes, pptoPorMes) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const etiquetas = meses12.map((m) => m.etiqueta);
+  let realSerie, proyectadoSerie, pptoLinea;
+
+  if (presupuestoForecastVista === 'mensual') {
+    realSerie = meses12.map((m, i) => (m.cerrado ? realPorMes[i] : null));
+    proyectadoSerie = meses12.map((m, i) => (m.cerrado ? null : pptoPorMes[i]));
+    pptoLinea = pptoPorMes.slice();
+  } else {
+    let acumReal = 0, acumProy = 0, acumPpto = 0;
+    realSerie = []; proyectadoSerie = []; pptoLinea = [];
+    meses12.forEach((m, i) => {
+      acumPpto += pptoPorMes[i];
+      pptoLinea.push(acumPpto);
+      if (m.cerrado) {
+        acumReal += realPorMes[i];
+        realSerie.push(acumReal);
+        proyectadoSerie.push(null);
+      } else {
+        acumProy += pptoPorMes[i];
+        realSerie.push(null);
+        proyectadoSerie.push(acumReal + acumProy);
+      }
+    });
+  }
+
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { label: 'Real', data: realSerie, backgroundColor: '#1B4F72', borderRadius: 4, stack: 's', maxBarThickness: 32 },
+        { label: 'Proyectado', data: proyectadoSerie, backgroundColor: '#85C1E9', borderRadius: 4, stack: 's', maxBarThickness: 32 },
+        { type: 'line', label: 'Presupuesto', data: pptoLinea, borderColor: '#5a5a5a', borderWidth: 2, borderDash: [4, 3], pointRadius: 2, pointBackgroundColor: '#5a5a5a', fill: false, tension: 0 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 32 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => item.dataset.label + ': ' + formatoMoneda(item.parsed.y) },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+        y: { display: false, beginAtZero: true },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasForecastPresupuesto',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const metaReal = chart.getDatasetMeta(0);
+        const metaProy = chart.getDatasetMeta(1);
+        const metaLinea = chart.getDatasetMeta(2);
+        const datosReal = chart.data.datasets[0].data;
+        const datosProy = chart.data.datasets[1].data;
+        const datosLinea = chart.data.datasets[2].data;
+        const ALTURA_MINIMA_DENTRO = 18;
+
+        for (let i = 0; i < datosReal.length; i++) {
+          const esReal = datosReal[i] !== null && datosReal[i] !== undefined;
+          const valor = esReal ? datosReal[i] : datosProy[i];
+          const barra = esReal ? metaReal.data[i] : metaProy.data[i];
+          if (valor === null || valor === undefined || !barra) continue;
+          const texto = formatoCompacto(valor);
+          ctxDibujo.save();
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          const anchoTexto = ctxDibujo.measureText(texto).width;
+          const padX = 6, altoBadge = 16;
+          const anchoBadge = anchoTexto + padX * 2;
+          const xBadge = barra.x - anchoBadge / 2;
+          const altura = Math.abs(barra.base - barra.y);
+          ctxDibujo.textAlign = 'center';
+          if (altura >= ALTURA_MINIMA_DENTRO) {
+            const yCentro = (barra.y + barra.base) / 2;
+            ctxDibujo.fillStyle = 'rgba(0,0,0,0.22)';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(xBadge, yCentro - altoBadge / 2, anchoBadge, altoBadge, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#ffffff';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(texto, barra.x, yCentro);
+          } else {
+            const yBadge = barra.y - 6 - altoBadge;
+            ctxDibujo.fillStyle = 'rgba(27,79,114,0.14)';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(xBadge, yBadge, anchoBadge, altoBadge, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#1b1b1b';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(texto, barra.x, yBadge + altoBadge / 2);
+          }
+          ctxDibujo.restore();
+        }
+
+        metaLinea.data.forEach((punto, i) => {
+          const valor = datosLinea[i];
+          if (valor === null || valor === undefined) return;
+          const texto = formatoCompacto(valor);
+          ctxDibujo.save();
+          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+          const anchoTexto = ctxDibujo.measureText(texto).width;
+          const padX = 5, altoBadge = 14;
+          const anchoBadge = anchoTexto + padX * 2;
+          const xBadge = punto.x - anchoBadge / 2;
+          const yBadge = punto.y - 10 - altoBadge;
+          ctxDibujo.fillStyle = 'rgba(255,255,255,0.9)';
+          ctxDibujo.beginPath();
+          ctxDibujo.roundRect(xBadge, yBadge, anchoBadge, altoBadge, 4);
+          ctxDibujo.fill();
+          ctxDibujo.strokeStyle = '#8a8a8a';
+          ctxDibujo.lineWidth = 1;
+          ctxDibujo.stroke();
+          ctxDibujo.fillStyle = '#1b1b1b';
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(texto, punto.x, yBadge + altoBadge / 2);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
+}
+
+function cambiarOrdenPresupuestoCategoria(orden) {
+  presupuestoCategoriaOrden = orden;
+  document.querySelectorAll('#presupuesto-categoria-orden-botones button').forEach((btn) => {
+    const activo = btn.dataset.orden === orden;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('border-primary', activo);
+    btn.classList.toggle('border-outline-variant', !activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  presupuestoCategoriaAbierta = null;
+  presupuestoGastoAbierto = null;
+  construirTablaPresupuestoCategoria();
+}
+
+async function renderizarAreaPresupuestoCategoria() {
+  construirTablaPresupuestoCategoria();
+}
+
+function construirTablaPresupuestoCategoria() {
+  const { presAgg, realAgg } = presupuestoDatosActuales;
+  const categoriasSet = new Set([...Object.keys(presAgg.porCategoria), ...Object.keys(realAgg.porCategoria)]);
+  let filas = Array.from(categoriasSet).map((cat) => {
+    const ppto = (presAgg.porCategoria[cat] && presAgg.porCategoria[cat].monto) || 0;
+    const real = (realAgg.porCategoria[cat] && realAgg.porCategoria[cat].monto) || 0;
+    const variacion = real - ppto;
+    const variacionPct = calcularVariacionPctPresupuesto(real, ppto);
+    return { categoria: cat, ppto, real, variacion, variacionPct };
+  });
+
+  if (presupuestoCategoriaOrden === 'var_abs') filas.sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion));
+  else if (presupuestoCategoriaOrden === 'var_pct') filas.sort((a, b) => Math.abs(b.variacionPct || 0) - Math.abs(a.variacionPct || 0));
+  else if (presupuestoCategoriaOrden === 'real') filas.sort((a, b) => b.real - a.real);
+  else filas.sort((a, b) => a.categoria.localeCompare(b.categoria));
+
+  document.getElementById('presupuesto-tabla-categoria').innerHTML = filas.map((f) => {
+    const clase = claseVariacion(f.variacion, false);
+    const ejecutado = f.ppto > 0 ? (f.real / f.ppto) * 100 : (f.real > 0 ? 100 : 0);
+    const abierta = presupuestoCategoriaAbierta === f.categoria;
+    const catEscapada = f.categoria.replace(/'/g, "\\'");
+    return `<div class="border-b border-outline-variant last:border-b-0">
+      <div class="grid grid-cols-6 gap-2 px-6 py-3 items-center cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="alternarCategoriaPresupuesto('${catEscapada}')">
+        <div class="col-span-2 flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-on-surface-variant text-sm shrink-0 transition-transform" style="${abierta ? 'transform:rotate(90deg);' : ''}">chevron_right</span>
+          <span class="text-xs font-gordita-bold truncate" title="${f.categoria}">${f.categoria}</span>
+        </div>
+        <div class="text-right text-xs">${formatoCompacto(f.ppto)}</div>
+        <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.real)}</div>
+        <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+        <div class="text-right">
+          <div class="h-1 bg-surface-container rounded-full overflow-hidden mb-0.5"><div class="h-full rounded-full ${ejecutado > 100 ? 'bg-error' : 'bg-op-pi'}" style="width:${Math.min(ejecutado, 100)}%;"></div></div>
+          <span class="text-[10px] text-on-surface-variant">${ejecutado.toFixed(0)}%</span>
+        </div>
+      </div>
+      ${abierta ? construirDrillCategoriaPresupuesto(f.categoria) : ''}
+    </div>`;
+  }).join('') || '<div class="px-6 py-8 text-center text-sm text-on-surface-variant">Sin datos.</div>';
+}
+
+function alternarCategoriaPresupuesto(categoria) {
+  presupuestoCategoriaAbierta = presupuestoCategoriaAbierta === categoria ? null : categoria;
+  presupuestoGastoAbierto = null;
+  construirTablaPresupuestoCategoria();
+}
+
+function construirDrillCategoriaPresupuesto(categoria) {
+  const tabActiva = presupuestoCategoriaTabActiva[categoria] || 'gasto';
+  const catEscapada = categoria.replace(/'/g, "\\'");
+  return `<div class="bg-surface-container-low px-6 py-4">
+    <div class="flex gap-4 border-b border-outline-variant mb-3">
+      <button class="pb-2 text-xs font-gordita-bold transition-colors ${tabActiva === 'gasto' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-variant'}" onclick="event.stopPropagation();cambiarTabCategoriaPresupuesto('${catEscapada}', 'gasto')">Por Gasto</button>
+      <button class="pb-2 text-xs font-gordita-bold transition-colors ${tabActiva === 'distrito' ? 'text-primary border-b-2 border-primary' : 'text-on-surface-variant'}" onclick="event.stopPropagation();cambiarTabCategoriaPresupuesto('${catEscapada}', 'distrito')">Por Distrito</button>
+    </div>
+    <div onclick="event.stopPropagation()">
+      ${tabActiva === 'gasto' ? construirTabGastoPresupuesto(categoria) : construirTabDistritoPresupuesto(categoria)}
+    </div>
+  </div>`;
+}
+
+function cambiarTabCategoriaPresupuesto(categoria, tab) {
+  presupuestoCategoriaTabActiva[categoria] = tab;
+  presupuestoGastoAbierto = null;
+  construirTablaPresupuestoCategoria();
+}
+
+function construirTabGastoPresupuesto(categoria) {
+  const { presAgg, realAgg } = presupuestoDatosActuales;
+  const pptoGastos = (presAgg.porCategoria[categoria] && presAgg.porCategoria[categoria].gastos) || {};
+  const realGastos = (realAgg.porCategoria[categoria] && realAgg.porCategoria[categoria].gastos) || {};
+  const gastosSet = new Set([...Object.keys(pptoGastos), ...Object.keys(realGastos)]);
+
+  const filas = Array.from(gastosSet).map((gasto) => {
+    const ppto = (pptoGastos[gasto] && pptoGastos[gasto].monto) || 0;
+    const real = (realGastos[gasto] && realGastos[gasto].monto) || 0;
+    return { gasto, ppto, real, variacion: real - ppto };
+  }).sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion));
+
+  if (!filas.length) return '<p class="text-xs text-on-surface-variant py-2">Sin desglose disponible.</p>';
+
+  let html = `<div class="grid grid-cols-4 gap-2 px-2 py-2 text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+      <div>Gasto</div><div class="text-right">Presupuesto</div><div class="text-right">Real</div><div class="text-right">Variación</div>
+    </div>`;
+
+  html += filas.map((f) => {
+    const clase = claseVariacion(f.variacion, false);
+    const claveGasto = categoria + '__' + f.gasto;
+    const tieneDistrito = (realGastos[f.gasto] && Object.keys(realGastos[f.gasto].distritos || {}).length > 0);
+    const abierto = presupuestoGastoAbierto === claveGasto;
+    const gastoEscapado = f.gasto.replace(/'/g, "\\'");
+    const catEscapada = categoria.replace(/'/g, "\\'");
+    return `<div>
+      <div class="grid grid-cols-4 gap-2 px-2 py-2 items-center ${tieneDistrito ? 'cursor-pointer hover:bg-white' : ''} transition-colors" ${tieneDistrito ? `onclick="alternarGastoPresupuesto('${catEscapada}', '${gastoEscapado}')"` : ''}>
+        <div class="text-xs font-gordita-bold flex items-center gap-1 min-w-0"><span class="truncate">${f.gasto}</span>${tieneDistrito ? '<span class="material-symbols-outlined text-on-surface-variant shrink-0" style="font-size:14px;' + (abierto ? 'transform:rotate(180deg);' : '') + '">expand_more</span>' : ''}</div>
+        <div class="text-right text-xs">${formatoCompacto(f.ppto)}</div>
+        <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.real)}</div>
+        <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+      </div>
+      ${abierto ? construirSubpanelDistritoGasto(categoria, f.gasto) : ''}
+    </div>`;
+  }).join('');
+
+  return html;
+}
+
+function alternarGastoPresupuesto(categoria, gasto) {
+  const clave = categoria + '__' + gasto;
+  presupuestoGastoAbierto = presupuestoGastoAbierto === clave ? null : clave;
+  construirTablaPresupuestoCategoria();
+}
+
+function construirSubpanelDistritoGasto(categoria, gasto) {
+  const { realAgg } = presupuestoDatosActuales;
+  const realGastos = (realAgg.porCategoria[categoria] && realAgg.porCategoria[categoria].gastos) || {};
+  const distritos = (realGastos[gasto] && realGastos[gasto].distritos) || {};
+  const entradas = Object.keys(distritos).map((dist) => ({ distrito: dist, monto: distritos[dist] })).sort((a, b) => b.monto - a.monto);
+  const total = entradas.reduce((s, e) => s + e.monto, 0);
+  if (!entradas.length) return '<p class="text-[11px] text-on-surface-variant py-2 pl-2">Sin datos de distrito (real).</p>';
+  return `<div class="pl-2 py-2 space-y-1.5">
+    <p class="text-[9px] text-on-surface-variant uppercase tracking-widest mb-1">Distribución real por distrito</p>
+    ${entradas.map((e) => {
+      const pctValor = total > 0 ? (e.monto / total) * 100 : 0;
+      const nombreCorto = nombreCortoDistritoFlota(e.distrito);
+      return `<div class="flex items-center gap-2">
+        <span class="text-[10px] text-on-surface-variant w-40 truncate shrink-0" title="${nombreCorto}">${nombreCorto}</span>
+        <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full rounded-full bg-op-pi" style="width:${pctValor}%;"></div></div>
+        <span class="text-[10px] font-gordita-bold w-16 text-right shrink-0">${formatoCompacto(e.monto)}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function construirTabDistritoPresupuesto(categoria) {
+  const { presAgg, realAgg } = presupuestoDatosActuales;
+  const pptoDistritos = (presAgg.porCategoria[categoria] && presAgg.porCategoria[categoria].distritos) || {};
+  const realDistritos = (realAgg.porCategoria[categoria] && realAgg.porCategoria[categoria].distritos) || {};
+  const distritosSet = new Set([...Object.keys(pptoDistritos), ...Object.keys(realDistritos)]);
+
+  const filas = Array.from(distritosSet).map((dist) => {
+    const ppto = pptoDistritos[dist] || 0;
+    const real = realDistritos[dist] || 0;
+    return { distrito: dist, ppto, real, variacion: real - ppto };
+  }).sort((a, b) => b.real - a.real);
+
+  if (!filas.length) return '<p class="text-xs text-on-surface-variant py-2">Sin desglose disponible.</p>';
+
+  let html = `<div class="grid grid-cols-4 gap-2 px-2 py-2 text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+      <div>Distrito</div><div class="text-right">Presupuesto</div><div class="text-right">Real</div><div class="text-right">Variación</div>
+    </div>`;
+
+  html += filas.map((f) => {
+    const clase = claseVariacion(f.variacion, false);
+    return `<div class="grid grid-cols-4 gap-2 px-2 py-2 items-center">
+      <div class="text-xs font-gordita-bold truncate" title="${f.distrito}">${nombreCortoDistritoFlota(f.distrito)}</div>
+      <div class="text-right text-xs">${formatoCompacto(f.ppto)}</div>
+      <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.real)}</div>
+      <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+    </div>`;
+  }).join('');
+
+  return html;
+}
+
+function cambiarOrdenPresupuestoDistrito(orden) {
+  presupuestoDistritoOrden = orden;
+  document.querySelectorAll('#presupuesto-distrito-orden-botones button').forEach((btn) => {
+    const activo = btn.dataset.orden === orden;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('border-primary', activo);
+    btn.classList.toggle('border-outline-variant', !activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  presupuestoDistritoAbierto = null;
+  construirTablaPresupuestoDistrito();
+}
+
+async function renderizarAreaPresupuestoDistrito() {
+  construirTablaPresupuestoDistrito();
+}
+
+function construirTablaPresupuestoDistrito() {
+  const d = overviewDatos;
+  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
+
+  let filas = d.listaDistritos.map((distrito) => {
+    const gastoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].gasto) || 0;
+    const ingresoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].ingreso) || 0;
+    const gastoReal = (realAgg.porDistrito[distrito] && realAgg.porDistrito[distrito].gasto) || 0;
+    const ingresoRealD = ingresoReal.porDistrito[distrito] || 0;
+    const utilidadPpto = ingresoPpto - gastoPpto;
+    const utilidadReal = ingresoRealD - gastoReal;
+    const ejecutado = gastoPpto > 0 ? (gastoReal / gastoPpto) * 100 : (gastoReal > 0 ? 100 : 0);
+    return { distrito, utilidadPpto, utilidadReal, gastoReal, variacion: utilidadReal - utilidadPpto, ejecutado };
+  });
+
+  if (presupuestoDistritoOrden === 'var_abs') filas.sort((a, b) => a.variacion - b.variacion);
+  else if (presupuestoDistritoOrden === 'real') filas.sort((a, b) => b.gastoReal - a.gastoReal);
+  else filas.sort((a, b) => nombreCortoDistritoFlota(a.distrito).localeCompare(nombreCortoDistritoFlota(b.distrito)));
+
+  document.getElementById('presupuesto-tabla-distrito').innerHTML = filas.map((f) => {
+    const clase = claseVariacion(f.variacion, true);
+    const abierta = presupuestoDistritoAbierto === f.distrito;
+    const nombreCorto = nombreCortoDistritoFlota(f.distrito);
+    const distritoEscapado = f.distrito.replace(/'/g, "\\'");
+    return `<div class="border-b border-outline-variant last:border-b-0">
+      <div class="grid grid-cols-6 gap-2 px-6 py-3 items-center cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="alternarDistritoPresupuesto('${distritoEscapado}')">
+        <div class="col-span-2 flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-on-surface-variant text-sm shrink-0 transition-transform" style="${abierta ? 'transform:rotate(90deg);' : ''}">chevron_right</span>
+          <span class="text-xs font-gordita-bold truncate" title="${f.distrito}">${nombreCorto}</span>
+        </div>
+        <div class="text-right text-xs">${formatoCompacto(f.utilidadPpto)}</div>
+        <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.utilidadReal)}</div>
+        <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+        <div class="text-right">
+          <div class="h-1 bg-surface-container rounded-full overflow-hidden mb-0.5"><div class="h-full rounded-full ${f.ejecutado > 100 ? 'bg-error' : 'bg-op-pi'}" style="width:${Math.min(f.ejecutado, 100)}%;"></div></div>
+          <span class="text-[10px] text-on-surface-variant">${f.ejecutado.toFixed(0)}%</span>
+        </div>
+      </div>
+      ${abierta ? construirDrillDistritoPresupuesto(f.distrito) : ''}
+    </div>`;
+  }).join('') || '<div class="px-6 py-8 text-center text-sm text-on-surface-variant">Sin datos.</div>';
+}
+
+function alternarDistritoPresupuesto(distrito) {
+  presupuestoDistritoAbierto = presupuestoDistritoAbierto === distrito ? null : distrito;
+  construirTablaPresupuestoDistrito();
+}
+
+function construirDrillDistritoPresupuesto(distrito) {
+  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
+  const ingresoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].ingreso) || 0;
+  const ingresoRealD = ingresoReal.porDistrito[distrito] || 0;
+
+  const pptoCategorias = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].categorias) || {};
+  const realCategorias = (realAgg.porDistrito[distrito] && realAgg.porDistrito[distrito].categorias) || {};
+  const categoriasSet = new Set([...Object.keys(pptoCategorias), ...Object.keys(realCategorias)]);
+
+  const filas = Array.from(categoriasSet).map((cat) => {
+    const ppto = pptoCategorias[cat] || 0;
+    const real = realCategorias[cat] || 0;
+    return { categoria: cat, ppto, real, variacion: real - ppto };
+  }).sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion));
+
+  const filasHtml = filas.map((f) => {
+    const clase = claseVariacion(f.variacion, false);
+    return `<div class="grid grid-cols-4 gap-2 px-2 py-2 items-center">
+      <div class="text-xs font-gordita-bold truncate" title="${f.categoria}">${f.categoria}</div>
+      <div class="text-right text-xs">${formatoCompacto(f.ppto)}</div>
+      <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.real)}</div>
+      <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+    </div>`;
+  }).join('') || '<p class="text-xs text-on-surface-variant py-2">Sin desglose disponible.</p>';
+
+  return `<div class="bg-surface-container-low px-6 py-4" onclick="event.stopPropagation()">
+    <div class="flex items-center gap-6 mb-3 text-xs">
+      <span class="text-on-surface-variant">Ingreso Ppto./Real: <strong class="text-primary">${formatoCompacto(ingresoPpto)} / ${formatoCompacto(ingresoRealD)}</strong></span>
+    </div>
+    <div class="grid grid-cols-4 gap-2 px-2 py-2 text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+      <div>Categoría</div><div class="text-right">Presupuesto</div><div class="text-right">Real</div><div class="text-right">Variación</div>
+    </div>
+    ${filasHtml}
+  </div>`;
+}
+
+function obtenerHcAutorizadoVigente(hcAutorizado, mesISO) {
+  const grupos = {};
+  (hcAutorizado || []).forEach((h) => {
+    const clave = h.distrito + '|' + h.puesto;
+    grupos[clave] = grupos[clave] || [];
+    grupos[clave].push(h);
+  });
+  return Object.values(grupos)
+    .map((registros) => Calc.obtenerParametroVigente(registros, mesISO))
+    .filter(Boolean);
+}
+
+async function cargarPilarCapitalHumano() {
+  const d = overviewDatos;
+  document.getElementById('pilar-ch-periodo').textContent = 'Vigente al ' + MESES_LARGOS[d.mesRef] + ' ' + d.anioRef;
+
+  const vigentes = obtenerHcAutorizadoVigente(d.datosIngresos.hcAutorizado, d.mesVigenteISO);
+  const puestos = Array.from(new Set(vigentes.map((v) => v.puesto))).sort();
+  const distritos = Array.from(new Set(vigentes.map((v) => v.distrito))).sort();
+
+  const matriz = {};
+  distritos.forEach((distrito) => { matriz[distrito] = {}; });
+  let totalGeneral = 0;
+  vigentes.forEach((v) => {
+    matriz[v.distrito][v.puesto] = (matriz[v.distrito][v.puesto] || 0) + v.personas_autorizadas;
+    totalGeneral += v.personas_autorizadas;
+  });
+
+  document.getElementById('ch-kpi-total').textContent = totalGeneral.toLocaleString('es-MX');
+  document.getElementById('ch-kpi-distritos').textContent = distritos.length.toLocaleString('es-MX');
+  document.getElementById('ch-kpi-puestos').textContent = puestos.length.toLocaleString('es-MX');
+
+  document.getElementById('ch-tabla-autorizado-head').innerHTML =
+    '<th class="px-8 py-3 font-gordita-bold uppercase tracking-widest">Distrito</th>' +
+    puestos.map((p) => `<th class="px-4 py-3 font-gordita-bold uppercase tracking-widest text-right">${p}</th>`).join('') +
+    '<th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Total</th>';
+
+  document.getElementById('ch-tabla-autorizado-body').innerHTML = distritos.map((distrito) => {
+    const totalDistrito = puestos.reduce((s, p) => s + (matriz[distrito][p] || 0), 0);
+    return '<tr><td class="px-8 py-3 font-gordita-bold">' + nombreCortoDistritoFlota(distrito) + '</td>' +
+      puestos.map((p) => `<td class="px-4 py-3 text-right">${matriz[distrito][p] ? matriz[distrito][p].toLocaleString('es-MX') : '—'}</td>`).join('') +
+      `<td class="px-6 py-3 text-right font-gordita-bold">${totalDistrito.toLocaleString('es-MX')}</td></tr>`;
+  }).join('');
+}
+
+function configurarDropzone(dropzoneId, inputId) {
+  const zona = document.getElementById(dropzoneId);
+  const input = document.getElementById(inputId);
+  if (!zona || !input) return;
+
+  zona.addEventListener('dragover', (evento) => {
+    evento.preventDefault();
+    zona.classList.add('border-primary', 'bg-primary/5');
+  });
+
+  zona.addEventListener('dragleave', (evento) => {
+    if (!zona.contains(evento.relatedTarget)) {
+      zona.classList.remove('border-primary', 'bg-primary/5');
+    }
+  });
+
+  zona.addEventListener('drop', (evento) => {
+    evento.preventDefault();
+    zona.classList.remove('border-primary', 'bg-primary/5');
+    const archivos = evento.dataTransfer.files;
+    if (archivos.length > 0) {
+      input.files = archivos;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+}
+
+configurarDropzone('dropzone-cargar', 'input-excel');
+configurarDropzone('dropzone-flota', 'input-excel-flota');
+configurarDropzone('dropzone-unidades', 'input-excel-unidades');
+configurarDropzone('dropzone-presupuesto', 'input-excel-presupuesto');
 
 cargarSesion();
 </script>
