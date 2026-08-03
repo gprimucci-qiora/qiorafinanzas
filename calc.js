@@ -43,10 +43,17 @@
     });
   }
 
-  function calcularProrrateo(facturas, glosarioMap) {
+  // Guadalajara es su propia "región" en el glosario solo por el tamaño del distrito, pero para
+  // efectos de bolsas de Gasto Operativo regionales, Occidente ya le da servicio — se tratan como
+  // la misma región (a diferencia de bolsaMultidistritoDeRegion, aquí no hay caso especial para NORTE).
+  function regionGastoOperativo(region) {
+    return region === 'GUADALAJARA' ? 'OCCIDENTE' : region;
+  }
+
+  function calcularProrrateo(facturas, glosarioMap, foliosPlantaInternaPorDistrito) {
+    const folios = foliosPlantaInternaPorDistrito || {};
     const distritos = new Set();
     const costoDirecto = {};
-    const folios = {};
     const bolsas = {};
 
     for (const raw of facturas) {
@@ -55,7 +62,6 @@
         const distrito = f.sucursal_secundaria;
         distritos.add(distrito);
         costoDirecto[distrito] = (costoDirecto[distrito] || 0) + (f.monto || 0);
-        folios[distrito] = (folios[distrito] || 0) + 1;
       } else if (f.tipo_gasto === 'GASTOS OPERATIVOS') {
         const entrada = glosarioMap[f.sucursal];
         const region = entrada ? entrada.region : null;
@@ -71,10 +77,11 @@
 
     for (const sucursalBolsa in bolsas) {
       const bolsa = bolsas[sucursalBolsa];
-      const esNacional = !bolsa.region || bolsa.region === 'NACIONAL';
+      const regionBolsa = regionGastoOperativo(bolsa.region);
+      const esNacional = !regionBolsa || regionBolsa === 'NACIONAL';
       const scope = esNacional
         ? distritoList
-        : distritoList.filter((d) => glosarioMap[d] && glosarioMap[d].region === bolsa.region);
+        : distritoList.filter((d) => glosarioMap[d] && regionGastoOperativo(glosarioMap[d].region) === regionBolsa);
       const totalFoliosScope = scope.reduce((sum, d) => sum + (folios[d] || 0), 0);
       if (totalFoliosScope === 0) continue;
       for (const d of scope) {
@@ -105,6 +112,7 @@
 
     for (const raw of facturas) {
       const f = clasificarFactura(raw, glosarioMap);
+      if (f.tipo_gasto === 'EXCLUIDO') continue;
       const monto = f.monto || 0;
       totalPagado += monto;
       if (f.tipo_gasto === 'COSTOS DIRECTOS') costoDirecto += monto;
@@ -227,13 +235,13 @@
     };
   }
 
-  function calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO) {
+  function calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO, foliosPlantaInternaPorDistrito) {
     const clasificadas = facturasDelMes.map((f) => clasificarFactura(f, glosarioMap));
     const totalCD = clasificadas
       .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === distrito)
       .reduce((s, f) => s + (f.monto || 0), 0);
 
-    const prorrateo = calcularProrrateo(facturasDelMes, glosarioMap);
+    const prorrateo = calcularProrrateo(facturasDelMes, glosarioMap, foliosPlantaInternaPorDistrito);
     const entradaProrrateo = prorrateo.distritos.find((d) => d.distrito === distrito);
     const totalGO = entradaProrrateo ? entradaProrrateo.gastoOperativoAsignado : 0;
 
@@ -263,6 +271,7 @@
     computeVentana,
     clasificarFactura,
     calcularProrrateo,
+    regionGastoOperativo,
     calcularKPIs,
     calcularVariacionPct,
     agruparPorFamiliaGasto,

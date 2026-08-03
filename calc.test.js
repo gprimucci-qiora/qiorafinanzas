@@ -58,7 +58,7 @@ test('clasificarFactura usa subtotal como monto, ignorando el monto original (co
   assert.strictEqual(result.monto, 100);
 });
 
-test('calcularProrrateo reparte una bolsa nacional entre todos los distritos por folios', () => {
+test('calcularProrrateo reparte una bolsa nacional entre todos los distritos por folios de Planta Interna', () => {
   const glosarioMap = {
     'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
     'DIST-B': { region: 'ORIENTE', sucursal_secundaria: 'DIST-B', tipo_gasto: 'COSTOS DIRECTOS' },
@@ -66,20 +66,19 @@ test('calcularProrrateo reparte una bolsa nacional entre todos los distritos por
   };
   const facturas = [
     { sucursal: 'DIST-A', subtotal: 100 },
-    { sucursal: 'DIST-A', subtotal: 100 },
-    { sucursal: 'DIST-A', subtotal: 100 },
     { sucursal: 'DIST-B', subtotal: 200 },
     { sucursal: 'BOLSA-NACIONAL', subtotal: 400 },
   ];
-  const result = Calc.calcularProrrateo(facturas, glosarioMap);
+  const foliosPI = { 'DIST-A': 3, 'DIST-B': 1 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
   const distB = result.distritos.find((d) => d.distrito === 'DIST-B');
-  // DIST-A tiene 3 folios de 4 totales -> 300 de la bolsa; DIST-B tiene 1 de 4 -> 100
+  // DIST-A tiene 3 folios PI de 4 totales -> 300 de la bolsa; DIST-B tiene 1 de 4 -> 100
   assert.strictEqual(distA.folios, 3);
   assert.strictEqual(distB.folios, 1);
   assert.strictEqual(distA.gastoOperativoAsignado, 300);
   assert.strictEqual(distB.gastoOperativoAsignado, 100);
-  assert.strictEqual(distA.totalProrrateado, 300 + 300);
+  assert.strictEqual(distA.totalProrrateado, 100 + 300);
   assert.strictEqual(result.gastoOperativoBolsaTotal, 400);
 });
 
@@ -94,29 +93,95 @@ test('calcularProrrateo reparte una bolsa regional solo entre distritos de esa r
     { sucursal: 'DIST-B', subtotal: 100 },
     { sucursal: 'BOLSA-BAJIO', subtotal: 500 },
   ];
-  const result = Calc.calcularProrrateo(facturas, glosarioMap);
+  const foliosPI = { 'DIST-A': 5, 'DIST-B': 5 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
   const distB = result.distritos.find((d) => d.distrito === 'DIST-B');
   // La bolsa de Bajío solo toca a DIST-A (único distrito de Bajío); DIST-B no recibe nada
+  // aunque tenga los mismos folios PI, porque está en otra región.
   assert.strictEqual(distA.gastoOperativoAsignado, 500);
   assert.strictEqual(distB.gastoOperativoAsignado, 0);
 });
 
-test('calcularProrrateo cuenta folios como número de renglones, no de FACTURA distinta', () => {
-  const glosarioMap = {
-    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
-  };
-  const facturas = [
-    { sucursal: 'DIST-A', subtotal: 100, factura: null },
-    { sucursal: 'DIST-A', subtotal: 100, factura: null },
-    { sucursal: 'DIST-A', subtotal: 100, factura: 'F-1' },
-  ];
-  const result = Calc.calcularProrrateo(facturas, glosarioMap);
-  const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
-  assert.strictEqual(distA.folios, 3);
+test('regionGastoOperativo trata Guadalajara como Occidente (Occidente ya le da servicio)', () => {
+  assert.strictEqual(Calc.regionGastoOperativo('GUADALAJARA'), 'OCCIDENTE');
+  assert.strictEqual(Calc.regionGastoOperativo('OCCIDENTE'), 'OCCIDENTE');
+  assert.strictEqual(Calc.regionGastoOperativo('BAJIO'), 'BAJIO');
+  assert.strictEqual(Calc.regionGastoOperativo(null), null);
 });
 
-test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos con folios en el periodo', () => {
+test('calcularProrrateo mezcla distritos de Guadalajara con la bolsa regional de Occidente', () => {
+  const glosarioMap = {
+    'DIST-GDL': { region: 'GUADALAJARA', sucursal_secundaria: 'DIST-GDL', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-OCC': { region: 'OCCIDENTE', sucursal_secundaria: 'DIST-OCC', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-BAJIO': { region: 'BAJIO', sucursal_secundaria: 'DIST-BAJIO', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-OCCIDENTE': { region: 'OCCIDENTE', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-GDL', subtotal: 100 },
+    { sucursal: 'DIST-OCC', subtotal: 100 },
+    { sucursal: 'DIST-BAJIO', subtotal: 100 },
+    { sucursal: 'BOLSA-OCCIDENTE', subtotal: 400 },
+  ];
+  const foliosPI = { 'DIST-GDL': 1, 'DIST-OCC': 1, 'DIST-BAJIO': 1 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
+  const distGdl = result.distritos.find((d) => d.distrito === 'DIST-GDL');
+  const distOcc = result.distritos.find((d) => d.distrito === 'DIST-OCC');
+  const distBajio = result.distritos.find((d) => d.distrito === 'DIST-BAJIO');
+  // DIST-GDL (región GUADALAJARA) participa en la bolsa de OCCIDENTE como si fuera de esa región;
+  // se reparte 50/50 con DIST-OCC. DIST-BAJIO (otra región real) no recibe nada.
+  assert.strictEqual(distGdl.gastoOperativoAsignado, 200);
+  assert.strictEqual(distOcc.gastoOperativoAsignado, 200);
+  assert.strictEqual(distBajio.gastoOperativoAsignado, 0);
+});
+
+test('calcularProrrateo también junta una bolsa regional cuya sucursal está etiquetada Guadalajara con Occidente', () => {
+  const glosarioMap = {
+    'DIST-GDL': { region: 'GUADALAJARA', sucursal_secundaria: 'DIST-GDL', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-OCC': { region: 'OCCIDENTE', sucursal_secundaria: 'DIST-OCC', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-GDL': { region: 'GUADALAJARA', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-GDL', subtotal: 100 },
+    { sucursal: 'DIST-OCC', subtotal: 100 },
+    { sucursal: 'BOLSA-GDL', subtotal: 300 },
+  ];
+  const foliosPI = { 'DIST-GDL': 1, 'DIST-OCC': 2 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
+  const distGdl = result.distritos.find((d) => d.distrito === 'DIST-GDL');
+  const distOcc = result.distritos.find((d) => d.distrito === 'DIST-OCC');
+  // Una bolsa etiquetada como región GUADALAJARA también se reparte con los distritos de OCCIDENTE.
+  assert.strictEqual(distGdl.gastoOperativoAsignado, 100); // 1/3 de 300
+  assert.strictEqual(distOcc.gastoOperativoAsignado, 200); // 2/3 de 300
+});
+
+test('calcularProrrateo usa el mapa de folios de Planta Interna provisto como peso, no cuenta renglones de factura', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-B': { region: 'BAJIO', sucursal_secundaria: 'DIST-B', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-BAJIO': { region: 'BAJIO', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    // DIST-A tiene 5 renglones de factura, DIST-B solo 1 — si el peso viniera
+    // de contar renglones, DIST-A se llevaría casi toda la bolsa.
+    { sucursal: 'DIST-A', subtotal: 20 },
+    { sucursal: 'DIST-A', subtotal: 20 },
+    { sucursal: 'DIST-A', subtotal: 20 },
+    { sucursal: 'DIST-A', subtotal: 20 },
+    { sucursal: 'DIST-A', subtotal: 20 },
+    { sucursal: 'DIST-B', subtotal: 100 },
+    { sucursal: 'BOLSA-BAJIO', subtotal: 1000 },
+  ];
+  // Pero el peso real es folios de Planta Interna: DIST-A=1, DIST-B=1 -> 50/50.
+  const foliosPI = { 'DIST-A': 1, 'DIST-B': 1 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
+  const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
+  const distB = result.distritos.find((d) => d.distrito === 'DIST-B');
+  assert.strictEqual(distA.gastoOperativoAsignado, 500);
+  assert.strictEqual(distB.gastoOperativoAsignado, 500);
+});
+
+test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos con folios PI en el periodo', () => {
   const glosarioMap = {
     'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
     'BOLSA-ORIENTE': { region: 'ORIENTE', tipo_gasto: 'GASTOS OPERATIVOS' },
@@ -125,13 +190,29 @@ test('calcularProrrateo no lanza error si una bolsa regional no tiene distritos 
     { sucursal: 'DIST-A', subtotal: 100 },
     { sucursal: 'BOLSA-ORIENTE', subtotal: 500 },
   ];
-  const result = Calc.calcularProrrateo(facturas, glosarioMap);
+  const foliosPI = { 'DIST-A': 5 };
+  const result = Calc.calcularProrrateo(facturas, glosarioMap, foliosPI);
   const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
-  // No district in ORIENTE appeared in this period's direct-cost invoices,
-  // so BOLSA-ORIENTE's scope has 0 total folios: it must be skipped, not
-  // crash or produce NaN, and DIST-A (a different region) must stay untouched.
+  // Ningún distrito de ORIENTE aparece en las facturas de costo directo de este periodo,
+  // así que el scope de BOLSA-ORIENTE no tiene distritos: se debe saltar sin
+  // tronar ni producir NaN, y DIST-A (otra región) debe quedar intacto.
   assert.strictEqual(distA.gastoOperativoAsignado, 0);
   assert.strictEqual(result.gastoOperativoBolsaTotal, 500);
+});
+
+test('calcularProrrateo no asigna nada si no se provee el mapa de folios de Planta Interna', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'BOLSA-NACIONAL': { region: 'NACIONAL', tipo_gasto: 'GASTOS OPERATIVOS' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-A', subtotal: 100 },
+    { sucursal: 'BOLSA-NACIONAL', subtotal: 400 },
+  ];
+  const result = Calc.calcularProrrateo(facturas, glosarioMap);
+  const distA = result.distritos.find((d) => d.distrito === 'DIST-A');
+  assert.strictEqual(distA.gastoOperativoAsignado, 0);
+  assert.strictEqual(result.gastoOperativoBolsaTotal, 400);
 });
 
 test('calcularKPIs suma correctamente costo directo, operativo y sin clasificar', () => {
@@ -149,6 +230,23 @@ test('calcularKPIs suma correctamente costo directo, operativo y sin clasificar'
   assert.strictEqual(result.costoDirecto, 1000);
   assert.strictEqual(result.gastoOperativo, 500);
   assert.strictEqual(result.sinClasificar, 50);
+});
+
+test('calcularKPIs ignora por completo las facturas marcadas como EXCLUIDO (sucursales cerradas)', () => {
+  const glosarioMap = {
+    'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
+    'DIST-CERRADO': { region: 'NORTE', sucursal_secundaria: 'DIST-CERRADO', tipo_gasto: 'EXCLUIDO' },
+  };
+  const facturas = [
+    { sucursal: 'DIST-A', subtotal: 1000 },
+    { sucursal: 'DIST-CERRADO', subtotal: 99999 },
+  ];
+  const result = Calc.calcularKPIs(facturas, glosarioMap);
+  // La factura de la sucursal cerrada no debe aparecer en ningún total, ni siquiera en sinClasificar.
+  assert.strictEqual(result.totalPagado, 1000);
+  assert.strictEqual(result.costoDirecto, 1000);
+  assert.strictEqual(result.gastoOperativo, 0);
+  assert.strictEqual(result.sinClasificar, 0);
 });
 
 test('calcularVariacionPct calcula el porcentaje de variación correcto', () => {
@@ -331,8 +429,9 @@ test('calcularRentabilidadDistritoMes calcula utilidad bruta y de operación res
     todosLosDistritos: ['DIST-A', 'DIST-B'],
     regionPorDistrito: { 'DIST-A': 'BAJIO', 'DIST-B': 'ORIENTE' },
   };
-  // Ingreso DIST-A = 1000; Costo Directo DIST-A = 300; folios 1 de 2 -> 200 de la bolsa de 400
-  const resultado = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, 'DIST-A', 'BAJIO', '2026-03-01');
+  // Ingreso DIST-A = 1000; Costo Directo DIST-A = 300; folios PI 1 de 2 -> 200 de la bolsa de 400
+  const foliosPI = { 'DIST-A': 1, 'DIST-B': 1 };
+  const resultado = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, 'DIST-A', 'BAJIO', '2026-03-01', foliosPI);
   assert.strictEqual(resultado.totalIngresos, 1000);
   assert.strictEqual(resultado.totalCD, 300);
   assert.strictEqual(resultado.totalGO, 200);

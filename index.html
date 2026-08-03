@@ -118,9 +118,6 @@
         <li><button data-vista="flota" onclick="abrirPilar('flota')" title="Flota Vehicular" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">local_shipping</span><span class="text-sm sidebar-texto">Flota Vehicular</span>
         </button></li>
-        <li><button data-vista="presupuesto" onclick="abrirPilar('presupuesto')" title="Presupuesto" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
-          <span class="material-symbols-outlined">request_quote</span><span class="text-sm sidebar-texto">Presupuesto</span>
-        </button></li>
         <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" title="Configuración" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">settings</span><span class="text-sm sidebar-texto">Configuración</span>
         </button></li>
@@ -277,17 +274,11 @@
               <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-2 text-center">Gastos</p>
               <div class="flex justify-between items-baseline">
                 <p class="text-[10px] text-op-pi font-gordita-bold">Costo Directo</p>
-                <div class="flex items-baseline gap-1.5">
-                  <h2 id="ov-fin-kpi-directo" class="font-gordita-bold text-sm text-primary">-</h2>
-                  <span id="ov-fin-kpi-directo-yoy" class="text-[9px] font-gordita-bold"></span>
-                </div>
+                <h2 id="ov-fin-kpi-directo" class="font-gordita-bold text-sm text-primary">-</h2>
               </div>
               <div class="flex justify-between items-baseline mt-2">
                 <p class="text-[10px] text-op-md font-gordita-bold">Gasto Operativo</p>
-                <div class="flex items-baseline gap-1.5">
-                  <h2 id="ov-fin-kpi-operativo" class="font-gordita-bold text-sm text-primary">-</h2>
-                  <span id="ov-fin-kpi-operativo-yoy" class="text-[9px] font-gordita-bold"></span>
-                </div>
+                <h2 id="ov-fin-kpi-operativo" class="font-gordita-bold text-sm text-primary">-</h2>
               </div>
               <div class="flex justify-between items-baseline mt-2 pt-2 border-t border-outline-variant">
                 <p class="text-[10px] text-primary font-gordita-bold">Gasto Total</p>
@@ -296,7 +287,7 @@
                   <span id="ov-fin-kpi-total-yoy" class="text-[9px] font-gordita-bold"></span>
                 </div>
               </div>
-              <p class="text-[8px] text-on-surface-variant opacity-60 text-right mt-2">Variación interanual (YoY)</p>
+              <p class="text-[8px] text-on-surface-variant opacity-60 text-right mt-2">Variación vs. Presupuesto</p>
             </div>
             <div class="bg-surface-container-low p-5 rounded-lg text-center">
               <p id="ov-fin-kpi-margen-titulo" class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Margen (·)</p>
@@ -314,9 +305,15 @@
               </div>
             </div>
           </div>
-          <div class="bg-surface-container-low p-4 rounded-lg">
-            <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Tendencia de Gasto · últimos 12 meses</h3>
-            <div style="height:260px;"><canvas id="grafica-overview-fin"></canvas></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+            <div class="bg-surface-container-low p-4 rounded-lg">
+              <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Tendencia de Ingreso vs. Presupuesto · últimos 6 meses</h3>
+              <div style="height:260px;"><canvas id="grafica-overview-fin-ingreso"></canvas></div>
+            </div>
+            <div class="bg-surface-container-low p-4 rounded-lg">
+              <h3 class="font-gordita-bold text-sm text-on-surface-variant uppercase tracking-wide mb-3">Tendencia de Gasto vs. Presupuesto · últimos 6 meses</h3>
+              <div style="height:260px;"><canvas id="grafica-overview-fin-gasto"></canvas></div>
+            </div>
           </div>
         </section>
         </div>
@@ -581,33 +578,6 @@
         </div>
       </div>
 
-      <div class="vista" id="vista-pnl">
-        <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">QiORA Conecta</span>
-            <h1 class="font-gordita-bold text-4xl text-primary mt-1">P&amp;L</h1>
-          </div>
-          <div class="flex gap-3">
-            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-              <button id="pnl-modo-pesos" onclick="cambiarModoVistaPnL('pesos')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
-              <button id="pnl-modo-porcentaje" onclick="cambiarModoVistaPnL('porcentaje')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
-            </div>
-            <select id="pnl-anio" onchange="cambiarAnioPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white"></select>
-            <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
-              <option value="GENERAL">General (toda la empresa)</option>
-            </select>
-          </div>
-        </div>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto">
-          <table id="tabla-pnl" class="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-              <tr id="tabla-pnl-encabezado-anio" class="bg-surface-container-low text-[10px] text-on-surface-variant"></tr>
-              <tr id="tabla-pnl-encabezado" class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant"></tr>
-            </thead>
-            <tbody id="tabla-pnl-body" class="divide-y divide-outline-variant"></tbody>
-          </table>
-        </section>
-      </div>
 
       <div class="vista" id="vista-config">
         <div class="mb-8">
@@ -945,6 +915,34 @@
         </div>
 
         <div id="fin-areas-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+          <button onclick="abrirAreaFinanciera('pnl')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">summarize</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">P&amp;L</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Estado de resultados completo, mes a mes, en $ o % de ingreso.</p>
+            <div class="grid grid-cols-3 gap-2 text-center mb-3">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ingreso</p><p id="fin-card-pnl-ingreso" class="font-gordita-bold text-sm text-primary">-</p></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Utilidad Op.</p><p id="fin-card-pnl-utilidad" class="font-gordita-bold text-sm text-primary">-</p></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Margen</p><p id="fin-card-pnl-margen" class="font-gordita-bold text-sm text-primary">-</p></div>
+            </div>
+            <div class="flex-1 min-h-[220px] flex flex-col items-center justify-center gap-2">
+              <div class="text-center">
+                <div style="height:90px; width:160px;"><canvas id="fin-card-gauge-margen-bruto"></canvas></div>
+                <p class="text-[9px] text-op-pi font-gordita-bold uppercase tracking-wide mt-1">Margen Bruto</p>
+              </div>
+              <div class="text-center">
+                <div style="height:90px; width:160px;"><canvas id="fin-card-gauge-margen-operacion"></canvas></div>
+                <p class="text-[9px] text-op-md font-gordita-bold uppercase tracking-wide mt-1">Margen de Operación</p>
+              </div>
+            </div>
+            <div class="pt-4">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">Top 5 Distritos por Margen de Operación</p>
+              <div id="fin-card-rentabilidad-ranking" class="space-y-1"></div>
+            </div>
+          </button>
+
           <button onclick="abrirAreaFinanciera('ingresos')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
             <div class="flex items-center justify-between mb-4">
               <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">payments</span></div>
@@ -952,8 +950,8 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Ingresos</h3>
             <p class="text-xs text-on-surface-variant mb-3">Desglose por póliza, tendencias, nacional o por distrito.</p>
-            <div style="height:280px;"><canvas id="fin-card-ingresos-pie"></canvas></div>
-            <div class="mt-auto pt-4">
+            <div class="flex-1 min-h-[220px] relative"><canvas id="fin-card-ingresos-pie"></canvas></div>
+            <div class="pt-4">
               <div class="grid grid-cols-3 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
                 <span>Póliza</span><span class="text-right"># Folios</span><span class="text-right">Ingreso</span>
               </div>
@@ -966,57 +964,98 @@
               <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">receipt_long</span></div>
               <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
             </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Gastos</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Nómina, comisiones, flota y más — últimos 6 meses.</p>
-            <p class="text-center mb-2"><span id="fin-card-gastos-pct-ingreso" class="font-gordita-bold text-lg text-primary">-</span> <span class="text-[10px] text-on-surface-variant">del ingreso son estos 9 rubros</span></p>
-            <div style="height:130px;"><canvas id="fin-card-gastos-sparkline"></canvas></div>
-            <div class="mt-auto pt-4">
-              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
-                <span>Rubro</span><span class="text-right">% Ingreso</span>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Costos Directos y Gastos Operativos</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Nómina, comisiones, flota, proveedores y más, con drill down completo.</p>
+            <div class="flex-1 min-h-[170px] flex flex-col justify-center">
+              <p class="text-center"><span id="fin-card-gastos-pct-ingreso" class="font-gordita-bold text-primary" style="font-size:64px; line-height:1;">-</span></p>
+              <p class="text-center text-[10px] text-on-surface-variant uppercase tracking-wide mb-3">del ingreso son estos 9 rubros</p>
+              <div>
+                <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                  <span>Top Rubro</span><span class="text-right">% Ingreso</span>
+                </div>
+                <div id="fin-card-gastos-tabla" class="space-y-1"></div>
               </div>
-              <div id="fin-card-gastos-tabla" class="space-y-1"></div>
+            </div>
+            <div class="pt-3 border-t border-outline-variant">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1">Top 5 Proveedores (Costo Directo, periodo activo)</p>
+              <div id="fin-card-proveedores-ranking" class="space-y-1.5 mt-1"></div>
             </div>
           </button>
 
-          <button onclick="abrirAreaFinanciera('rentabilidad')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+          <button onclick="abrirAreaFinanciera('presupuesto')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
             <div class="flex items-center justify-between mb-4">
-              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">query_stats</span></div>
+              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">request_quote</span></div>
               <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
             </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rentabilidad</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Márgenes y utilidad en el tiempo, por distrito.</p>
-            <div class="flex flex-col items-center gap-3">
-              <div class="text-center">
-                <div style="height:110px; width:190px;"><canvas id="fin-card-gauge-margen-bruto"></canvas></div>
-                <p class="text-[10px] text-op-pi font-gordita-bold uppercase tracking-wide mt-1">Margen Bruto</p>
-              </div>
-              <div class="text-center">
-                <div style="height:110px; width:190px;"><canvas id="fin-card-gauge-margen-operacion"></canvas></div>
-                <p class="text-[10px] text-op-md font-gordita-bold uppercase tracking-wide mt-1">Margen de Operación</p>
-              </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Presupuesto</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Real vs. presupuestado, rolling forecast al cierre de año y variaciones por categoría.</p>
+            <div class="flex-1 min-h-[230px] flex flex-col items-center justify-center text-center">
+              <span id="fin-card-presupuesto-var-utilidad" class="font-gordita-bold" style="font-size:64px; line-height:1;">-</span>
+              <span class="text-[10px] text-on-surface-variant uppercase tracking-wide mt-3">vs. Ppto en utilidad (periodo activo)</span>
             </div>
-            <div class="mt-auto pt-4">
-              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">Top 5 Distritos por Margen de Operación</p>
-              <div id="fin-card-rentabilidad-ranking" class="space-y-1"></div>
+            <div class="pt-3 border-t border-outline-variant">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1">Mayores Variaciones en Gasto</p>
+              <div id="fin-card-presupuesto-ranking" class="space-y-1.5 mt-1"></div>
             </div>
           </button>
+        </div>
 
-          <button onclick="abrirAreaFinanciera('proveedores')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-2 bg-primary/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-primary">storefront</span></div>
-              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
-            </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Proveedores</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Drill down completo: Familia → Gasto → Proveedor.</p>
-            <p class="text-[9px] text-on-surface-variant uppercase tracking-wide mb-1">Top 5 por Costo Directo (periodo activo)</p>
-            <div style="height:120px;"><canvas id="fin-card-proveedores-chart"></canvas></div>
-            <div class="mt-auto pt-4">
-              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
-                <span>Proveedor</span><span class="text-right">Monto</span>
-              </div>
-              <div id="fin-card-proveedores-ranking" class="space-y-1.5"></div>
-            </div>
+        <div id="fin-area-pnl" class="fin-area" style="display:none;">
+          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
           </button>
+          <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+            <h3 class="font-gordita-bold text-2xl text-primary">P&amp;L</h3>
+            <div class="flex gap-3">
+              <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+                <button id="pnl-modo-pesos" onclick="cambiarModoVistaPnL('pesos')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
+                <button id="pnl-modo-porcentaje" onclick="cambiarModoVistaPnL('porcentaje')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
+              </div>
+              <select id="pnl-anio" onchange="cambiarAnioPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white"></select>
+              <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
+                <option value="GENERAL">General (toda la empresa)</option>
+              </select>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-x-auto mb-lg">
+            <table id="tabla-pnl" class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr id="tabla-pnl-encabezado-anio" class="bg-surface-container-low text-[10px] text-on-surface-variant"></tr>
+                <tr id="tabla-pnl-encabezado" class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant"></tr>
+              </thead>
+              <tbody id="tabla-pnl-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+
+          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen Bruto por Distrito (últimos 12 meses)</h3>
+            <p id="rentabilidad-subtitulo" class="text-xs text-on-surface-variant mb-6">-</p>
+            <div class="overflow-x-auto">
+              <table id="tabla-heatmap-rentabilidad" class="w-full border-collapse table-fixed">
+                <thead>
+                  <tr id="heatmap-rentabilidad-encabezado" class="text-[10px] text-on-surface-variant"></tr>
+                </thead>
+                <tbody id="heatmap-rentabilidad-body" class="text-xs"></tbody>
+              </table>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm">
+            <table id="tabla-rentabilidad" class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso <span id="orden-rentabilidad-ingreso"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo <span id="orden-rentabilidad-costoDirecto"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Ut. Bruta <span id="orden-rentabilidad-utilidadBruta"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Marg. Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Oper. <span id="orden-rentabilidad-operativo"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Ut. Operación <span id="orden-rentabilidad-utilidadOperacion"></span></th>
+                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Marg. Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
+                </tr>
+              </thead>
+              <tbody id="tabla-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
         </div>
 
         <div id="fin-area-ingresos" class="fin-area" style="display:none;">
@@ -1140,7 +1179,7 @@
           <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
           </button>
-          <h3 class="font-gordita-bold text-2xl text-primary mb-1">Top Gastos</h3>
+          <h3 class="font-gordita-bold text-2xl text-primary mb-1">Costos Directos y Gastos Operativos</h3>
           <p class="text-sm text-on-surface-variant mb-6">Rubros que representan la mayor parte del costo operativo mensual del negocio — <span id="fin-gastos-periodo" class="font-gordita-bold">-</span></p>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
@@ -1160,7 +1199,7 @@
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-outline-variant">
               <h3 class="font-gordita-bold text-lg text-primary">Desglose de Gastos Clave</h3>
-              <p class="text-xs text-on-surface-variant mt-1">Columnas: últimos 6 meses. La variación (Δ% / Δ MX$) compara el YTD actual contra el mismo YTD del año anterior. "Otros Costos y Gastos" agrupa todo lo que no está entre los 9 rubros principales, para que la tabla reconcilie con el gasto total.</p>
+              <p class="text-xs text-on-surface-variant mt-1">Columnas: últimos 6 meses. La variación (Δ% / Δ MX$) compara el YTD actual contra el Presupuesto del mismo YTD. "Otros Costos y Gastos" agrupa todo lo que no está entre los 9 rubros principales, para que la tabla reconcilie con el gasto total.</p>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse whitespace-nowrap">
@@ -1171,57 +1210,12 @@
               </table>
             </div>
           </section>
-        </div>
 
-        <div id="fin-area-rentabilidad" class="fin-area" style="display:none;">
-          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
-          </button>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-            <h3 class="font-gordita-bold text-lg text-primary mb-1">Tendencia de Márgenes (últimos 12 meses)</h3>
-            <p class="text-xs text-on-surface-variant mb-6">Margen Bruto y Margen de Operación a nivel nacional, mes a mes — útil para ver el efecto de incrementos de precio o cambios de costo en el tiempo.</p>
-            <div style="height: 260px;"><canvas id="grafica-fin-tendencia-margen"></canvas></div>
-          </div>
-          <div class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-            <h3 class="font-gordita-bold text-lg text-primary mb-1">Margen de Operación por Distrito (últimos 12 meses)</h3>
-            <p id="rentabilidad-subtitulo" class="text-xs text-on-surface-variant mb-6">Ranking YTD de utilidad y margen por distrito. Click en un distrito para ver su tendencia mensual.</p>
-            <div class="overflow-x-auto">
-              <table id="tabla-heatmap-rentabilidad" class="w-full border-collapse table-fixed">
-                <thead>
-                  <tr id="heatmap-rentabilidad-encabezado" class="text-[10px] text-on-surface-variant"></tr>
-                </thead>
-                <tbody id="heatmap-rentabilidad-body" class="text-xs"></tbody>
-              </table>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mt-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-lg text-primary">Top 10 Familias de Gasto</h3>
+              <p id="fin-proveedor-subtitulo" class="text-xs text-on-surface-variant mt-1">Costos Directos y Gastos Operativos del periodo activo, ordenados por % del ingreso. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
             </div>
-          </div>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm mb-lg">
-            <table id="tabla-rentabilidad" class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
-                  <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest cursor-pointer select-none" onclick="ordenarRentabilidad('distrito')">Distrito <span id="orden-rentabilidad-distrito"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('ingreso')">Ingreso <span id="orden-rentabilidad-ingreso"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('costoDirecto')">Costo Directo <span id="orden-rentabilidad-costoDirecto"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadBruta')">Ut. Bruta <span id="orden-rentabilidad-utilidadBruta"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenBruto')">Marg. Bruto <span id="orden-rentabilidad-margenBruto"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('operativo')">Gasto Oper. <span id="orden-rentabilidad-operativo"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('utilidadOperacion')">Ut. Operación <span id="orden-rentabilidad-utilidadOperacion"></span></th>
-                  <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right cursor-pointer select-none" onclick="ordenarRentabilidad('margenOperacion')">Marg. Operación <span id="orden-rentabilidad-margenOperacion"></span></th>
-                </tr>
-              </thead>
-              <tbody id="tabla-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
-            </table>
-          </section>
-        </div>
-
-        <div id="fin-area-proveedores" class="fin-area" style="display:none;">
-          <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
-          </button>
-          <div class="mb-6">
-            <h3 class="font-gordita-bold text-lg text-primary mb-1">Análisis por Proveedor</h3>
-            <p id="fin-proveedor-subtitulo" class="text-xs text-on-surface-variant">Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.</p>
-          </div>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
             <div class="px-8 py-3 flex items-center gap-5 text-[10px] text-on-surface-variant uppercase tracking-widest bg-surface-container-low border-b border-outline-variant">
               <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi inline-block"></span>Familia</span>
               <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-rec inline-block"></span>Gasto</span>
@@ -1232,13 +1226,221 @@
               <thead>
                 <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
                   <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Familia / Gasto / Proveedor / Sucursal</th>
-                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest text-right">Monto (% Ingreso)</th>
                 </tr>
               </thead>
               <tbody id="tabla-analisis-proveedor-body" class="text-sm divide-y divide-outline-variant"></tbody>
             </table>
           </section>
         </div>
+
+      <div id="fin-area-presupuesto" class="fin-area" style="display:none;">
+        <button onclick="cerrarAreaFinanciera()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Financieros
+        </button>
+        <div class="mb-6">
+          <h3 class="font-gordita-bold text-2xl text-primary mb-1">Presupuesto</h3>
+          <p id="pilar-presupuesto-periodo" class="text-sm text-on-surface-variant">-</p>
+        </div>
+
+        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Tendencia del Año · Rolling Forecast</h4>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter items-center">
+            <div class="lg:col-span-3" style="height:260px;"><canvas id="grafica-presupuesto-rf-tendencia"></canvas></div>
+            <div class="space-y-4">
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Ingresos · Cierre Año (RF)</p>
+                <h2 id="presupuesto-rf-kpi-ingreso-monto" class="font-gordita-bold text-xl text-primary">-</h2>
+                <p id="presupuesto-rf-kpi-ingreso-var" class="text-xs font-gordita-bold">-</p>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Gastos · Cierre Año (RF)</p>
+                <h2 id="presupuesto-rf-kpi-gasto-monto" class="font-gordita-bold text-xl text-primary">-</h2>
+                <p id="presupuesto-rf-kpi-gasto-var" class="text-xs font-gordita-bold">-</p>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Utilidad de Operación · Cierre Año (RF)</p>
+                <h2 id="presupuesto-rf-kpi-utilidad-monto" class="font-gordita-bold text-xl text-primary">-</h2>
+                <p id="presupuesto-rf-kpi-utilidad-var" class="text-xs font-gordita-bold">-</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Principales Variaciones en Gastos · Por Monto</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-lg">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <p class="font-gordita-bold text-xs text-error uppercase tracking-wide mb-3">▲ Por encima de presupuesto</p>
+            <div id="presupuesto-variaciones-sobre" class="space-y-3"></div>
+            <button id="presupuesto-variaciones-sobre-boton" onclick="alternarVerMasVariaciones('sobre')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <p class="font-gordita-bold text-xs text-qiora-green uppercase tracking-wide mb-3">▼ Por debajo de presupuesto</p>
+            <div id="presupuesto-variaciones-bajo" class="space-y-3"></div>
+            <button id="presupuesto-variaciones-bajo-boton" onclick="alternarVerMasVariaciones('bajo')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+          </section>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-ingreso-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-ingreso-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-ingreso-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Gasto</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-gasto-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-gasto-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-gasto-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Utilidad</p>
+            <div class="flex items-end justify-between gap-2">
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestada</p><h2 id="presupuesto-kpi-utilidad-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-utilidad-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-utilidad-var" class="font-gordita-bold text-lg">-</h2></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="presupuesto-areas-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <button onclick="abrirAreaPresupuesto('resumen')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">show_chart</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rolling Forecast</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Real ejecutado + proyección al cierre de año.</p>
+            <div style="height:130px;"><canvas id="presupuesto-card-ingreso-chart"></canvas></div>
+          </button>
+
+          <button onclick="abrirAreaPresupuesto('categoria')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">category</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Categoría</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Top 5 categorías con mayor variación vs. presupuesto.</p>
+            <div id="presupuesto-card-categoria-ranking" class="space-y-1"></div>
+          </button>
+
+          <button onclick="abrirAreaPresupuesto('distrito')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">location_on</span></div>
+              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+            </div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
+            <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor variación de utilidad vs. presupuesto.</p>
+            <div id="presupuesto-card-distrito-ranking" class="space-y-1"></div>
+          </button>
+        </div>
+
+        <div id="presupuesto-area-resumen" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Rolling Forecast</h2>
+              <p id="presupuesto-forecast-nota" class="text-sm text-on-surface-variant mt-1">-</p>
+            </div>
+            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
+              <button id="presupuesto-forecast-btn-mensual" onclick="cambiarVistaForecastPresupuesto('mensual')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Mensual</button>
+              <button id="presupuesto-forecast-btn-acumulado" onclick="cambiarVistaForecastPresupuesto('acumulado')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Acumulado</button>
+            </div>
+          </div>
+
+          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
+            <h3 class="font-gordita-bold text-lg text-primary mb-4">Ingreso</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-ingreso-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-ingreso-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-ingreso-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-ingreso-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
+            </div>
+            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-ingreso"></canvas></div>
+            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
+            </div>
+          </section>
+
+          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
+            <h3 class="font-gordita-bold text-lg text-primary mb-4">Gasto</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-gasto-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-gasto-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
+              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-gasto-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-gasto-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
+            </div>
+            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-gasto"></canvas></div>
+            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
+            </div>
+          </section>
+        </div>
+
+        <div id="presupuesto-area-categoria" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Por Categoría</h2>
+              <p class="text-sm text-on-surface-variant mt-1">Clic en una categoría para ver el desglose por gasto y por distrito.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap" id="presupuesto-categoria-orden-botones">
+              <button onclick="cambiarOrdenPresupuestoCategoria('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Mayor desviación $</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('var_pct')" data-orden="var_pct" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor desviación %</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto</button>
+              <button onclick="cambiarOrdenPresupuestoCategoria('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <div class="col-span-2">Categoría</div>
+              <div class="text-right">Presupuesto</div>
+              <div class="text-right">Real</div>
+              <div class="text-right">Variación</div>
+              <div class="text-right">Ejecutado</div>
+            </div>
+            <div id="presupuesto-tabla-categoria"></div>
+          </section>
+        </div>
+
+        <div id="presupuesto-area-distrito" class="presupuesto-area" style="display:none;">
+          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
+          </button>
+          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="font-gordita-bold text-2xl text-primary">Por Distrito</h2>
+              <p class="text-sm text-on-surface-variant mt-1">Utilidad presupuestada vs. real por distrito (solo distritos operativos). Clic para ver el desglose por categoría.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap" id="presupuesto-distrito-orden-botones">
+              <button onclick="cambiarOrdenPresupuestoDistrito('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Peor variación</button>
+              <button onclick="cambiarOrdenPresupuestoDistrito('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto real</button>
+              <button onclick="cambiarOrdenPresupuestoDistrito('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
+            </div>
+          </div>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <div class="col-span-2">Distrito</div>
+              <div class="text-right">Utilidad Ppto.</div>
+              <div class="text-right">Utilidad Real</div>
+              <div class="text-right">Variación</div>
+              <div class="text-right">Gasto Ejecutado</div>
+            </div>
+            <div id="presupuesto-tabla-distrito"></div>
+          </section>
+        </div>
+      </div>
       </div>
 
       <div class="vista" id="vista-pilar-flota">
@@ -1505,177 +1707,6 @@
         </div>
       </div>
 
-      <div class="vista" id="vista-pilar-presupuesto">
-        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
-        </button>
-        <div class="mb-8">
-          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
-          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Presupuesto</h1>
-          <p id="pilar-presupuesto-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso</p>
-            <div class="flex items-end justify-between gap-2">
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-ingreso-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-ingreso-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-ingreso-var" class="font-gordita-bold text-lg">-</h2></div>
-            </div>
-          </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Gasto</p>
-            <div class="flex items-end justify-between gap-2">
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="presupuesto-kpi-gasto-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-gasto-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-gasto-var" class="font-gordita-bold text-lg">-</h2></div>
-            </div>
-          </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Utilidad</p>
-            <div class="flex items-end justify-between gap-2">
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestada</p><h2 id="presupuesto-kpi-utilidad-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="presupuesto-kpi-utilidad-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
-              <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="presupuesto-kpi-utilidad-var" class="font-gordita-bold text-lg">-</h2></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="presupuesto-areas-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-          <button onclick="abrirAreaPresupuesto('resumen')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-2 bg-op-pi/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-pi">show_chart</span></div>
-              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
-            </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rolling Forecast</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Real ejecutado + proyección al cierre de año.</p>
-            <div style="height:130px;"><canvas id="presupuesto-card-ingreso-chart"></canvas></div>
-          </button>
-
-          <button onclick="abrirAreaPresupuesto('categoria')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-2 bg-op-rec/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-rec">category</span></div>
-              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
-            </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Categoría</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Top 5 categorías con mayor variación vs. presupuesto.</p>
-            <div id="presupuesto-card-categoria-ranking" class="space-y-1"></div>
-          </button>
-
-          <button onclick="abrirAreaPresupuesto('distrito')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <div class="p-2 bg-op-md/10 rounded-lg inline-flex"><span class="material-symbols-outlined text-op-md">location_on</span></div>
-              <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
-            </div>
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
-            <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor variación de utilidad vs. presupuesto.</p>
-            <div id="presupuesto-card-distrito-ranking" class="space-y-1"></div>
-          </button>
-        </div>
-
-        <div id="presupuesto-area-resumen" class="presupuesto-area" style="display:none;">
-          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
-          </button>
-          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h2 class="font-gordita-bold text-2xl text-primary">Rolling Forecast</h2>
-              <p id="presupuesto-forecast-nota" class="text-sm text-on-surface-variant mt-1">-</p>
-            </div>
-            <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
-              <button id="presupuesto-forecast-btn-mensual" onclick="cambiarVistaForecastPresupuesto('mensual')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">Mensual</button>
-              <button id="presupuesto-forecast-btn-acumulado" onclick="cambiarVistaForecastPresupuesto('acumulado')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Acumulado</button>
-            </div>
-          </div>
-
-          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm mb-lg">
-            <h3 class="font-gordita-bold text-lg text-primary mb-4">Ingreso</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-ingreso-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-ingreso-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-ingreso-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-ingreso-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
-            </div>
-            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-ingreso"></canvas></div>
-            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
-            </div>
-          </section>
-
-          <section class="bg-white p-8 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-lg text-primary mb-4">Gasto</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Real Ejecutado</p><h4 id="presupuesto-forecast-gasto-real" class="font-gordita-bold text-xl text-primary">-</h4></div>
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Proyección Restante</p><h4 id="presupuesto-forecast-gasto-proyeccion" class="font-gordita-bold text-xl text-primary">-</h4></div>
-              <div><p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Forecast al Cierre</p><h4 id="presupuesto-forecast-gasto-total" class="font-gordita-bold text-xl text-primary">-</h4><p id="presupuesto-forecast-gasto-var" class="text-xs font-gordita-bold mt-0.5">-</p></div>
-            </div>
-            <div style="height:280px;"><canvas id="presupuesto-forecast-grafica-gasto"></canvas></div>
-            <div class="flex items-center gap-4 mt-4 flex-wrap text-[11px] text-on-surface-variant">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-pi shrink-0"></span>Real ejecutado</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-op-md shrink-0"></span>Presupuesto proyectado</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-on-surface-variant shrink-0"></span>Línea: presupuesto original</span>
-            </div>
-          </section>
-        </div>
-
-        <div id="presupuesto-area-categoria" class="presupuesto-area" style="display:none;">
-          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
-          </button>
-          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h2 class="font-gordita-bold text-2xl text-primary">Por Categoría</h2>
-              <p class="text-sm text-on-surface-variant mt-1">Clic en una categoría para ver el desglose por gasto y por distrito.</p>
-            </div>
-            <div class="flex gap-2 flex-wrap" id="presupuesto-categoria-orden-botones">
-              <button onclick="cambiarOrdenPresupuestoCategoria('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Mayor desviación $</button>
-              <button onclick="cambiarOrdenPresupuestoCategoria('var_pct')" data-orden="var_pct" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor desviación %</button>
-              <button onclick="cambiarOrdenPresupuestoCategoria('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto</button>
-              <button onclick="cambiarOrdenPresupuestoCategoria('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
-            </div>
-          </div>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
-              <div class="col-span-2">Categoría</div>
-              <div class="text-right">Presupuesto</div>
-              <div class="text-right">Real</div>
-              <div class="text-right">Variación</div>
-              <div class="text-right">Ejecutado</div>
-            </div>
-            <div id="presupuesto-tabla-categoria"></div>
-          </section>
-        </div>
-
-        <div id="presupuesto-area-distrito" class="presupuesto-area" style="display:none;">
-          <button onclick="cerrarAreaPresupuesto()" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Volver a Presupuesto
-          </button>
-          <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h2 class="font-gordita-bold text-2xl text-primary">Por Distrito</h2>
-              <p class="text-sm text-on-surface-variant mt-1">Utilidad presupuestada vs. real por distrito (solo distritos operativos). Clic para ver el desglose por categoría.</p>
-            </div>
-            <div class="flex gap-2 flex-wrap" id="presupuesto-distrito-orden-botones">
-              <button onclick="cambiarOrdenPresupuestoDistrito('var_abs')" data-orden="var_abs" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Peor variación</button>
-              <button onclick="cambiarOrdenPresupuestoDistrito('real')" data-orden="real" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor gasto real</button>
-              <button onclick="cambiarOrdenPresupuestoDistrito('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
-            </div>
-          </div>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
-              <div class="col-span-2">Distrito</div>
-              <div class="text-right">Utilidad Ppto.</div>
-              <div class="text-right">Utilidad Real</div>
-              <div class="text-right">Variación</div>
-              <div class="text-right">Gasto Ejecutado</div>
-            </div>
-            <div id="presupuesto-tabla-distrito"></div>
-          </section>
-        </div>
-      </div>
-
       <div class="vista" id="vista-pilar-capitalhumano">
         <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
@@ -1798,20 +1829,14 @@
           <button id="rentabilidad-modo-porcentaje" onclick="cambiarModoVistaRentabilidad('porcentaje')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
         </div>
       </div>
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant">
-            <th class="px-3 py-3 font-gordita-bold uppercase tracking-widest">Mes</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ingreso</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Costo Directo</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ut. Bruta</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto Oper.</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Ut. Operación</th>
-            <th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">Marg. Operación</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-drilldown-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr id="drilldown-rentabilidad-encabezado" class="bg-surface-container-low text-[9px] text-on-surface-variant border-b border-outline-variant"></tr>
+          </thead>
+          <tbody id="tabla-drilldown-rentabilidad-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -2030,6 +2055,7 @@ async function cargarConfig() {
 
 let analisisProveedorDatos = {};
 let analisisProveedorMeses = [];
+let analisisProveedorIngresoActivo = 0;
 
 async function cargarAnalisisProveedor(distritoFiltro) {
   const glosarioMap = obtenerGlosarioMap();
@@ -2037,8 +2063,8 @@ async function cargarAnalisisProveedor(distritoFiltro) {
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
   document.getElementById('fin-proveedor-subtitulo').textContent = distritoFiltro
-    ? 'Costos Directos del periodo activo en ' + distritoFiltro + '. Familia → Gasto → Proveedor → últimos 6 meses.'
-    : 'Costos Directos del periodo activo. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.';
+    ? 'Costos Directos y Gastos Operativos del periodo activo en ' + distritoFiltro + ', ordenados por % del ingreso. Familia → Gasto → Proveedor → últimos 6 meses.'
+    : 'Costos Directos y Gastos Operativos del periodo activo, ordenados por % del ingreso. Familia → Gasto → Proveedor → ranking de sucursales por monto pagado.';
 
   const mesesTendencia = [];
   for (let i = 5; i >= 0; i--) {
@@ -2055,7 +2081,7 @@ async function cargarAnalisisProveedor(distritoFiltro) {
   const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, familia, gasto, proveedor, monto, subtotal, fecha_pago');
   const clasificadas = facturas
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
-    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS')
+    .filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' || f.tipo_gasto === 'GASTOS OPERATIVOS')
     .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
 
   const porFamilia = {};
@@ -2088,49 +2114,82 @@ async function cargarAnalisisProveedor(distritoFiltro) {
   });
 
   analisisProveedorDatos = porFamilia;
+
+  const d = overviewDatos;
+  const clavesActivo = clavesMesesEnRango(rangos.actual);
+  const listaDistritosIngreso = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  let ingresoActivo = 0;
+  clavesActivo.forEach((clave) => {
+    const mesISO = clave + '-01';
+    listaDistritosIngreso.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      ingresoActivo += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO).total;
+    });
+  });
+  analisisProveedorIngresoActivo = ingresoActivo;
+
   renderizarAnalisisProveedor();
 }
 
-function renderizarAnalisisProveedor() {
+function filasFamiliaAnalisisProveedor(familia, idFamilia, grupoPadre) {
   const filas = [];
+  const datosFamilia = analisisProveedorDatos[familia];
+  const atributoGrupo = grupoPadre ? ` data-grupo="${grupoPadre}"` : '';
+  const estiloOculto = grupoPadre ? ' style="display:none;"' : '';
+  const pct = analisisProveedorIngresoActivo > 0 ? ' <span class="text-[10px] text-on-surface-variant font-normal">(' + (datosFamilia.total / analisisProveedorIngresoActivo * 100).toFixed(1) + '%)</span>' : '';
+  filas.push(`<tr${atributoGrupo}${estiloOculto} class="cursor-pointer bg-white border-l-4 border-primary hover:bg-surface-container-low/50 transition-colors" onclick="alternarNivelAnalisisProveedor('${idFamilia}')"><td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span id="chevron-${idFamilia}" class="material-symbols-outlined text-sm">chevron_right</span><span class="material-symbols-outlined text-sm text-primary/40">category</span>${familia}</span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(datosFamilia.total)}${pct}</td></tr>`);
 
-  const familias = Object.keys(analisisProveedorDatos)
-    .filter((familia) => analisisProveedorDatos[familia].total > 0)
-    .sort((a, b) => analisisProveedorDatos[b].total - analisisProveedorDatos[a].total);
-  familias.forEach((familia, iFamilia) => {
-    const idFamilia = 'ap-' + iFamilia;
-    filas.push(`<tr class="cursor-pointer bg-white border-l-4 border-primary hover:bg-surface-container-low/50 transition-colors" onclick="alternarNivelAnalisisProveedor('${idFamilia}')"><td class="px-8 py-4 font-gordita-bold"><span class="inline-flex items-center gap-2"><span id="chevron-${idFamilia}" class="material-symbols-outlined text-sm">chevron_right</span><span class="material-symbols-outlined text-sm text-primary/40">category</span>${familia}</span></td><td class="px-6 py-4 text-right font-gordita-bold">${formatoMoneda(analisisProveedorDatos[familia].total)}</td></tr>`);
+  const gastos = Object.keys(datosFamilia.porGasto)
+    .filter((gasto) => datosFamilia.porGasto[gasto].total > 0)
+    .sort((a, b) => datosFamilia.porGasto[b].total - datosFamilia.porGasto[a].total);
+  gastos.forEach((gasto, iGasto) => {
+    const idGasto = idFamilia + '-' + iGasto;
+    const nodoGasto = datosFamilia.porGasto[gasto];
+    filas.push(`<tr data-grupo="${idFamilia}" style="display:none;" class="bg-qiora-blue/5 border-l-4 border-qiora-blue cursor-pointer hover:bg-qiora-blue/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idGasto}')"><td class="pl-14 pr-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idGasto}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-qiora-blue">receipt_long</span>${gasto}</td><td class="px-6 py-2.5 text-right text-xs font-gordita-bold">${formatoMoneda(nodoGasto.total)}</td></tr>`);
 
-    const gastos = Object.keys(analisisProveedorDatos[familia].porGasto)
-      .filter((gasto) => analisisProveedorDatos[familia].porGasto[gasto].total > 0)
-      .sort((a, b) => analisisProveedorDatos[familia].porGasto[b].total - analisisProveedorDatos[familia].porGasto[a].total);
-    gastos.forEach((gasto, iGasto) => {
-      const idGasto = idFamilia + '-' + iGasto;
-      const nodoGasto = analisisProveedorDatos[familia].porGasto[gasto];
-      filas.push(`<tr data-grupo="${idFamilia}" style="display:none;" class="bg-qiora-blue/5 border-l-4 border-qiora-blue cursor-pointer hover:bg-qiora-blue/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idGasto}')"><td class="pl-14 pr-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idGasto}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-qiora-blue">receipt_long</span>${gasto}</td><td class="px-6 py-2.5 text-right text-xs font-gordita-bold">${formatoMoneda(nodoGasto.total)}</td></tr>`);
+    const proveedores = Object.keys(nodoGasto.porProveedor)
+      .filter((proveedor) => nodoGasto.porProveedor[proveedor].total > 0)
+      .sort((a, b) => nodoGasto.porProveedor[b].total - nodoGasto.porProveedor[a].total);
+    proveedores.forEach((proveedor, iProveedor) => {
+      const idProveedor = idGasto + '-' + iProveedor;
+      const nodoProveedor = nodoGasto.porProveedor[proveedor];
+      filas.push(`<tr data-grupo="${idGasto}" style="display:none;" class="bg-brand-teal/5 border-l-4 border-brand-teal cursor-pointer hover:bg-brand-teal/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idProveedor}')"><td class="pl-20 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idProveedor}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-brand-teal">storefront</span>${proveedor}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(nodoProveedor.total)}</td></tr>`);
 
-      const proveedores = Object.keys(nodoGasto.porProveedor)
-        .filter((proveedor) => nodoGasto.porProveedor[proveedor].total > 0)
-        .sort((a, b) => nodoGasto.porProveedor[b].total - nodoGasto.porProveedor[a].total);
-      proveedores.forEach((proveedor, iProveedor) => {
-        const idProveedor = idGasto + '-' + iProveedor;
-        const nodoProveedor = nodoGasto.porProveedor[proveedor];
-        filas.push(`<tr data-grupo="${idGasto}" style="display:none;" class="bg-brand-teal/5 border-l-4 border-brand-teal cursor-pointer hover:bg-brand-teal/10 transition-colors" onclick="alternarNivelAnalisisProveedor('${idProveedor}')"><td class="pl-20 pr-6 py-2 text-xs text-on-surface-variant flex items-center gap-2"><span id="chevron-${idProveedor}" class="material-symbols-outlined text-xs">chevron_right</span><span class="material-symbols-outlined text-xs text-brand-teal">storefront</span>${proveedor}</td><td class="px-6 py-2 text-right text-xs font-gordita-bold">${formatoMoneda(nodoProveedor.total)}</td></tr>`);
-
-        const sucursales = Object.keys(nodoProveedor.porSucursal)
-          .filter((sucursal) => nodoProveedor.porSucursal[sucursal].total > 0)
-          .sort((a, b) => nodoProveedor.porSucursal[b].total - nodoProveedor.porSucursal[a].total);
-        sucursales.forEach((sucursal, iSucursal) => {
-          const nodoSucursal = nodoProveedor.porSucursal[sucursal];
-          const mesesHtml = analisisProveedorMeses.map((m) => {
-            const valor = nodoSucursal.porMes[m.clave] || 0;
-            return `<div class="w-16 shrink-0 text-right"><div class="text-[8px] text-on-surface-variant/60 uppercase">${etiquetaMesCorta(m.anio, m.mes)}</div><div class="text-[10px] text-on-surface-variant">${formatoCompacto(valor)}</div></div>`;
-          }).join('');
-          filas.push(`<tr data-grupo="${idProveedor}" style="display:none;" class="bg-secondary-container/5 hover:bg-secondary-container/10 transition-colors"><td colspan="2" class="pl-28 pr-6 py-1.5"><div class="flex items-center gap-3"><span class="text-[11px] font-gordita-bold text-on-surface w-6 shrink-0">#${iSucursal + 1}</span><span class="text-[11px] text-on-surface-variant flex-1 min-w-[140px]">${sucursal}</span><div class="flex gap-2">${mesesHtml}</div><span class="text-[11px] font-gordita-bold text-on-surface w-24 text-right shrink-0">${formatoMoneda(nodoSucursal.total)}</span></div></td></tr>`);
-        });
+      const sucursales = Object.keys(nodoProveedor.porSucursal)
+        .filter((sucursal) => nodoProveedor.porSucursal[sucursal].total > 0)
+        .sort((a, b) => nodoProveedor.porSucursal[b].total - nodoProveedor.porSucursal[a].total);
+      sucursales.forEach((sucursal, iSucursal) => {
+        const nodoSucursal = nodoProveedor.porSucursal[sucursal];
+        const mesesHtml = analisisProveedorMeses.map((m) => {
+          const valor = nodoSucursal.porMes[m.clave] || 0;
+          return `<div class="w-16 shrink-0 text-right"><div class="text-[8px] text-on-surface-variant/60 uppercase">${etiquetaMesCorta(m.anio, m.mes)}</div><div class="text-[10px] text-on-surface-variant">${formatoCompacto(valor)}</div></div>`;
+        }).join('');
+        filas.push(`<tr data-grupo="${idProveedor}" style="display:none;" class="bg-secondary-container/5 hover:bg-secondary-container/10 transition-colors"><td colspan="2" class="pl-28 pr-6 py-1.5"><div class="flex items-center gap-3"><span class="text-[11px] font-gordita-bold text-on-surface w-6 shrink-0">#${iSucursal + 1}</span><span class="text-[11px] text-on-surface-variant flex-1 min-w-[140px]">${sucursal}</span><div class="flex gap-2">${mesesHtml}</div><span class="text-[11px] font-gordita-bold text-on-surface w-24 text-right shrink-0">${formatoMoneda(nodoSucursal.total)}</span></div></td></tr>`);
       });
     });
   });
+  return filas;
+}
+
+function renderizarAnalisisProveedor() {
+  const familias = Object.keys(analisisProveedorDatos)
+    .filter((familia) => analisisProveedorDatos[familia].total > 0)
+    .sort((a, b) => analisisProveedorDatos[b].total - analisisProveedorDatos[a].total);
+
+  const top10 = familias.slice(0, 10);
+  const resto = familias.slice(10);
+
+  let filas = [];
+  top10.forEach((familia, i) => {
+    filas = filas.concat(filasFamiliaAnalisisProveedor(familia, 'ap-' + i, null));
+  });
+
+  if (resto.length > 0) {
+    filas.push(`<tr class="cursor-pointer bg-surface-container-low hover:bg-surface-container-low/70 transition-colors" onclick="alternarNivelAnalisisProveedor('demas')"><td colspan="2" class="px-8 py-3 text-xs font-gordita-bold text-primary"><span class="inline-flex items-center gap-2"><span id="chevron-demas" class="material-symbols-outlined text-sm">chevron_right</span>Ver todas las demás familias (${resto.length})</span></td></tr>`);
+    resto.forEach((familia, i) => {
+      filas = filas.concat(filasFamiliaAnalisisProveedor(familia, 'demas-' + i, 'demas'));
+    });
+  }
 
   document.getElementById('tabla-analisis-proveedor-body').innerHTML = filas.join('');
 }
@@ -2484,9 +2543,19 @@ async function eliminarGlosario(sucursal) {
   await cargarGlosario();
 }
 
+// Distritos que ya cerraron operaciones — no deben aparecer en ningún lado de la app
+// (ni en totales financieros, ni en rankings/listas de distrito, ni en Flota).
+const DISTRITOS_EXCLUIDOS = new Set(['CTA-TPI-INT-MTY MONTERREY', 'CTA-TPI-INT-COA COATZA MINA']);
+
 function obtenerGlosarioMap() {
   const mapa = {};
-  glosarioActual.forEach((fila) => { mapa[fila.sucursal] = fila; });
+  glosarioActual.forEach((fila) => {
+    // No se borra la fila del glosario (sigue viéndose en Configuración para administrarla),
+    // pero se reclasifica en memoria para que sus facturas queden totalmente invisibles
+    // en cualquier cálculo (Calc.calcularKPIs las ignora por completo con tipo_gasto EXCLUIDO).
+    const excluida = DISTRITOS_EXCLUIDOS.has(fila.sucursal_secundaria);
+    mapa[fila.sucursal] = excluida ? Object.assign({}, fila, { tipo_gasto: 'EXCLUIDO' }) : fila;
+  });
   return mapa;
 }
 
@@ -2738,6 +2807,28 @@ async function obtenerTablaCompleta(nombreTabla) {
   return promesa;
 }
 
+// Wrappers que excluyen los distritos ya cerrados (ver DISTRITOS_EXCLUIDOS) de tablas
+// que traen el distrito como campo directo (no requieren pasar por el glosario).
+async function obtenerPolizaParametrosActivos() {
+  const filas = await obtenerTablaCompleta('poliza_parametros');
+  return filas.filter((p) => !DISTRITOS_EXCLUIDOS.has(p.distrito));
+}
+
+async function obtenerHcAutorizadoActivo() {
+  const filas = await obtenerTablaCompleta('hc_autorizado');
+  return filas.filter((h) => !DISTRITOS_EXCLUIDOS.has(h.distrito));
+}
+
+async function obtenerPresupuestoActivo() {
+  const filas = await obtenerTablaCompleta('presupuesto');
+  return filas.filter((p) => !DISTRITOS_EXCLUIDOS.has(p.distrito));
+}
+
+async function obtenerUnidadesAutorizadasActivas() {
+  const filas = await obtenerTablaCompleta('unidades_autorizadas');
+  return filas.filter((u) => !DISTRITOS_EXCLUIDOS.has(u.distrito));
+}
+
 async function obtenerFacturasDeMes(claveMesStr) {
   if (cacheFacturasPorMes[claveMesStr]) return cacheFacturasPorMes[claveMesStr];
   const [anio, mes] = claveMesStr.split('-').map(Number);
@@ -2982,6 +3073,147 @@ async function calcularTendenciaGasto12m(glosarioMap, anioRef, mesRef) {
   }
 
   return { etiquetas, etiquetasAnioAnterior, datosDirecto, datosOperativo, datosAnioAnterior, datosYoy };
+}
+
+async function calcularTendenciaFinancieraVsPresupuesto6m(d, anioRef, mesRef) {
+  const inicioVentana = rangoDeMes(anioRef, mesRef - 5).inicio;
+  const finVentana = rangoDeMes(anioRef, mesRef).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, monto, subtotal, fecha_pago');
+
+  const porMesFacturas = {};
+  facturasVentana.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
+  const presupuestoPorMes = {};
+  (d.presupuesto || []).forEach((p) => {
+    const clave = (p.mes || '').slice(0, 7);
+    presupuestoPorMes[clave] = presupuestoPorMes[clave] || { ingreso: 0, gasto: 0 };
+    const monto = Number(p.monto) || 0;
+    if (p.tipo_gasto_categoria === 'INGRESOS') presupuestoPorMes[clave].ingreso += monto;
+    else presupuestoPorMes[clave].gasto += monto;
+  });
+
+  const etiquetas = [];
+  const ingresoReal = [], ingresoPpto = [], ingresoVarPct = [];
+  const gastoReal = [], gastoPpto = [], gastoVarPct = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    const clave = claveMes(base.getFullYear(), base.getMonth());
+    const mesISO = clave + '-01';
+    etiquetas.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+
+    let ingresoMes = 0;
+    d.listaDistritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      ingresoMes += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, mesISO).total;
+    });
+    const kpisMes = Calc.calcularKPIs(porMesFacturas[clave] || [], d.glosarioMap);
+    const pptoMes = presupuestoPorMes[clave] || { ingreso: 0, gasto: 0 };
+    const gastoRealMes = kpisMes.costoDirecto + kpisMes.gastoOperativo;
+
+    ingresoReal.push(ingresoMes);
+    ingresoPpto.push(pptoMes.ingreso);
+    ingresoVarPct.push(Calc.calcularVariacionPct(ingresoMes, pptoMes.ingreso));
+
+    gastoReal.push(gastoRealMes);
+    gastoPpto.push(pptoMes.gasto);
+    gastoVarPct.push(Calc.calcularVariacionPct(gastoRealMes, pptoMes.gasto));
+  }
+
+  return { etiquetas, ingresoReal, ingresoPpto, ingresoVarPct, gastoReal, gastoPpto, gastoVarPct };
+}
+
+function renderizarGraficaTendenciaVsPresupuesto(canvasId, refGrafica, etiquetas, seriesReales, pptoSerie, variacionPct, positivoEsMalo) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  const ALTURA_MINIMA_ETIQUETA = 16;
+
+  window[refGrafica] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { label: 'Presupuesto', data: pptoSerie, backgroundColor: 'transparent', borderColor: '#7e7576', borderWidth: 2, borderDash: [4, 3], borderSkipped: false, stack: 'ppto', maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95 },
+        ...seriesReales.map((s, i) => ({
+          label: s.label, data: s.data, backgroundColor: s.color, stack: 'actual',
+          maxBarThickness: 34, categoryPercentage: 0.85, barPercentage: 0.95,
+          borderRadius: i === seriesReales.length - 1 ? 4 : 0,
+        })),
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => item.dataset.label + ': ' + formatoMoneda(item.parsed.y) },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+        y: { stacked: true, beginAtZero: true, display: false, grid: { display: false }, border: { display: false } },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasTendenciaVsPresupuesto',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const metaPpto = chart.getDatasetMeta(0);
+
+        seriesReales.forEach((s, idx) => {
+          const meta = chart.getDatasetMeta(idx + 1);
+          meta.data.forEach((barra, i) => {
+            const altura = Math.abs(barra.base - barra.y);
+            if (altura < ALTURA_MINIMA_ETIQUETA || s.data[i] <= 0) return;
+            ctxDibujo.save();
+            ctxDibujo.fillStyle = s.textColor || '#ffffff';
+            ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+            ctxDibujo.textAlign = 'center';
+            ctxDibujo.textBaseline = 'middle';
+            ctxDibujo.fillText(formatoCompactoCorto(s.data[i]), barra.x, (barra.y + barra.base) / 2);
+            ctxDibujo.restore();
+          });
+        });
+
+        metaPpto.data.forEach((barra, i) => {
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#7e7576';
+          ctxDibujo.font = "10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.fillText(formatoCompactoCorto(pptoSerie[i]), barra.x, barra.y - 6);
+          ctxDibujo.restore();
+        });
+
+        // Badge de variación vs presupuesto, arriba de ambas barras (no encima de ninguna etiqueta $).
+        const metaTope = chart.getDatasetMeta(seriesReales.length);
+        metaTope.data.forEach((barra, i) => {
+          const v = variacionPct[i];
+          if (v === null || v === undefined) return;
+          const texto = (v >= 0 ? '+' : '') + v.toFixed(0) + '%';
+          const malo = positivoEsMalo ? v >= 0 : v < 0;
+          const topActual = barra.y;
+          const topPpto = metaPpto.data[i].y - 12;
+          const topMost = Math.min(topActual, topPpto);
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = malo ? '#ba1a1a' : '#2ECC71';
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.fillText(texto, (barra.x + metaPpto.data[i].x) / 2, topMost - 8);
+          ctxDibujo.restore();
+        });
+      },
+    }],
+  });
 }
 
 async function renderizarTendenciaAnual(glosarioMap) {
@@ -3834,9 +4066,9 @@ async function cargarIngresos() {
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
 
   const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
-    obtenerTablaCompleta('poliza_parametros'),
+    obtenerPolizaParametrosActivos(),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('hc_autorizado'),
+    obtenerHcAutorizadoActivo(),
   ]);
 
   const distritos = new Set();
@@ -4057,10 +4289,11 @@ async function cargarPnL() {
   const glosarioMap = obtenerGlosarioMap();
   const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
 
-  const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
-    obtenerTablaCompleta('poliza_parametros'),
+  const [polizaParametros, multidistritoBolsas, hcAutorizado, filasFoliosPoliza] = await Promise.all([
+    obtenerPolizaParametrosActivos(),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('hc_autorizado'),
+    obtenerHcAutorizadoActivo(),
+    obtenerTablaCompleta('folios_poliza'),
   ]);
 
   const distritosIngresos = new Set();
@@ -4102,6 +4335,7 @@ async function cargarPnL() {
     distritosIngresos: Array.from(distritosIngresos).sort(),
     glosarioMap,
     regionPorDistrito,
+    filasFoliosPoliza,
   };
 
   poblarSelectorDistritoPnL();
@@ -4145,7 +4379,8 @@ function renderizarPnL() {
 
     if (scope !== 'GENERAL') {
       const region = datosPnL.regionPorDistrito[scope];
-      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosPnL.datosIngresos, datosPnL.glosarioMap, scope, region, mesISO);
+      const foliosPI = obtenerFoliosPlantaInternaPorDistrito(datosPnL.filasFoliosPoliza, mesISO);
+      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosPnL.datosIngresos, datosPnL.glosarioMap, scope, region, mesISO, foliosPI);
       const facturasCostosDirectos = facturasDelMes.filter((f) => f.tipo_gasto === 'COSTOS DIRECTOS' && f.sucursal_secundaria === scope);
       const porFamiliaCD = Calc.agruparPorFamiliaGasto(facturasCostosDirectos);
       return {
@@ -4244,7 +4479,7 @@ function formatoValorSegunModo(valor, ingresoRef, modo, signado) {
     const pct = (valor / ingresoRef) * 100;
     return (signado && pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
   }
-  return formatoMoneda(valor);
+  return formatoCompacto(valor);
 }
 
 function formatoValorPnL(valor, ingresoRef, signado) {
@@ -4371,10 +4606,11 @@ async function cargarRentabilidades() {
   const regionPorDistrito = Calc.obtenerRegionPorDistrito(glosarioMap);
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
 
-  const [polizaParametros, multidistritoBolsas, hcAutorizado] = await Promise.all([
-    obtenerTablaCompleta('poliza_parametros'),
+  const [polizaParametros, multidistritoBolsas, hcAutorizado, filasFoliosPoliza] = await Promise.all([
+    obtenerPolizaParametrosActivos(),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('hc_autorizado'),
+    obtenerHcAutorizadoActivo(),
+    obtenerTablaCompleta('folios_poliza'),
   ]);
 
   const distritosIngresos = new Set();
@@ -4397,6 +4633,9 @@ async function cargarRentabilidades() {
     porMesFacturas[clave].push(f);
   });
 
+  const foliosPIPorMes = {};
+  meses.forEach((m) => { foliosPIPorMes[m.clave] = obtenerFoliosPlantaInternaPorDistrito(filasFoliosPoliza, m.clave + '-01'); });
+
   const clavesYTD = meses.filter((m) => m.anio === anioRef).map((m) => m.clave);
 
   rentabilidadPorDistrito = {};
@@ -4405,7 +4644,7 @@ async function cargarRentabilidades() {
     const porMes = meses.map((m) => {
       const mesISO = m.clave + '-01';
       const facturasDelMes = porMesFacturas[m.clave] || [];
-      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO);
+      const r = Calc.calcularRentabilidadDistritoMes(facturasDelMes, datosIngresos, glosarioMap, distrito, region, mesISO, foliosPIPorMes[m.clave]);
       return Object.assign({ etiqueta: m.etiqueta, clave: m.clave }, r);
     });
 
@@ -4507,11 +4746,11 @@ function colorMargenHeatmap(v) {
     const clamp = Math.max(-30, v);
     return interpolarColor([255, 255, 255], [186, 26, 26], -clamp / 30);
   }
-  if (v < 5) {
-    return interpolarColor([255, 255, 255], [245, 196, 66], v / 5);
+  if (v < 10) {
+    return interpolarColor([255, 255, 255], [245, 196, 66], v / 10);
   }
-  const clamp = Math.min(30, v);
-  return interpolarColor([245, 196, 66], [46, 204, 113], (clamp - 5) / 25);
+  const clamp = Math.min(40, v);
+  return interpolarColor([245, 196, 66], [46, 204, 113], (clamp - 10) / 30);
 }
 
 function colorTextoParaFondo(rgbString) {
@@ -4524,8 +4763,8 @@ function renderizarHeatmapRentabilidad() {
   const encabezado = document.getElementById('heatmap-rentabilidad-encabezado');
   const cuerpo = document.getElementById('heatmap-rentabilidad-body');
   const distritosOrden = Object.keys(rentabilidadPorDistrito).sort((a, b) => {
-    const ma = rentabilidadPorDistrito[a].ytd.margenOperacion;
-    const mb = rentabilidadPorDistrito[b].ytd.margenOperacion;
+    const ma = rentabilidadPorDistrito[a].ytd.margenBruto;
+    const mb = rentabilidadPorDistrito[b].ytd.margenBruto;
     if (ma === null) return 1;
     if (mb === null) return -1;
     return ma - mb;
@@ -4545,9 +4784,9 @@ function renderizarHeatmapRentabilidad() {
   cuerpo.innerHTML = distritosOrden.map((distrito) => {
     const distritoEscapado = distrito.replace(/'/g, "\\'");
     const celdas = rentabilidadPorDistrito[distrito].porMes.map((m) => {
-      const color = colorMargenHeatmap(m.margenOperacion);
+      const color = colorMargenHeatmap(m.margenBruto);
       const colorTexto = colorTextoParaFondo(color);
-      const texto = m.margenOperacion === null ? '—' : (m.margenOperacion >= 0 ? '+' : '') + Math.round(m.margenOperacion) + '%';
+      const texto = m.margenBruto === null ? '—' : (m.margenBruto >= 0 ? '+' : '') + Math.round(m.margenBruto) + '%';
       return `<td class="px-1 py-2 text-center cursor-pointer font-gordita-bold text-[11px]" style="background-color:${color};color:${colorTexto};" onclick="abrirDrillDownRentabilidad('${distritoEscapado}')">${texto}</td>`;
     }).join('');
     return `<tr>` +
@@ -4622,18 +4861,32 @@ function renderizarDetalleRentabilidad() {
 
   const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
   const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  const mesesDesc = datos.porMes.slice().reverse();
+
+  document.getElementById('drilldown-rentabilidad-encabezado').innerHTML =
+    '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest sticky left-0 bg-surface-container-low z-10">Categoría</th>' +
+    mesesDesc.map((m) => `<th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('');
+
+  const filaCategoria = (nombre, valores, opciones) => {
+    opciones = opciones || {};
+    const clase = opciones.bold ? 'font-gordita-bold' : '';
+    const celdas = valores.map((v, i) => {
+      const claseCelda = opciones.esMargen ? claseMargen(v) : '';
+      const texto = opciones.esMargen ? textoPct(v) : formatoValorSegunModo(v, mesesDesc[i].totalIngresos, rentabilidadModoVista, false);
+      return `<td class="px-2 py-2 text-right whitespace-nowrap ${clase} ${claseCelda}">${texto}</td>`;
+    }).join('');
+    return `<tr><td class="px-3 py-2 font-gordita-bold whitespace-nowrap sticky left-0 bg-white z-10">${nombre}</td>${celdas}</tr>`;
+  };
+
   const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
-  cuerpo.innerHTML = datos.porMes.slice().reverse().map((m) => {
-    const ing = m.totalIngresos;
-    return `<tr>` +
-      `<td class="px-3 py-2 font-gordita-bold whitespace-nowrap">${m.etiqueta}</td>` +
-      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalIngresos, ing, rentabilidadModoVista, false)}</td>` +
-      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalCD, ing, rentabilidadModoVista, false)}</td>` +
-      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.utilidadBruta, ing, rentabilidadModoVista, false)}</td>` +
-      `<td class="px-2 py-2 text-right whitespace-nowrap">${formatoValorSegunModo(m.totalGO, ing, rentabilidadModoVista, false)}</td>` +
-      `<td class="px-2 py-2 text-right font-gordita-bold whitespace-nowrap">${formatoValorSegunModo(m.utilidadOperacion, ing, rentabilidadModoVista, false)}</td>` +
-      `<td class="px-2 py-2 text-right whitespace-nowrap ${claseMargen(m.margenOperacion)}">${textoPct(m.margenOperacion)}</td></tr>`;
-  }).join('');
+  cuerpo.innerHTML =
+    filaCategoria('Ingreso', mesesDesc.map((m) => m.totalIngresos)) +
+    filaCategoria('Costo Directo', mesesDesc.map((m) => m.totalCD)) +
+    filaCategoria('Ut. Bruta', mesesDesc.map((m) => m.utilidadBruta)) +
+    filaCategoria('Margen Bruto', mesesDesc.map((m) => m.margenBruto), { esMargen: true }) +
+    filaCategoria('Gasto Oper.', mesesDesc.map((m) => m.totalGO)) +
+    filaCategoria('Ut. Operación', mesesDesc.map((m) => m.utilidadOperacion), { bold: true }) +
+    filaCategoria('Marg. Operación', mesesDesc.map((m) => m.margenOperacion), { esMargen: true });
 }
 
 function abrirDrillDownRentabilidad(distrito) {
@@ -4691,6 +4944,19 @@ function renderizarGraficaGaugeAlcance(canvasId, refGrafica, pct, color, tamanoF
       },
     }],
   });
+}
+
+// Peso para prorratear la bolsa de Gasto Operativo: folios DIMENSIONADOS de Planta Interna
+// por distrito, para un mes específico (clave 'YYYY-MM' o fecha ISO). Ver Calc.calcularProrrateo.
+function obtenerFoliosPlantaInternaPorDistrito(filasFoliosPoliza, mesISO) {
+  const mesClave = (mesISO || '').slice(0, 7);
+  const porDistrito = {};
+  (filasFoliosPoliza || []).forEach((f) => {
+    if (f.poliza !== 'PLANTA INTERNA') return;
+    if (f.mes.slice(0, 7) !== mesClave) return;
+    porDistrito[f.distrito] = (porDistrito[f.distrito] || 0) + (f.folios_dimensionados || 0);
+  });
+  return porDistrito;
 }
 
 async function obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodo) {
@@ -4901,11 +5167,11 @@ async function cargarOverview() {
 
   const [facturasYTD, polizaParametros, multidistritoBolsas, hcAutorizado, unidadesAutorizadas, presupuesto] = await Promise.all([
     obtenerFacturasEnRango(inicioYTD, finYTD, '*'),
-    obtenerTablaCompleta('poliza_parametros'),
+    obtenerPolizaParametrosActivos(),
     obtenerTablaCompleta('multidistrito_bolsas'),
-    obtenerTablaCompleta('hc_autorizado'),
-    obtenerTablaCompleta('unidades_autorizadas'),
-    obtenerTablaCompleta('presupuesto'),
+    obtenerHcAutorizadoActivo(),
+    obtenerUnidadesAutorizadasActivas(),
+    obtenerPresupuestoActivo(),
   ]);
 
   const distritosSet = new Set();
@@ -4992,9 +5258,9 @@ async function cargarOverview() {
 
   const rangosFin = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
   const facturasFinActual = await obtenerFacturasEnRango(rangosFin.actual.inicio, rangosFin.actual.fin, '*');
-  const facturasFinAnioAnterior = await obtenerFacturasEnRango(rangosFin.comparacionYoY.inicio, rangosFin.comparacionYoY.fin, '*');
   const kpisFinActual = Calc.calcularKPIs(facturasFinActual, glosarioMap);
-  const kpisFinAnioAnterior = Calc.calcularKPIs(facturasFinAnioAnterior, glosarioMap);
+  const clavesActivoFin = clavesMesesEnRango(rangosFin.actual);
+  const pptoAggFin = calcularPresupuestoAgregado(presupuesto, clavesActivoFin);
 
   const mesesRangoFin = [];
   {
@@ -5061,11 +5327,14 @@ async function cargarOverview() {
     elYoy.textContent = textoVarFin(yoy);
     elYoy.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-gordita-bold whitespace-nowrap ' + claseVarFin(yoy);
   };
-  pintarVariacionFin('ov-fin-kpi-total-yoy', kpisFinActual.totalPagado, kpisFinAnioAnterior.totalPagado);
-  pintarVariacionFin('ov-fin-kpi-directo-yoy', kpisFinActual.costoDirecto, kpisFinAnioAnterior.costoDirecto);
-  pintarVariacionFin('ov-fin-kpi-operativo-yoy', kpisFinActual.gastoOperativo, kpisFinAnioAnterior.gastoOperativo);
+  pintarVariacionFin('ov-fin-kpi-total-yoy', kpisFinActual.totalPagado, pptoAggFin.gastoPresupuestado);
 
-  const flotaVehicular = await obtenerTablaCompleta('flota_vehicular');
+  const flotaVehicularCruda = await obtenerTablaCompleta('flota_vehicular');
+  const flotaVehicular = flotaVehicularCruda.filter((v) => {
+    const entrada = glosarioMap[v.sucursal];
+    const distrito = entrada && entrada.sucursal_secundaria;
+    return !distrito || !DISTRITOS_EXCLUIDOS.has(distrito);
+  });
   overviewDatos.flotaVehicular = flotaVehicular;
   const resumenAutorizadoOv = calcularRealVsAutorizadoPorDistrito(flotaVehicular, unidadesAutorizadas, mesVigenteISO, glosarioMap);
   const faltanteTotalOv = Object.values(resumenAutorizadoOv).reduce((s, r) => s + Math.max(0, r.autorizado - r.real), 0);
@@ -5115,8 +5384,17 @@ async function cargarOverview() {
   document.getElementById('ov-op-kpi-dim-md').textContent = Math.round(foliosPoliza.multidistrito.totalDimensionados).toLocaleString('es-MX');
   document.getElementById('ov-op-kpi-real-md').textContent = Math.round(foliosPoliza.multidistrito.totalRealizados).toLocaleString('es-MX');
 
-  const datosTendenciaGasto = await calcularTendenciaGasto12m(glosarioMap, anioRef, mesRef);
-  renderizarGraficaTendencia('grafica-overview-fin', 'graficaOverviewFin', datosTendenciaGasto, { directo: '#1B4F72', operativo: '#85C1E9', textoDirecto: '#ffffff', textoOperativo: '#1b1b1b' }, false);
+  const datosTendenciaFin = await calcularTendenciaFinancieraVsPresupuesto6m(overviewDatos, anioRef, mesRef);
+  renderizarGraficaTendenciaVsPresupuesto(
+    'grafica-overview-fin-ingreso', 'graficaOverviewFinIngreso', datosTendenciaFin.etiquetas,
+    [{ label: 'Ingreso Real', data: datosTendenciaFin.ingresoReal, color: '#1B4F72', textColor: '#ffffff' }],
+    datosTendenciaFin.ingresoPpto, datosTendenciaFin.ingresoVarPct, false,
+  );
+  renderizarGraficaTendenciaVsPresupuesto(
+    'grafica-overview-fin-gasto', 'graficaOverviewFinGasto', datosTendenciaFin.etiquetas,
+    [{ label: 'Gasto Real', data: datosTendenciaFin.gastoReal, color: '#1B4F72', textColor: '#ffffff' }],
+    datosTendenciaFin.gastoPpto, datosTendenciaFin.gastoVarPct, true,
+  );
 }
 
 async function abrirPilar(nombre) {
@@ -5133,7 +5411,6 @@ async function abrirPilar(nombre) {
       capitalhumano: cargarPilarCapitalHumano,
       financieros: cargarPilarFinancieros,
       flota: cargarPilarFlota,
-      presupuesto: cargarPilarPresupuesto,
     }[nombre];
     if (cargador) await cargador();
   } finally {
@@ -5856,13 +6133,15 @@ async function renderizarFinKpis(distritoFiltro) {
   const clavesMeses = clavesMesesEnRango(rangos.actual);
 
   const facturasPeriodo = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
-  const clasificadas = facturasPeriodo
-    .map((f) => Calc.clasificarFactura(f, glosarioMap))
-    .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
+  // Nota: no se filtra por distritoFiltro aquí — el prorrateo de Gasto Operativo necesita ver
+  // las facturas de TODOS los distritos (para las bolsas y el resto del scope), no solo las del
+  // distrito objetivo. calcularRentabilidadDistritoMes ya filtra el Costo Directo internamente.
+  const clasificadas = facturasPeriodo.map((f) => Calc.clasificarFactura(f, glosarioMap));
 
   let ingreso = 0, costoDirecto = 0, gastoOperativo = 0;
   if (distritoFiltro) {
     const region = d.regionPorDistrito[distritoFiltro];
+    const filasFoliosPoliza = await obtenerTablaCompleta('folios_poliza');
     const porMesLocal = {};
     clasificadas.forEach((f) => {
       const clave = f.fecha_pago.slice(0, 7);
@@ -5870,7 +6149,8 @@ async function renderizarFinKpis(distritoFiltro) {
       porMesLocal[clave].push(f);
     });
     clavesMeses.forEach((clave) => {
-      const r = Calc.calcularRentabilidadDistritoMes(porMesLocal[clave] || [], d.datosIngresos, glosarioMap, distritoFiltro, region, clave + '-01');
+      const foliosPI = obtenerFoliosPlantaInternaPorDistrito(filasFoliosPoliza, clave + '-01');
+      const r = Calc.calcularRentabilidadDistritoMes(porMesLocal[clave] || [], d.datosIngresos, glosarioMap, distritoFiltro, region, clave + '-01', foliosPI);
       ingreso += r.totalIngresos;
       costoDirecto += r.totalCD;
       gastoOperativo += r.totalGO;
@@ -5911,6 +6191,12 @@ async function renderizarFinTarjetasResumen() {
   const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, d.anioRef, d.mesRef);
   const clavesActivo = clavesMesesEnRango(rangos.actual);
+  const filasFoliosPolizaCard = await obtenerTablaCompleta('folios_poliza');
+
+  // --- P&L: teaser con los headline numbers (mismos que el KPI de arriba) ---
+  document.getElementById('fin-card-pnl-ingreso').textContent = formatoCompacto(finKpisActuales.ingreso);
+  document.getElementById('fin-card-pnl-utilidad').textContent = formatoCompacto(finKpisActuales.utilidad);
+  document.getElementById('fin-card-pnl-margen').textContent = finKpisActuales.margen === null ? '—' : finKpisActuales.margen.toFixed(1) + '%';
 
   // --- Ingresos: monto + composición por póliza (respeta Mes/YTD) ---
   const POLIZAS_CARD = [
@@ -5959,6 +6245,7 @@ async function renderizarFinTarjetasResumen() {
   const facturasVentana = await obtenerFacturasEnRango(inicioVentana < rangos.actual.inicio ? inicioVentana : rangos.actual.inicio, finVentana, '*');
   const clasificadas = facturasVentana
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => f.tipo_gasto !== 'EXCLUIDO')
     .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
   const porMes = {};
   clasificadas.forEach((f) => {
@@ -5967,26 +6254,7 @@ async function renderizarFinTarjetasResumen() {
     porMes[clave].push(f);
   });
 
-  // --- Top Gastos: % del ingreso + tendencia de 6 meses de los rubros clave ---
-  const meses6 = meses.slice(6);
-  const serieGastosClave = meses6.map((m) => {
-    const facturasDelMes = porMes[m.clave] || [];
-    return FAMILIAS_CLAVE_TODAS.reduce((total, cat) => total + facturasDelMes.reduce((s, f) => {
-      const valor = normalizarTexto(f[cat.campo]);
-      return s + (cat.test(valor) ? (f.monto || 0) : 0);
-    }, 0), 0);
-  });
-  const ingresoPorMes6 = meses6.map((m) => {
-    let ingresoMes = 0;
-    distritos.forEach((distrito) => {
-      const region = d.regionPorDistrito[distrito];
-      ingresoMes += Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01').total;
-    });
-    return ingresoMes;
-  });
-  const seriePctGastosClave = serieGastosClave.map((v, i) => (ingresoPorMes6[i] > 0 ? (v / ingresoPorMes6[i]) * 100 : null));
-  renderizarGraficaBarraSimple('fin-card-gastos-sparkline', 'finCardGastosSparkline', meses6.map((m) => m.etiqueta), serieGastosClave, '#2E86C1', seriePctGastosClave);
-
+  // --- Top Gastos: % del ingreso de los rubros clave (periodo activo) ---
   const sumaCategoriaActivoCard = (cat) => clavesActivo.reduce((s, clave) => s + (porMes[clave] || []).reduce((s2, f) => {
     const valor = normalizarTexto(f[cat.campo]);
     return s2 + (cat.test(valor) ? (f.monto || 0) : 0);
@@ -5997,7 +6265,7 @@ async function renderizarFinTarjetasResumen() {
   }).sort((a, b) => b.pct - a.pct);
   const pctIdentificadoCard = categoriasCard.reduce((s, c) => s + c.pct, 0);
   document.getElementById('fin-card-gastos-pct-ingreso').textContent = pctIdentificadoCard.toFixed(1) + '%';
-  document.getElementById('fin-card-gastos-tabla').innerHTML = categoriasCard.map((c) => `
+  document.getElementById('fin-card-gastos-tabla').innerHTML = categoriasCard.slice(0, 5).map((c) => `
     <div class="grid grid-cols-2 gap-2 text-[10px]">
       <span class="truncate">${c.label}</span>
       <span class="text-right font-gordita-bold text-primary">${c.pct.toFixed(1)}%</span>
@@ -6017,12 +6285,14 @@ async function renderizarFinTarjetasResumen() {
     porMesNacional[clave] = porMesNacional[clave] || [];
     porMesNacional[clave].push(f);
   });
+  const foliosPIPorMesCard = {};
+  clavesActivo.forEach((clave) => { foliosPIPorMesCard[clave] = obtenerFoliosPlantaInternaPorDistrito(filasFoliosPolizaCard, clave + '-01'); });
   const rankingMargenDistritos = d.listaDistritos.map((distrito) => {
     const region = d.regionPorDistrito[distrito];
     let ingresoD = 0, cdD = 0, goD = 0;
     clavesActivo.forEach((clave) => {
       const mesISO = clave + '-01';
-      const r = Calc.calcularRentabilidadDistritoMes(porMesNacional[clave] || [], d.datosIngresos, glosarioMap, distrito, region, mesISO);
+      const r = Calc.calcularRentabilidadDistritoMes(porMesNacional[clave] || [], d.datosIngresos, glosarioMap, distrito, region, mesISO, foliosPIPorMesCard[clave]);
       ingresoD += r.totalIngresos;
       cdD += r.totalCD;
       goD += r.totalGO;
@@ -6046,11 +6316,35 @@ async function renderizarFinTarjetasResumen() {
     porProveedor[proveedor] = (porProveedor[proveedor] || 0) + (f.monto || 0);
   });
   const topProveedores = Object.keys(porProveedor).map((proveedor) => ({ proveedor, monto: porProveedor[proveedor] })).sort((a, b) => b.monto - a.monto).slice(0, 5);
-  renderizarGraficaBarraHorizontal('fin-card-proveedores-chart', 'finCardProveedoresChart', topProveedores.map((p) => p.proveedor), topProveedores.map((p) => p.monto), '#1B4F72');
   document.getElementById('fin-card-proveedores-ranking').innerHTML = topProveedores.map((p) => `
     <div class="grid grid-cols-2 gap-2 text-[10px]">
       <span class="truncate">${p.proveedor}</span>
       <span class="text-right font-gordita-bold text-primary">${formatoCompacto(p.monto)}</span>
+    </div>`).join('');
+
+  // --- Presupuesto: variación de utilidad + top variaciones de categoría (periodo activo, nacional) ---
+  const datosPptoCard = await obtenerDatosPresupuestoActivo();
+  const { presAgg: presAggCard, realAgg: realAggCard, ingresoReal: ingresoRealCard } = datosPptoCard;
+  const utilidadPptoCard = presAggCard.ingresoPresupuestado - presAggCard.gastoPresupuestado;
+  const utilidadRealCard = ingresoRealCard.total - datosPptoCard.gastoRealTotal;
+  const varUtilidadCard = utilidadRealCard - utilidadPptoCard;
+  const elVarUtilidadCard = document.getElementById('fin-card-presupuesto-var-utilidad');
+  elVarUtilidadCard.textContent = textoVariacionMoneda(varUtilidadCard);
+  elVarUtilidadCard.className = 'font-gordita-bold text-lg ' + claseVariacion(varUtilidadCard, true);
+
+  const categoriasCard2 = Object.keys(presAggCard.porCategoria).map((cat) => {
+    const ppto = presAggCard.porCategoria[cat].monto;
+    const real = (realAggCard.porCategoria[cat] && realAggCard.porCategoria[cat].monto) || 0;
+    return { categoria: cat, variacion: real - ppto };
+  });
+  Object.keys(realAggCard.porCategoria).forEach((cat) => {
+    if (!presAggCard.porCategoria[cat]) categoriasCard2.push({ categoria: cat, variacion: realAggCard.porCategoria[cat].monto });
+  });
+  const rankingPptoCard = categoriasCard2.sort((a, b) => Math.abs(b.variacion) - Math.abs(a.variacion)).slice(0, 5);
+  document.getElementById('fin-card-presupuesto-ranking').innerHTML = rankingPptoCard.map((c) => `
+    <div class="grid grid-cols-2 gap-2 text-[10px]">
+      <span class="truncate" title="${c.categoria}">${c.categoria}</span>
+      <span class="text-right font-gordita-bold ${claseVariacion(c.variacion, false)}">${textoVariacionMoneda(c.variacion)}</span>
     </div>`).join('');
 }
 
@@ -6061,20 +6355,21 @@ function enRangoActivo(f, rango) {
 async function abrirAreaFinanciera(area) {
   finAreaActual = area;
   document.getElementById('fin-areas-grid').style.display = 'none';
-  ['ingresos', 'gastos', 'rentabilidad', 'proveedores'].forEach((a) => {
+  ['pnl', 'ingresos', 'gastos', 'presupuesto'].forEach((a) => {
     document.getElementById('fin-area-' + a).style.display = a === area ? '' : 'none';
   });
   mostrarIndicadorCarga();
   try {
-    if (area === 'ingresos') {
+    if (area === 'pnl') {
+      await cargarPnL();
+      await cargarRentabilidades();
+    } else if (area === 'ingresos') {
       await renderizarAreaIngresos();
     } else if (area === 'gastos') {
       await renderizarAreaGastos();
-    } else if (area === 'rentabilidad') {
-      await cargarRentabilidades();
-      renderizarTendenciaHistoricaMargen();
-    } else if (area === 'proveedores') {
       await cargarAnalisisProveedor(finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado);
+    } else if (area === 'presupuesto') {
+      await cargarPilarPresupuesto();
     }
   } finally {
     ocultarIndicadorCarga();
@@ -6083,8 +6378,9 @@ async function abrirAreaFinanciera(area) {
 
 function cerrarAreaFinanciera() {
   finAreaActual = null;
+  cerrarAreaPresupuesto();
   document.getElementById('fin-areas-grid').style.display = '';
-  ['ingresos', 'gastos', 'rentabilidad', 'proveedores'].forEach((a) => {
+  ['pnl', 'ingresos', 'gastos', 'presupuesto'].forEach((a) => {
     document.getElementById('fin-area-' + a).style.display = 'none';
   });
 }
@@ -6228,93 +6524,6 @@ const FAMILIAS_CLAVE_OPERATIVAS = [
 ];
 const FAMILIAS_CLAVE_TODAS = FAMILIAS_CLAVE_NOMINA.concat(FAMILIAS_CLAVE_OPERATIVAS);
 
-function renderizarGraficaBarraSimple(canvasId, refGrafica, etiquetas, datos, color, datosPct) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  if (window[refGrafica]) window[refGrafica].destroy();
-  const ALTURA_MINIMA_MONTO_DENTRO = 18;
-  window[refGrafica] = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 28 }] },
-    options: {
-      maintainAspectRatio: false,
-      layout: { padding: { top: 26 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 8,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (item) => formatoMoneda(item.parsed.y) },
-        },
-      },
-      scales: {
-        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 9 } } },
-        y: { display: false, beginAtZero: true },
-      },
-    },
-    plugins: [{
-      id: 'etiquetasBarraSimple',
-      afterDatasetsDraw(chart) {
-        const { ctx: ctxDibujo } = chart;
-        const meta = chart.getDatasetMeta(0);
-        meta.data.forEach((barra, i) => {
-          if (datosPct && datosPct[i] != null) {
-            const texto = datosPct[i].toFixed(1) + '%';
-            ctxDibujo.save();
-            ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
-            const anchoTexto = ctxDibujo.measureText(texto).width;
-            const padX = 5, altoBadge = 14;
-            const anchoBadge = anchoTexto + padX * 2;
-            const xBadge = barra.x - anchoBadge / 2;
-            const yBadge = barra.y - 8 - altoBadge;
-            ctxDibujo.fillStyle = 'rgba(27,79,114,0.12)';
-            ctxDibujo.beginPath();
-            ctxDibujo.roundRect(xBadge, yBadge, anchoBadge, altoBadge, 4);
-            ctxDibujo.fill();
-            ctxDibujo.fillStyle = '#1b1b1b';
-            ctxDibujo.textAlign = 'center';
-            ctxDibujo.textBaseline = 'middle';
-            ctxDibujo.fillText(texto, barra.x, yBadge + altoBadge / 2);
-            ctxDibujo.restore();
-          }
-
-          const altura = Math.abs(barra.base - barra.y);
-          const textoMonto = formatoCompacto(datos[i]);
-          ctxDibujo.save();
-          ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
-          const anchoMonto = ctxDibujo.measureText(textoMonto).width;
-          const padXMonto = 5, altoBadgeMonto = 14;
-          const anchoBadgeMonto = anchoMonto + padXMonto * 2;
-          const xBadgeMonto = barra.x - anchoBadgeMonto / 2;
-          ctxDibujo.textAlign = 'center';
-          if (altura >= ALTURA_MINIMA_MONTO_DENTRO) {
-            const yCentro = (barra.y + barra.base) / 2;
-            ctxDibujo.fillStyle = 'rgba(0,0,0,0.18)';
-            ctxDibujo.beginPath();
-            ctxDibujo.roundRect(xBadgeMonto, yCentro - altoBadgeMonto / 2, anchoBadgeMonto, altoBadgeMonto, 4);
-            ctxDibujo.fill();
-            ctxDibujo.fillStyle = '#ffffff';
-            ctxDibujo.textBaseline = 'middle';
-            ctxDibujo.fillText(textoMonto, barra.x, yCentro);
-          } else {
-            const yBadgeMonto = barra.y - 16 - altoBadgeMonto / 2;
-            ctxDibujo.fillStyle = 'rgba(27,79,114,0.12)';
-            ctxDibujo.beginPath();
-            ctxDibujo.roundRect(xBadgeMonto, yBadgeMonto, anchoBadgeMonto, altoBadgeMonto, 4);
-            ctxDibujo.fill();
-            ctxDibujo.fillStyle = '#1b1b1b';
-            ctxDibujo.textBaseline = 'middle';
-            ctxDibujo.fillText(textoMonto, barra.x, yBadgeMonto + altoBadgeMonto / 2);
-          }
-          ctxDibujo.restore();
-        });
-      },
-    }],
-  });
-}
-
 // Pie con etiquetas externas (línea + póliza + folios + monto), para tarjetas resumen.
 function renderizarGraficaPieConEtiquetas(canvasId, refGrafica, datos, textoCentral, textoCentralSecundario, colorCentralSecundario) {
   const ctx = document.getElementById(canvasId);
@@ -6411,51 +6620,6 @@ function renderizarGraficaPieConEtiquetas(canvasId, refGrafica, datos, textoCent
 }
 
 // Barra horizontal compacta para rankings (proveedores, etc.) en tarjetas resumen.
-function renderizarGraficaBarraHorizontal(canvasId, refGrafica, etiquetas, datos, color) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  if (window[refGrafica]) window[refGrafica].destroy();
-  window[refGrafica] = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: etiquetas, datasets: [{ data: datos, backgroundColor: color, borderRadius: 3, maxBarThickness: 16 }] },
-    options: {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      layout: { padding: { right: 38 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1b1b1b',
-          padding: 8,
-          titleFont: { family: 'Gordita', weight: 'bold' },
-          bodyFont: { family: 'Gordita' },
-          callbacks: { label: (item) => formatoMoneda(item.parsed.x) },
-        },
-      },
-      scales: {
-        x: { display: false, beginAtZero: true },
-        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: 8 }, callback: function (v) { const l = this.getLabelForValue(v); return l.length > 16 ? l.slice(0, 15) + '…' : l; } } },
-      },
-    },
-    plugins: [{
-      id: 'etiquetasBarraHorizontal',
-      afterDatasetsDraw(chart) {
-        const { ctx: ctxDibujo } = chart;
-        const meta = chart.getDatasetMeta(0);
-        meta.data.forEach((barra, i) => {
-          ctxDibujo.save();
-          ctxDibujo.fillStyle = '#1b1b1b';
-          ctxDibujo.font = "bold 8px 'Gordita', sans-serif";
-          ctxDibujo.textAlign = 'left';
-          ctxDibujo.textBaseline = 'middle';
-          ctxDibujo.fillText(formatoCompacto(datos[i]), barra.x + 4, barra.y);
-          ctxDibujo.restore();
-        });
-      },
-    }],
-  });
-}
-
 // Barra vertical con conteos enteros (no moneda) y badge del total arriba de cada barra.
 function renderizarGraficaBarraConteo(canvasId, refGrafica, etiquetas, datos, color) {
   const ctx = document.getElementById(canvasId);
@@ -6645,14 +6809,15 @@ async function renderizarAreaGastos() {
     meses6.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
   }
   const inicio6 = rangoDeMes(new Date(anioRef, mesRef - 5, 1).getFullYear(), new Date(anioRef, mesRef - 5, 1).getMonth()).inicio;
-  const inicioYTDAnterior = rangoDeMes(anioRef - 1, 0).inicio;
+  const inicioAnioActual = rangoDeMes(anioRef, 0).inicio;
   const finYTDActual = rangoDeMes(anioRef, mesRef).fin;
-  const inicioVentana = inicio6 < inicioYTDAnterior ? inicio6 : inicioYTDAnterior;
+  const inicioVentana = inicio6 < inicioAnioActual ? inicio6 : inicioAnioActual;
   const finVentana = finYTDActual > rangos.actual.fin ? finYTDActual : rangos.actual.fin;
 
   const facturas = await obtenerFacturasEnRango(inicioVentana, finVentana, '*');
   const clasificadas = facturas
     .map((f) => Calc.clasificarFactura(f, glosarioMap))
+    .filter((f) => f.tipo_gasto !== 'EXCLUIDO')
     .filter((f) => !distritoFiltro || f.sucursal_secundaria === distritoFiltro);
 
   const enRango = (f, rango) => f.fecha_pago >= rango.inicio && f.fecha_pago <= rango.fin;
@@ -6668,8 +6833,14 @@ async function renderizarAreaGastos() {
 
   const mesesYTDActual = [];
   for (let m = 0; m <= mesRef; m++) mesesYTDActual.push(claveMes(anioRef, m));
-  const mesesYTDAnterior = [];
-  for (let m = 0; m <= mesRef; m++) mesesYTDAnterior.push(claveMes(anioRef - 1, m));
+
+  const presupuestoDelPeriodo = (d.presupuesto || []).filter((p) => p.tipo_gasto_categoria !== 'INGRESOS' && (!distritoFiltro || p.distrito === distritoFiltro));
+  const presupuestoPorMes = {};
+  presupuestoDelPeriodo.forEach((p) => {
+    const clave = (p.mes || '').slice(0, 7);
+    presupuestoPorMes[clave] = presupuestoPorMes[clave] || [];
+    presupuestoPorMes[clave].push(p);
+  });
 
   const sumaCategoriaEnLista = (cat, lista) => lista.reduce((s, f) => {
     const valor = normalizarTexto(f[cat.campo]);
@@ -6677,15 +6848,21 @@ async function renderizarAreaGastos() {
   }, 0);
   const sumaCategoriaMeses = (cat, clavesMeses) => clavesMeses.reduce((s, clave) => s + sumaCategoriaEnLista(cat, porMes[clave] || []), 0);
 
+  const sumaCategoriaPresupuestoEnLista = (cat, lista) => lista.reduce((s, p) => {
+    const valor = normalizarTexto(p[cat.campo]);
+    return s + (cat.test(valor) ? (Number(p.monto) || 0) : 0);
+  }, 0);
+  const sumaCategoriaPresupuestoMeses = (cat, clavesMeses) => clavesMeses.reduce((s, clave) => s + sumaCategoriaPresupuestoEnLista(cat, presupuestoPorMes[clave] || []), 0);
+
   const calcularCategoria = (cat) => {
     const serieMensual = meses6.map((m) => sumaCategoriaEnLista(cat, porMes[m.clave] || []));
     const ytdActual = sumaCategoriaMeses(cat, mesesYTDActual);
-    const ytdAnterior = sumaCategoriaMeses(cat, mesesYTDAnterior);
+    const ytdPresupuesto = sumaCategoriaPresupuestoMeses(cat, mesesYTDActual);
     return Object.assign({}, cat, {
       serieMensual,
       ytdActual,
-      variacionPct: Calc.calcularVariacionPct(ytdActual, ytdAnterior),
-      variacionMonto: ytdActual - ytdAnterior,
+      variacionPct: Calc.calcularVariacionPct(ytdActual, ytdPresupuesto),
+      variacionMonto: ytdActual - ytdPresupuesto,
     });
   };
 
@@ -6707,16 +6884,17 @@ async function renderizarAreaGastos() {
   const serieClaveMensual = meses6.map((_, i) => categorias.reduce((s, c) => s + c.serieMensual[i], 0));
   const serieOtrosMensual = meses6.map((m, i) => totalMesTodas(m.clave) - serieClaveMensual[i]);
   const totalYTDActualTodas = mesesYTDActual.reduce((s, clave) => s + totalMesTodas(clave), 0);
-  const totalYTDAnteriorTodas = mesesYTDAnterior.reduce((s, clave) => s + totalMesTodas(clave), 0);
+  const totalMesPresupuestoTodas = (clave) => (presupuestoPorMes[clave] || []).reduce((s, p) => s + (Number(p.monto) || 0), 0);
+  const totalYTDPresupuestoTodas = mesesYTDActual.reduce((s, clave) => s + totalMesPresupuestoTodas(clave), 0);
   const claveYTDActual = categorias.reduce((s, c) => s + sumaCategoriaMeses(c, mesesYTDActual), 0);
-  const claveYTDAnterior = categorias.reduce((s, c) => s + sumaCategoriaMeses(c, mesesYTDAnterior), 0);
+  const claveYTDPresupuesto = categorias.reduce((s, c) => s + sumaCategoriaPresupuestoMeses(c, mesesYTDActual), 0);
   const otrosYtdActual = totalYTDActualTodas - claveYTDActual;
-  const otrosYtdAnterior = totalYTDAnteriorTodas - claveYTDAnterior;
+  const otrosYtdPresupuesto = totalYTDPresupuestoTodas - claveYTDPresupuesto;
   const otros = {
     serieMensual: serieOtrosMensual,
     ytdActual: otrosYtdActual,
-    variacionPct: Calc.calcularVariacionPct(otrosYtdActual, otrosYtdAnterior),
-    variacionMonto: otrosYtdActual - otrosYtdAnterior,
+    variacionPct: Calc.calcularVariacionPct(otrosYtdActual, otrosYtdPresupuesto),
+    variacionMonto: otrosYtdActual - otrosYtdPresupuesto,
   };
 
   const totalIdentificado = FAMILIAS_CLAVE_TODAS.reduce((s, cat) => s + sumaCategoriaEnLista(cat, actualPeriodo), 0);
@@ -6851,12 +7029,13 @@ function agruparGastoRealPorCategoriaYDistrito(facturas, glosarioMap) {
   const porDistrito = {};
   const porCategoria = {};
 
-  (facturas || []).forEach((f) => {
+  (facturas || []).forEach((raw) => {
+    const f = Calc.clasificarFactura(raw, glosarioMap);
+    if (f.tipo_gasto === 'EXCLUIDO') return;
     const categoria = f.tipo_gasto_categoria || 'SIN CATEGORIA';
     const monto = f.subtotal || 0;
     const gastoNombre = f.gasto || 'SIN GASTO';
-    const entrada = glosarioMap[f.sucursal];
-    const distrito = (entrada && entrada.sucursal_secundaria) || 'SIN DISTRITO';
+    const distrito = f.sucursal_secundaria || 'SIN DISTRITO';
 
     porCategoria[categoria] = porCategoria[categoria] || { monto: 0, gastos: {}, distritos: {} };
     porCategoria[categoria].monto += monto;
@@ -6926,6 +7105,7 @@ async function obtenerDatosPresupuestoActivo() {
 
 let presupuestoAreaActual = null;
 let presupuestoDatosActuales = null;
+let presupuestoForecastAnualCache = null;
 let presupuestoForecastVista = 'mensual';
 let presupuestoCategoriaOrden = 'var_abs';
 let presupuestoCategoriaAbierta = null;
@@ -6968,8 +7148,208 @@ async function cargarPilarPresupuesto() {
   elVarUtilidad.textContent = textoVariacionMoneda(varUtilidad);
   elVarUtilidad.className = 'font-gordita-bold text-lg ' + claseVariacion(varUtilidad, true);
 
+  calcularVariacionesPresupuesto();
+  renderizarVariacionesPresupuesto();
+  await renderizarRollingForecastLanding();
+
   await renderizarPresupuestoTarjetasResumen();
   if (presupuestoAreaActual) await abrirAreaPresupuesto(presupuestoAreaActual);
+}
+
+let presupuestoVariacionesDatos = { sobre: [], bajo: [] };
+let presupuestoVariacionesExpandido = { sobre: false, bajo: false };
+
+function calcularVariacionesPresupuesto() {
+  const { presAgg, realAgg } = presupuestoDatosActuales;
+  const categorias = new Set([...Object.keys(presAgg.porCategoria), ...Object.keys(realAgg.porCategoria)]);
+  const filas = Array.from(categorias).map((cat) => {
+    const ppto = (presAgg.porCategoria[cat] && presAgg.porCategoria[cat].monto) || 0;
+    const real = (realAgg.porCategoria[cat] && realAgg.porCategoria[cat].monto) || 0;
+    const delta = real - ppto;
+    const deltaPct = ppto ? (delta / Math.abs(ppto)) * 100 : null;
+    return { categoria: cat, ppto, real, delta, deltaPct };
+  }).filter((f) => Math.round(f.delta) !== 0);
+
+  presupuestoVariacionesDatos = {
+    sobre: filas.filter((f) => f.delta > 0).sort((a, b) => b.delta - a.delta),
+    bajo: filas.filter((f) => f.delta < 0).sort((a, b) => a.delta - b.delta),
+  };
+}
+
+function filaVariacionPresupuesto(f, tipo) {
+  const colorDelta = tipo === 'sobre' ? 'text-error' : 'text-qiora-green';
+  const signo = f.delta >= 0 ? '+' : '';
+  const textoPct = f.deltaPct === null ? '' : signo + f.deltaPct.toFixed(1) + '%';
+  return `<div class="py-2 border-b border-outline-variant last:border-0">
+    <div class="flex items-center justify-between gap-2">
+      <span class="font-gordita-bold text-xs truncate" title="${f.categoria}">${f.categoria}</span>
+      <span class="font-gordita-bold text-sm ${colorDelta} shrink-0">${signo}${formatoCompacto(f.delta)}</span>
+    </div>
+    <div class="flex items-center justify-between text-[10px] text-on-surface-variant mt-0.5">
+      <span>RF ${formatoCompacto(f.real)} · PPTO ${formatoCompacto(f.ppto)}</span>
+      <span class="${colorDelta} font-gordita-bold shrink-0">${textoPct}</span>
+    </div>
+  </div>`;
+}
+
+function renderizarVariacionesPresupuesto() {
+  const LIMITE = 8;
+  ['sobre', 'bajo'].forEach((tipo) => {
+    const lista = presupuestoVariacionesDatos[tipo];
+    const expandido = presupuestoVariacionesExpandido[tipo];
+    const visibles = expandido ? lista : lista.slice(0, LIMITE);
+    document.getElementById('presupuesto-variaciones-' + tipo).innerHTML = visibles.length
+      ? visibles.map((f) => filaVariacionPresupuesto(f, tipo)).join('')
+      : '<p class="text-xs text-on-surface-variant">Sin variaciones en el periodo activo.</p>';
+    const boton = document.getElementById('presupuesto-variaciones-' + tipo + '-boton');
+    const restantes = lista.length - LIMITE;
+    if (restantes > 0) {
+      boton.style.display = '';
+      boton.textContent = expandido ? '▲ Ver menos' : '▼ Ver ' + restantes + ' más';
+    } else {
+      boton.style.display = 'none';
+    }
+  });
+}
+
+function alternarVerMasVariaciones(tipo) {
+  presupuestoVariacionesExpandido[tipo] = !presupuestoVariacionesExpandido[tipo];
+  renderizarVariacionesPresupuesto();
+}
+
+async function calcularForecastAnualPresupuesto() {
+  const d = overviewDatos;
+  const anioRef = d.anioRef;
+  const mesRef = d.mesRef;
+
+  const meses12 = [];
+  for (let m = 0; m <= 11; m++) meses12.push({ clave: claveMes(anioRef, m), etiqueta: etiquetaMesCorta(anioRef, m), cerrado: m <= mesRef });
+
+  const pptoIngresoPorMes = {};
+  const pptoGastoPorMes = {};
+  (d.presupuesto || []).forEach((p) => {
+    const clave = (p.mes || '').slice(0, 7);
+    const monto = Number(p.monto) || 0;
+    if (p.tipo_gasto_categoria === 'INGRESOS') {
+      pptoIngresoPorMes[clave] = (pptoIngresoPorMes[clave] || 0) + monto;
+    } else {
+      pptoGastoPorMes[clave] = (pptoGastoPorMes[clave] || 0) + monto;
+    }
+  });
+
+  const ingresoRealPorMes = meses12.map((m) => {
+    if (!m.cerrado) return 0;
+    let suma = 0;
+    d.listaDistritos.forEach((distrito) => {
+      const region = d.regionPorDistrito[distrito];
+      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
+      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
+    });
+    return suma;
+  });
+
+  const inicioAnio = rangoDeMes(anioRef, 0).inicio;
+  const finCerrado = rangoDeMes(anioRef, mesRef).fin;
+  const facturasCerradas = await obtenerFacturasEnRango(inicioAnio, finCerrado, '*');
+  const gastoRealPorMesMap = {};
+  facturasCerradas.forEach((raw) => {
+    const f = Calc.clasificarFactura(raw, d.glosarioMap);
+    if (f.tipo_gasto === 'EXCLUIDO') return;
+    const clave = f.fecha_pago.slice(0, 7);
+    gastoRealPorMesMap[clave] = (gastoRealPorMesMap[clave] || 0) + (f.subtotal || 0);
+  });
+  const gastoRealPorMes = meses12.map((m) => (m.cerrado ? (gastoRealPorMesMap[m.clave] || 0) : 0));
+
+  const pptoIngresoArr = meses12.map((m) => pptoIngresoPorMes[m.clave] || 0);
+  const pptoGastoArr = meses12.map((m) => pptoGastoPorMes[m.clave] || 0);
+
+  return { meses12, mesRef, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr };
+}
+
+async function renderizarRollingForecastLanding() {
+  const forecast = await calcularForecastAnualPresupuesto();
+  presupuestoForecastAnualCache = forecast;
+  const { meses12, mesRef, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr } = forecast;
+
+  const ingresoCombinado = meses12.map((m, i) => (m.cerrado ? ingresoRealPorMes[i] : pptoIngresoArr[i]));
+  const utilidadCombinado = meses12.map((m, i) => (m.cerrado ? ingresoRealPorMes[i] - gastoRealPorMes[i] : pptoIngresoArr[i] - pptoGastoArr[i]));
+  renderizarGraficaTendenciaAnualForecast('grafica-presupuesto-rf-tendencia', 'graficaPresupuestoRfTendencia', meses12.map((m) => m.etiqueta), ingresoCombinado, utilidadCombinado, mesRef);
+
+  const realIngresoTotal = ingresoRealPorMes.reduce((s, v) => s + v, 0);
+  const proyeccionIngresoRestante = meses12.reduce((s, m, i) => s + (m.cerrado ? 0 : pptoIngresoArr[i]), 0);
+  const forecastIngreso = realIngresoTotal + proyeccionIngresoRestante;
+  const pptoIngresoAnual = pptoIngresoArr.reduce((s, v) => s + v, 0);
+
+  const realGastoTotal = gastoRealPorMes.reduce((s, v) => s + v, 0);
+  const proyeccionGastoRestante = meses12.reduce((s, m, i) => s + (m.cerrado ? 0 : pptoGastoArr[i]), 0);
+  const forecastGasto = realGastoTotal + proyeccionGastoRestante;
+  const pptoGastoAnual = pptoGastoArr.reduce((s, v) => s + v, 0);
+
+  const forecastUtilidad = forecastIngreso - forecastGasto;
+  const pptoUtilidadAnual = pptoIngresoAnual - pptoGastoAnual;
+
+  const pintarKpiForecast = (idMonto, idVar, monto, ppto, positivoEsBueno) => {
+    document.getElementById(idMonto).textContent = formatoCompacto(monto);
+    const variacion = monto - ppto;
+    const el = document.getElementById(idVar);
+    el.textContent = textoVariacionMoneda(variacion) + ' vs. Ppto';
+    el.className = 'text-xs font-gordita-bold ' + claseVariacion(variacion, positivoEsBueno);
+  };
+  pintarKpiForecast('presupuesto-rf-kpi-ingreso-monto', 'presupuesto-rf-kpi-ingreso-var', forecastIngreso, pptoIngresoAnual, true);
+  pintarKpiForecast('presupuesto-rf-kpi-gasto-monto', 'presupuesto-rf-kpi-gasto-var', forecastGasto, pptoGastoAnual, false);
+  pintarKpiForecast('presupuesto-rf-kpi-utilidad-monto', 'presupuesto-rf-kpi-utilidad-var', forecastUtilidad, pptoUtilidadAnual, true);
+}
+
+function renderizarGraficaTendenciaAnualForecast(canvasId, refGrafica, etiquetas, ingresoSerie, utilidadSerie, mesRef) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const dash = (c) => (c.p1DataIndex > mesRef ? [5, 4] : undefined);
+
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { label: 'Ingresos', data: ingresoSerie, borderColor: '#1B4F72', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#1B4F72', pointBorderColor: '#ffffff', pointBorderWidth: 1.5, segment: { borderDash: dash }, fill: false },
+        { label: 'Utilidad de Operación', data: utilidadSerie, borderColor: '#2ECC71', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#2ECC71', pointBorderColor: '#ffffff', pointBorderWidth: 1.5, segment: { borderDash: dash }, fill: false },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b',
+          padding: 10,
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (item) => item.dataset.label + ': ' + formatoCompacto(item.parsed.y) },
+        },
+      },
+      scales: {
+        y: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompactoCorto(v), font: { family: 'Gordita' } } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
+      },
+    },
+    plugins: [{
+      id: 'sombraPronosticoAnual',
+      beforeDraw(chart) {
+        if (mesRef >= 11) return;
+        const { ctx: ctxDibujo, chartArea, scales } = chart;
+        const xInicio = scales.x.getPixelForValue(mesRef);
+        ctxDibujo.save();
+        ctxDibujo.fillStyle = 'rgba(0,0,0,0.04)';
+        ctxDibujo.fillRect(xInicio, chartArea.top, chartArea.right - xInicio, chartArea.bottom - chartArea.top);
+        ctxDibujo.fillStyle = '#9a9a9a';
+        ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+        ctxDibujo.textAlign = 'center';
+        ctxDibujo.fillText('PRONÓSTICO', (xInicio + chartArea.right) / 2, chartArea.top + 12);
+        ctxDibujo.restore();
+      },
+    }],
+  });
 }
 
 async function renderizarPresupuestoTarjetasResumen() {
@@ -7085,57 +7465,20 @@ function cambiarVistaForecastPresupuesto(vista) {
 
 async function renderizarAreaPresupuestoResumen() {
   const d = overviewDatos;
-  const anioRef = d.anioRef;
   const mesRef = d.mesRef;
 
-  const meses12 = [];
-  for (let m = 0; m <= 11; m++) meses12.push({ clave: claveMes(anioRef, m), etiqueta: etiquetaMesCorta(anioRef, m), cerrado: m <= mesRef });
+  const forecast = presupuestoForecastAnualCache || await calcularForecastAnualPresupuesto();
+  const { meses12, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr } = forecast;
 
   document.getElementById('presupuesto-forecast-nota').textContent =
     'Ene–' + MESES_LARGOS[mesRef] + ' = real ejecutado' + (mesRef < 11 ? ' · ' + MESES_LARGOS[mesRef + 1] + '–Dic = presupuesto proyectado' : ' · año completo ya cerrado');
-
-  const pptoIngresoPorMes = {};
-  const pptoGastoPorMes = {};
-  (d.presupuesto || []).forEach((p) => {
-    const clave = (p.mes || '').slice(0, 7);
-    const monto = Number(p.monto) || 0;
-    if (p.tipo_gasto_categoria === 'INGRESOS') {
-      pptoIngresoPorMes[clave] = (pptoIngresoPorMes[clave] || 0) + monto;
-    } else {
-      pptoGastoPorMes[clave] = (pptoGastoPorMes[clave] || 0) + monto;
-    }
-  });
-
-  const ingresoRealPorMes = meses12.map((m) => {
-    if (!m.cerrado) return 0;
-    let suma = 0;
-    d.listaDistritos.forEach((distrito) => {
-      const region = d.regionPorDistrito[distrito];
-      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
-      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
-    });
-    return suma;
-  });
-
-  const inicioAnio = rangoDeMes(anioRef, 0).inicio;
-  const finCerrado = rangoDeMes(anioRef, mesRef).fin;
-  const facturasCerradas = await obtenerFacturasEnRango(inicioAnio, finCerrado, 'subtotal, fecha_pago');
-  const gastoRealPorMesMap = {};
-  facturasCerradas.forEach((f) => {
-    const clave = f.fecha_pago.slice(0, 7);
-    gastoRealPorMesMap[clave] = (gastoRealPorMesMap[clave] || 0) + (f.subtotal || 0);
-  });
-  const gastoRealPorMes = meses12.map((m) => (m.cerrado ? (gastoRealPorMesMap[m.clave] || 0) : 0));
-
-  const pptoIngresoArr = meses12.map((m) => pptoIngresoPorMes[m.clave] || 0);
-  const pptoGastoArr = meses12.map((m) => pptoGastoPorMes[m.clave] || 0);
 
   renderizarGraficaForecastPresupuesto('presupuesto-forecast-grafica-ingreso', 'graficaPresupuestoForecastIngreso', meses12, ingresoRealPorMes, pptoIngresoArr);
   renderizarGraficaForecastPresupuesto('presupuesto-forecast-grafica-gasto', 'graficaPresupuestoForecastGasto', meses12, gastoRealPorMes, pptoGastoArr);
 
   const realIngresoTotal = ingresoRealPorMes.reduce((s, v) => s + v, 0);
   const pptoIngresoAnual = pptoIngresoArr.reduce((s, v) => s + v, 0);
-  const proyeccionIngresoRestante = meses12.filter((m) => !m.cerrado).reduce((s, m, i) => s + (pptoIngresoPorMes[m.clave] || 0), 0);
+  const proyeccionIngresoRestante = meses12.reduce((s, m, i) => s + (m.cerrado ? 0 : pptoIngresoArr[i]), 0);
   const forecastIngreso = realIngresoTotal + proyeccionIngresoRestante;
   const varIngresoForecast = forecastIngreso - pptoIngresoAnual;
 
@@ -7148,7 +7491,7 @@ async function renderizarAreaPresupuestoResumen() {
 
   const realGastoTotal = gastoRealPorMes.reduce((s, v) => s + v, 0);
   const pptoGastoAnual = pptoGastoArr.reduce((s, v) => s + v, 0);
-  const proyeccionGastoRestante = meses12.filter((m) => !m.cerrado).reduce((s, m) => s + (pptoGastoPorMes[m.clave] || 0), 0);
+  const proyeccionGastoRestante = meses12.reduce((s, m, i) => s + (m.cerrado ? 0 : pptoGastoArr[i]), 0);
   const forecastGasto = realGastoTotal + proyeccionGastoRestante;
   const varGastoForecast = forecastGasto - pptoGastoAnual;
 
