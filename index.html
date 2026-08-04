@@ -359,29 +359,6 @@
           </div>
         </section>
 
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-8 mb-lg">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-              <div class="p-2 bg-brand-teal/10 rounded-lg"><span class="material-symbols-outlined text-brand-teal">groups</span></div>
-              <h2 class="font-gordita-bold text-xl text-primary">Capital Humano</h2>
-            </div>
-            <button onclick="abrirPilar('capitalhumano')" class="flex items-center gap-1 text-xs font-gordita-bold text-on-surface-variant hover:text-qiora-blue transition-colors">
-              Ver desglose completo <span class="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">HeadCount</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Nómina Pagada</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Bono Pagado</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-            <div class="bg-surface-container-low p-5 rounded-lg"><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Rotación (Altas/Bajas)</p><h2 class="font-gordita-bold text-xl text-on-surface-variant">-</h2></div>
-          </div>
-          <div class="bg-surface-container-low p-8 rounded-lg flex flex-col items-center text-center">
-            <span class="material-symbols-outlined text-brand-teal mb-2" style="font-size:32px;">database</span>
-            <h3 class="font-gordita-bold text-primary mb-1">Falta conectar la fuente de datos</h3>
-            <p class="text-sm text-on-surface-variant max-w-md">En cuanto compartas la base de HeadCount, nómina, bonos y movimientos de altas/bajas, esta sección se conecta con datos reales.</p>
-          </div>
-        </section>
-
       </div>
 
       <div class="vista" id="vista-resumen">
@@ -1011,7 +988,6 @@
                 <button id="pnl-modo-pesos" onclick="cambiarModoVistaPnL('pesos')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
                 <button id="pnl-modo-porcentaje" onclick="cambiarModoVistaPnL('porcentaje')" class="px-4 py-1.5 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
               </div>
-              <select id="pnl-anio" onchange="cambiarAnioPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white"></select>
               <select id="pnl-distrito" onchange="renderizarPnL()" class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-gordita-bold bg-white">
                 <option value="GENERAL">General (toda la empresa)</option>
               </select>
@@ -1243,44 +1219,6 @@
           <p id="pilar-presupuesto-periodo" class="text-sm text-on-surface-variant">-</p>
         </div>
 
-        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Tendencia del Año · Rolling Forecast</h4>
-        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter items-center">
-            <div class="lg:col-span-3" style="height:260px;"><canvas id="grafica-presupuesto-rf-tendencia"></canvas></div>
-            <div class="space-y-4">
-              <div>
-                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Ingresos · Cierre Año (RF)</p>
-                <h2 id="presupuesto-rf-kpi-ingreso-monto" class="font-gordita-bold text-xl text-primary">-</h2>
-                <p id="presupuesto-rf-kpi-ingreso-var" class="text-xs font-gordita-bold">-</p>
-              </div>
-              <div>
-                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Gastos · Cierre Año (RF)</p>
-                <h2 id="presupuesto-rf-kpi-gasto-monto" class="font-gordita-bold text-xl text-primary">-</h2>
-                <p id="presupuesto-rf-kpi-gasto-var" class="text-xs font-gordita-bold">-</p>
-              </div>
-              <div>
-                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide">Utilidad de Operación · Cierre Año (RF)</p>
-                <h2 id="presupuesto-rf-kpi-utilidad-monto" class="font-gordita-bold text-xl text-primary">-</h2>
-                <p id="presupuesto-rf-kpi-utilidad-var" class="text-xs font-gordita-bold">-</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Principales Variaciones en Gastos · Por Monto</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-lg">
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
-            <p class="font-gordita-bold text-xs text-error uppercase tracking-wide mb-3">▲ Por encima de presupuesto</p>
-            <div id="presupuesto-variaciones-sobre" class="space-y-3"></div>
-            <button id="presupuesto-variaciones-sobre-boton" onclick="alternarVerMasVariaciones('sobre')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
-          </section>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
-            <p class="font-gordita-bold text-xs text-qiora-green uppercase tracking-wide mb-3">▼ Por debajo de presupuesto</p>
-            <div id="presupuesto-variaciones-bajo" class="space-y-3"></div>
-            <button id="presupuesto-variaciones-bajo-boton" onclick="alternarVerMasVariaciones('bajo')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
-          </section>
-        </div>
-
         <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
             <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso</p>
@@ -1308,6 +1246,25 @@
           </div>
         </div>
 
+        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Tendencia del Año · Rolling Forecast</h4>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+          <div style="height:300px;"><canvas id="grafica-presupuesto-rf-tendencia"></canvas></div>
+        </section>
+
+        <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Principales Variaciones en Gastos · Por Monto</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-lg">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <p class="font-gordita-bold text-xs text-error uppercase tracking-wide mb-3">▲ Por encima de presupuesto</p>
+            <div id="presupuesto-variaciones-sobre" class="space-y-3"></div>
+            <button id="presupuesto-variaciones-sobre-boton" onclick="alternarVerMasVariaciones('sobre')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <p class="font-gordita-bold text-xs text-qiora-green uppercase tracking-wide mb-3">▼ Por debajo de presupuesto</p>
+            <div id="presupuesto-variaciones-bajo" class="space-y-3"></div>
+            <button id="presupuesto-variaciones-bajo-boton" onclick="alternarVerMasVariaciones('bajo')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+          </section>
+        </div>
+
         <div id="presupuesto-areas-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
           <button onclick="abrirAreaPresupuesto('resumen')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
             <div class="flex items-center justify-between mb-4">
@@ -1316,7 +1273,11 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Rolling Forecast</h3>
             <p class="text-xs text-on-surface-variant mb-3">Real ejecutado + proyección al cierre de año.</p>
-            <div style="height:130px;"><canvas id="presupuesto-card-ingreso-chart"></canvas></div>
+            <div class="flex-1 min-h-[140px] flex flex-col items-center justify-center text-center">
+              <span id="presupuesto-card-rf-utilidad-monto" class="font-gordita-bold text-6xl text-primary">-</span>
+              <span class="text-[10px] text-on-surface-variant uppercase tracking-wide mt-2">Utilidad de Operación · Cierre Año (RF)</span>
+              <span id="presupuesto-card-rf-utilidad-var" class="text-xs font-gordita-bold mt-1">-</span>
+            </div>
           </button>
 
           <button onclick="abrirAreaPresupuesto('categoria')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
@@ -1326,7 +1287,12 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Categoría</h3>
             <p class="text-xs text-on-surface-variant mb-3">Top 5 categorías con mayor variación vs. presupuesto.</p>
-            <div id="presupuesto-card-categoria-ranking" class="space-y-1"></div>
+            <div class="flex-1 flex flex-col justify-center">
+              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Categoría</span><span class="text-right">Variación</span>
+              </div>
+              <div id="presupuesto-card-categoria-ranking" class="space-y-1"></div>
+            </div>
           </button>
 
           <button onclick="abrirAreaPresupuesto('distrito')" class="text-left bg-white p-6 border border-outline-variant rounded-xl shadow-sm hover:border-primary transition-colors flex flex-col">
@@ -1336,7 +1302,12 @@
             </div>
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Por Distrito</h3>
             <p class="text-xs text-on-surface-variant mb-3">Top 5 distritos con mayor variación de utilidad vs. presupuesto.</p>
-            <div id="presupuesto-card-distrito-ranking" class="space-y-1"></div>
+            <div class="flex-1 flex flex-col justify-center">
+              <div class="grid grid-cols-2 gap-2 text-[9px] text-on-surface-variant uppercase tracking-wide mb-1 pb-1 border-b border-outline-variant">
+                <span>Distrito</span><span class="text-right">Variación</span>
+              </div>
+              <div id="presupuesto-card-distrito-ranking" class="space-y-1"></div>
+            </div>
           </button>
         </div>
 
@@ -1430,11 +1401,12 @@
             </div>
           </div>
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div class="grid grid-cols-6 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+            <div class="grid grid-cols-7 gap-2 px-6 py-3 bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
               <div class="col-span-2">Distrito</div>
               <div class="text-right">Utilidad Ppto.</div>
               <div class="text-right">Utilidad Real</div>
               <div class="text-right">Variación</div>
+              <div class="text-center">Tendencia Utilidad (6m)</div>
               <div class="text-right">Gasto Ejecutado</div>
             </div>
             <div id="presupuesto-tabla-distrito"></div>
@@ -1823,7 +1795,7 @@
         <canvas id="grafica-drilldown-rentabilidad"></canvas>
       </div>
       <div class="flex justify-between items-center mb-3">
-        <h4 class="font-gordita-bold text-sm text-primary">Detalle mensual (más reciente primero)</h4>
+        <h4 class="font-gordita-bold text-sm text-primary">Detalle mensual</h4>
         <div class="bg-white p-1 rounded-lg border border-outline-variant flex">
           <button id="rentabilidad-modo-pesos" onclick="cambiarModoVistaRentabilidad('pesos')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors bg-primary text-on-primary">$</button>
           <button id="rentabilidad-modo-porcentaje" onclick="cambiarModoVistaRentabilidad('porcentaje')" class="px-3 py-1 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">%</button>
@@ -3175,40 +3147,63 @@ function renderizarGraficaTendenciaVsPresupuesto(canvasId, refGrafica, etiquetas
           meta.data.forEach((barra, i) => {
             const altura = Math.abs(barra.base - barra.y);
             if (altura < ALTURA_MINIMA_ETIQUETA || s.data[i] <= 0) return;
+            const texto = formatoCompactoCorto(s.data[i]);
+            const yCentro = (barra.y + barra.base) / 2;
             ctxDibujo.save();
-            ctxDibujo.fillStyle = s.textColor || '#ffffff';
             ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+            const anchoTexto = ctxDibujo.measureText(texto).width;
+            const padX = 5, altoBadge = 15;
+            const anchoBadge = anchoTexto + padX * 2;
+            ctxDibujo.fillStyle = '#eeeeee';
+            ctxDibujo.beginPath();
+            ctxDibujo.roundRect(barra.x - anchoBadge / 2, yCentro - altoBadge / 2, anchoBadge, altoBadge, 4);
+            ctxDibujo.fill();
+            ctxDibujo.fillStyle = '#1b1b1b';
             ctxDibujo.textAlign = 'center';
             ctxDibujo.textBaseline = 'middle';
-            ctxDibujo.fillText(formatoCompactoCorto(s.data[i]), barra.x, (barra.y + barra.base) / 2);
+            ctxDibujo.fillText(texto, barra.x, yCentro + 1);
             ctxDibujo.restore();
           });
         });
 
         metaPpto.data.forEach((barra, i) => {
+          const texto = formatoCompactoCorto(pptoSerie[i]);
           ctxDibujo.save();
-          ctxDibujo.fillStyle = '#7e7576';
-          ctxDibujo.font = "10px 'Gordita', sans-serif";
+          ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          const anchoTexto = ctxDibujo.measureText(texto).width;
+          const padX = 5, altoBadge = 15;
+          const anchoBadge = anchoTexto + padX * 2;
+          const yCentro = barra.y - 6 - altoBadge / 2;
+          ctxDibujo.fillStyle = '#eeeeee';
+          ctxDibujo.beginPath();
+          ctxDibujo.roundRect(barra.x - anchoBadge / 2, yCentro - altoBadge / 2, anchoBadge, altoBadge, 4);
+          ctxDibujo.fill();
+          ctxDibujo.fillStyle = '#5a5a5a';
           ctxDibujo.textAlign = 'center';
-          ctxDibujo.fillText(formatoCompactoCorto(pptoSerie[i]), barra.x, barra.y - 6);
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(texto, barra.x, yCentro + 1);
           ctxDibujo.restore();
         });
 
-        // Badge de variación vs presupuesto, arriba de ambas barras (no encima de ninguna etiqueta $).
+        // Variación vs presupuesto, arriba de ambas barras (no encima de ninguna etiqueta $), sin fondo.
         const metaTope = chart.getDatasetMeta(seriesReales.length);
         metaTope.data.forEach((barra, i) => {
           const v = variacionPct[i];
           if (v === null || v === undefined) return;
           const texto = (v >= 0 ? '+' : '') + v.toFixed(0) + '%';
           const malo = positivoEsMalo ? v >= 0 : v < 0;
+          const color = malo ? '#ba1a1a' : '#2ECC71';
           const topActual = barra.y;
           const topPpto = metaPpto.data[i].y - 12;
           const topMost = Math.min(topActual, topPpto);
+          const xCentro = (barra.x + metaPpto.data[i].x) / 2;
+
           ctxDibujo.save();
-          ctxDibujo.fillStyle = malo ? '#ba1a1a' : '#2ECC71';
           ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+          ctxDibujo.fillStyle = color;
           ctxDibujo.textAlign = 'center';
-          ctxDibujo.fillText(texto, (barra.x + metaPpto.data[i].x) / 2, topMost - 8);
+          ctxDibujo.textBaseline = 'middle';
+          ctxDibujo.fillText(texto, xCentro, topMost - 8);
           ctxDibujo.restore();
         });
       },
@@ -4283,7 +4278,7 @@ async function guardarHcAutorizado() {
 
 let datosPnL = null;
 
-let pnlAnioSeleccionado = null;
+let pnlAnioReferencia = null;
 
 async function cargarPnL() {
   const glosarioMap = obtenerGlosarioMap();
@@ -4300,18 +4295,24 @@ async function cargarPnL() {
   polizaParametros.forEach((p) => distritosIngresos.add(p.distrito));
   const datosIngresos = { polizaParametros, multidistritoBolsas, hcAutorizado, todosLosDistritos: Array.from(distritosIngresos), regionPorDistrito };
 
-  const aniosDisponibles = new Set();
-  polizaParametros.forEach((p) => aniosDisponibles.add(p.vigente_desde.slice(0, 4)));
-  aniosDisponibles.add(String(mesGlobalSeleccionado.anio));
-  const listaAnios = Array.from(aniosDisponibles).sort().reverse();
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  pnlAnioReferencia = anioRef;
 
-  if (!pnlAnioSeleccionado) {
-    pnlAnioSeleccionado = mesGlobalSeleccionado.anio;
+  const meses = [];
+  let primerMesBase = null;
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    if (i === 11) primerMesBase = base;
+    meses.push({
+      clave: claveMes(base.getFullYear(), base.getMonth()),
+      etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()),
+      anio: String(base.getFullYear()),
+    });
   }
 
-  const inicioAnio = rangoDeMes(pnlAnioSeleccionado, 0).inicio;
-  const finAnio = rangoDeMes(pnlAnioSeleccionado, 11).fin;
-  const facturasVentana = await obtenerFacturasEnRango(inicioAnio, finAnio, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
+  const inicioVentana = rangoDeMes(primerMesBase.getFullYear(), primerMesBase.getMonth()).inicio;
+  const finVentana = rangoDeMes(anioRef, mesRef).fin;
+  const facturasVentana = await obtenerFacturasEnRango(inicioVentana, finVentana, 'sucursal, familia, gasto, monto, subtotal, fecha_pago');
   const clasificadas = facturasVentana.map((f) => Calc.clasificarFactura(f, glosarioMap));
   const porMesFacturas = {};
   clasificadas.forEach((f) => {
@@ -4319,14 +4320,6 @@ async function cargarPnL() {
     porMesFacturas[clave] = porMesFacturas[clave] || [];
     porMesFacturas[clave].push(f);
   });
-
-  const meses = [];
-  for (let mes = 0; mes <= 11; mes++) {
-    meses.push({
-      clave: claveMes(pnlAnioSeleccionado, mes),
-      etiqueta: etiquetaMesCorta(pnlAnioSeleccionado, mes),
-    });
-  }
 
   datosPnL = {
     meses,
@@ -4339,7 +4332,6 @@ async function cargarPnL() {
   };
 
   poblarSelectorDistritoPnL();
-  poblarSelectorAnioPnL(listaAnios);
   renderizarPnL();
 }
 
@@ -4350,22 +4342,6 @@ function poblarSelectorDistritoPnL() {
     datosPnL.distritosIngresos.map((d) => `<option value="${d}">${d}</option>`).join('');
   if (valorPrevio && [...select.options].some((o) => o.value === valorPrevio)) {
     select.value = valorPrevio;
-  }
-}
-
-function poblarSelectorAnioPnL(listaAnios) {
-  const select = document.getElementById('pnl-anio');
-  select.innerHTML = listaAnios.map((a) => `<option value="${a}">${a}</option>`).join('');
-  select.value = String(pnlAnioSeleccionado);
-}
-
-async function cambiarAnioPnL() {
-  pnlAnioSeleccionado = parseInt(document.getElementById('pnl-anio').value, 10);
-  mostrarIndicadorCarga();
-  try {
-    await cargarPnL();
-  } finally {
-    ocultarIndicadorCarga();
   }
 }
 
@@ -4495,7 +4471,7 @@ function alternarSeccionPnL(grupo) {
   if (icono) icono.textContent = pnlColapsado[grupo] ? 'chevron_right' : 'expand_more';
 }
 
-const PNL_BG_UTILIDAD = 'bg-[#EAF8F0]';
+const PNL_BG_UTILIDAD = 'bg-surface-container-low';
 
 function llenarEncabezadosPnL(porMesDatos) {
   const gruposAnio = [];
@@ -4508,14 +4484,16 @@ function llenarEncabezadosPnL(porMesDatos) {
     }
   });
 
+  const claseAnio = (anio) => (String(anio) !== String(pnlAnioReferencia) ? 'bg-surface-container-high' : '');
+
   document.getElementById('tabla-pnl-encabezado-anio').innerHTML =
     '<th class="px-4 py-1 sticky left-0 bg-surface-container-low z-10"></th>' +
-    gruposAnio.map((g) => `<th colspan="${g.cantidad}" class="px-2 py-1 font-gordita-bold text-center text-[9px]">${g.anio}</th>`).join('') +
+    gruposAnio.map((g) => `<th colspan="${g.cantidad}" class="px-2 py-1 font-gordita-bold text-center text-[9px] ${claseAnio(g.anio)}">${g.anio}</th>`).join('') +
     '<th class="px-2 py-1 bg-surface-container-high"></th>';
 
   document.getElementById('tabla-pnl-encabezado').innerHTML =
     '<th class="px-4 py-2 font-gordita-bold uppercase tracking-widest text-[10px] sticky left-0 bg-surface-container-low z-10">Cuenta</th>' +
-    porMesDatos.map((m) => `<th class="px-2 py-2 font-gordita-bold uppercase tracking-widest text-[10px] text-right">${m.etiqueta}</th>`).join('') +
+    porMesDatos.map((m) => `<th class="px-2 py-2 font-gordita-bold uppercase tracking-widest text-[10px] text-right ${claseAnio(m.anio)}">${m.etiqueta}</th>`).join('') +
     '<th class="px-2 py-2 font-gordita-bold uppercase tracking-widest text-[10px] text-right bg-surface-container-high">Total</th>';
 }
 
@@ -4543,23 +4521,21 @@ function filaValoresPnL(nombre, valores, opciones, totalIngresosPorMes) {
 }
 
 function filaUtilidadPnL(nombre, valores, totalIngresosPorMes) {
-  const claseSigno = (v) => (v >= 0 ? 'text-qiora-green' : 'text-error');
   const total = totalAnualPnL(valores);
   const totalIngreso = totalIngresosPorMes ? totalAnualPnL(totalIngresosPorMes) : 0;
   return `<tr class="${PNL_BG_UTILIDAD}"><td class="px-4 py-1.5 font-gordita-bold text-[10px] sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v, i) => `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(v)}">${formatoValorPnL(v, totalIngresosPorMes[i], true)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold ${claseSigno(total)} bg-surface-container-high">${formatoValorPnL(total, totalIngreso, true)}</td></tr>`;
+    valores.map((v, i) => `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold">${formatoValorPnL(v, totalIngresosPorMes[i], true)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right text-[10px] font-gordita-bold bg-surface-container-high">${formatoValorPnL(total, totalIngreso, true)}</td></tr>`;
 }
 
 function filaMargenPnL(nombre, valores, totalIngresos) {
-  const claseSigno = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error'));
   const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
   const ingresoTotal = totalAnualPnL(totalIngresos);
   const utilidadPesosAnual = totalAnualPnL(valores.map((v, i) => (v === null ? 0 : (v / 100) * totalIngresos[i])));
   const margenTotal = ingresoTotal > 0 ? (utilidadPesosAnual / ingresoTotal) * 100 : null;
-  return `<tr class="${PNL_BG_UTILIDAD} text-[10px]"><td class="pl-8 py-1.5 sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
-    valores.map((v) => `<td class="px-2 py-1.5 text-right ${claseSigno(v)}">${textoPct(v)}</td>`).join('') +
-    `<td class="px-2 py-1.5 text-right font-gordita-bold ${claseSigno(margenTotal)} bg-surface-container-high">${textoPct(margenTotal)}</td></tr>`;
+  return `<tr class="${PNL_BG_UTILIDAD} text-[10px] text-on-surface-variant"><td class="pl-8 py-1.5 sticky left-0 ${PNL_BG_UTILIDAD} z-10 whitespace-nowrap">${nombre}</td>` +
+    valores.map((v) => `<td class="px-2 py-1.5 text-right">${textoPct(v)}</td>`).join('') +
+    `<td class="px-2 py-1.5 text-right font-gordita-bold bg-surface-container-high">${textoPct(margenTotal)}</td></tr>`;
 }
 
 function renderizarTablaPnL(porMesDatos, listaFamiliasCD, listaFamiliasGO, scope) {
@@ -4861,18 +4837,18 @@ function renderizarDetalleRentabilidad() {
 
   const claseMargen = (v) => (v === null ? '' : (v >= 0 ? 'text-qiora-green' : 'text-error font-gordita-bold'));
   const textoPct = (v) => (v === null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
-  const mesesDesc = datos.porMes.slice().reverse();
+  const mesesOrden = datos.porMes;
 
   document.getElementById('drilldown-rentabilidad-encabezado').innerHTML =
     '<th class="px-3 py-3 font-gordita-bold uppercase tracking-widest sticky left-0 bg-surface-container-low z-10">Categoría</th>' +
-    mesesDesc.map((m) => `<th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('');
+    mesesOrden.map((m) => `<th class="px-2 py-3 font-gordita-bold uppercase tracking-widest text-right">${m.etiqueta}</th>`).join('');
 
   const filaCategoria = (nombre, valores, opciones) => {
     opciones = opciones || {};
     const clase = opciones.bold ? 'font-gordita-bold' : '';
     const celdas = valores.map((v, i) => {
       const claseCelda = opciones.esMargen ? claseMargen(v) : '';
-      const texto = opciones.esMargen ? textoPct(v) : formatoValorSegunModo(v, mesesDesc[i].totalIngresos, rentabilidadModoVista, false);
+      const texto = opciones.esMargen ? textoPct(v) : formatoValorSegunModo(v, mesesOrden[i].totalIngresos, rentabilidadModoVista, false);
       return `<td class="px-2 py-2 text-right whitespace-nowrap ${clase} ${claseCelda}">${texto}</td>`;
     }).join('');
     return `<tr><td class="px-3 py-2 font-gordita-bold whitespace-nowrap sticky left-0 bg-white z-10">${nombre}</td>${celdas}</tr>`;
@@ -4880,13 +4856,13 @@ function renderizarDetalleRentabilidad() {
 
   const cuerpo = document.getElementById('tabla-drilldown-rentabilidad-body');
   cuerpo.innerHTML =
-    filaCategoria('Ingreso', mesesDesc.map((m) => m.totalIngresos)) +
-    filaCategoria('Costo Directo', mesesDesc.map((m) => m.totalCD)) +
-    filaCategoria('Ut. Bruta', mesesDesc.map((m) => m.utilidadBruta)) +
-    filaCategoria('Margen Bruto', mesesDesc.map((m) => m.margenBruto), { esMargen: true }) +
-    filaCategoria('Gasto Oper.', mesesDesc.map((m) => m.totalGO)) +
-    filaCategoria('Ut. Operación', mesesDesc.map((m) => m.utilidadOperacion), { bold: true }) +
-    filaCategoria('Marg. Operación', mesesDesc.map((m) => m.margenOperacion), { esMargen: true });
+    filaCategoria('Ingreso', mesesOrden.map((m) => m.totalIngresos)) +
+    filaCategoria('Costo Directo', mesesOrden.map((m) => m.totalCD)) +
+    filaCategoria('Ut. Bruta', mesesOrden.map((m) => m.utilidadBruta)) +
+    filaCategoria('Margen Bruto', mesesOrden.map((m) => m.margenBruto), { esMargen: true }) +
+    filaCategoria('Gasto Oper.', mesesOrden.map((m) => m.totalGO)) +
+    filaCategoria('Ut. Operación', mesesOrden.map((m) => m.utilidadOperacion), { bold: true }) +
+    filaCategoria('Marg. Operación', mesesOrden.map((m) => m.margenOperacion), { esMargen: true });
 }
 
 function abrirDrillDownRentabilidad(distrito) {
@@ -6987,7 +6963,7 @@ async function cargarPilarFlota() {
   if (flotaAreaActual) await abrirAreaFlota(flotaAreaActual);
 }
 
-function calcularPresupuestoAgregado(presupuesto, clavesMeses) {
+function calcularPresupuestoAgregado(presupuesto, clavesMeses, distritoFiltro) {
   let ingresoPresupuestado = 0;
   let gastoPresupuestado = 0;
   const porDistrito = {};
@@ -6995,6 +6971,7 @@ function calcularPresupuestoAgregado(presupuesto, clavesMeses) {
 
   (presupuesto || []).forEach((p) => {
     if (!clavesMeses.includes((p.mes || '').slice(0, 7))) return;
+    if (distritoFiltro && p.distrito !== distritoFiltro) return;
     const monto = Number(p.monto) || 0;
     const categoria = p.tipo_gasto_categoria || 'SIN CATEGORIA';
     const esIngreso = categoria === 'INGRESOS';
@@ -7025,13 +7002,14 @@ function calcularPresupuestoAgregado(presupuesto, clavesMeses) {
   return { ingresoPresupuestado, gastoPresupuestado, porDistrito, porCategoria };
 }
 
-function agruparGastoRealPorCategoriaYDistrito(facturas, glosarioMap) {
+function agruparGastoRealPorCategoriaYDistrito(facturas, glosarioMap, distritoFiltro) {
   const porDistrito = {};
   const porCategoria = {};
 
   (facturas || []).forEach((raw) => {
     const f = Calc.clasificarFactura(raw, glosarioMap);
     if (f.tipo_gasto === 'EXCLUIDO') return;
+    if (distritoFiltro && f.sucursal_secundaria !== distritoFiltro) return;
     const categoria = f.tipo_gasto_categoria || 'SIN CATEGORIA';
     const monto = f.subtotal || 0;
     const gastoNombre = f.gasto || 'SIN GASTO';
@@ -7052,10 +7030,11 @@ function agruparGastoRealPorCategoriaYDistrito(facturas, glosarioMap) {
   return { porDistrito, porCategoria };
 }
 
-function calcularIngresoRealPorDistrito(d, clavesMeses) {
+function calcularIngresoRealPorDistrito(d, clavesMeses, distritoFiltro) {
   const porDistrito = {};
   let total = 0;
-  d.listaDistritos.forEach((distrito) => {
+  const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
+  distritos.forEach((distrito) => {
     const region = d.regionPorDistrito[distrito];
     let suma = 0;
     clavesMeses.forEach((clave) => {
@@ -7090,21 +7069,22 @@ function calcularVariacionPctPresupuesto(real, ppto) {
   return ((real / ppto) - 1) * 100;
 }
 
-async function obtenerDatosPresupuestoActivo() {
+async function obtenerDatosPresupuestoActivo(distritoFiltro) {
   const d = overviewDatos;
   const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
   const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
   const clavesActivo = clavesMesesEnRango(rangos.actual);
-  const presAgg = calcularPresupuestoAgregado(d.presupuesto, clavesActivo);
+  const presAgg = calcularPresupuestoAgregado(d.presupuesto, clavesActivo, distritoFiltro);
   const facturasActivo = await obtenerFacturasEnRango(rangos.actual.inicio, rangos.actual.fin, '*');
-  const realAgg = agruparGastoRealPorCategoriaYDistrito(facturasActivo, d.glosarioMap);
-  const ingresoReal = calcularIngresoRealPorDistrito(d, clavesActivo);
+  const realAgg = agruparGastoRealPorCategoriaYDistrito(facturasActivo, d.glosarioMap, distritoFiltro);
+  const ingresoReal = calcularIngresoRealPorDistrito(d, clavesActivo, distritoFiltro);
   const gastoRealTotal = Object.values(realAgg.porCategoria).reduce((s, c) => s + c.monto, 0);
   return { presAgg, realAgg, ingresoReal, gastoRealTotal, clavesActivo, rangos };
 }
 
 let presupuestoAreaActual = null;
 let presupuestoDatosActuales = null;
+let presupuestoDatosNacionales = null;
 let presupuestoForecastAnualCache = null;
 let presupuestoForecastVista = 'mensual';
 let presupuestoCategoriaOrden = 'var_abs';
@@ -7116,9 +7096,12 @@ let presupuestoDistritoAbierto = null;
 
 async function cargarPilarPresupuesto() {
   const d = overviewDatos;
-  document.getElementById('pilar-presupuesto-periodo').textContent = 'Periodo activo: ' + textoPeriodoActivo(d.anioRef, d.mesRef);
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+  document.getElementById('pilar-presupuesto-periodo').textContent =
+    'Periodo activo: ' + textoPeriodoActivo(d.anioRef, d.mesRef) + (distritoFiltro ? ' — ' + distritoFiltro : ' — Nacional (todos los distritos)');
 
-  presupuestoDatosActuales = await obtenerDatosPresupuestoActivo();
+  presupuestoDatosActuales = await obtenerDatosPresupuestoActivo(distritoFiltro);
+  presupuestoDatosNacionales = distritoFiltro ? await obtenerDatosPresupuestoActivo(null) : presupuestoDatosActuales;
   const { presAgg, ingresoReal, gastoRealTotal } = presupuestoDatosActuales;
 
   const ingresoPpto = presAgg.ingresoPresupuestado;
@@ -7150,9 +7133,9 @@ async function cargarPilarPresupuesto() {
 
   calcularVariacionesPresupuesto();
   renderizarVariacionesPresupuesto();
-  await renderizarRollingForecastLanding();
+  await renderizarRollingForecastLanding(distritoFiltro);
 
-  await renderizarPresupuestoTarjetasResumen();
+  await renderizarPresupuestoTarjetasResumen(distritoFiltro);
   if (presupuestoAreaActual) await abrirAreaPresupuesto(presupuestoAreaActual);
 }
 
@@ -7217,7 +7200,7 @@ function alternarVerMasVariaciones(tipo) {
   renderizarVariacionesPresupuesto();
 }
 
-async function calcularForecastAnualPresupuesto() {
+async function calcularForecastAnualPresupuesto(distritoFiltro) {
   const d = overviewDatos;
   const anioRef = d.anioRef;
   const mesRef = d.mesRef;
@@ -7228,6 +7211,7 @@ async function calcularForecastAnualPresupuesto() {
   const pptoIngresoPorMes = {};
   const pptoGastoPorMes = {};
   (d.presupuesto || []).forEach((p) => {
+    if (distritoFiltro && p.distrito !== distritoFiltro) return;
     const clave = (p.mes || '').slice(0, 7);
     const monto = Number(p.monto) || 0;
     if (p.tipo_gasto_categoria === 'INGRESOS') {
@@ -7237,10 +7221,11 @@ async function calcularForecastAnualPresupuesto() {
     }
   });
 
+  const distritos = distritoFiltro ? [distritoFiltro] : d.listaDistritos;
   const ingresoRealPorMes = meses12.map((m) => {
     if (!m.cerrado) return 0;
     let suma = 0;
-    d.listaDistritos.forEach((distrito) => {
+    distritos.forEach((distrito) => {
       const region = d.regionPorDistrito[distrito];
       const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
       suma += r.plantaInterna + r.recolecciones + r.multidistrito;
@@ -7255,6 +7240,7 @@ async function calcularForecastAnualPresupuesto() {
   facturasCerradas.forEach((raw) => {
     const f = Calc.clasificarFactura(raw, d.glosarioMap);
     if (f.tipo_gasto === 'EXCLUIDO') return;
+    if (distritoFiltro && f.sucursal_secundaria !== distritoFiltro) return;
     const clave = f.fecha_pago.slice(0, 7);
     gastoRealPorMesMap[clave] = (gastoRealPorMesMap[clave] || 0) + (f.subtotal || 0);
   });
@@ -7266,8 +7252,8 @@ async function calcularForecastAnualPresupuesto() {
   return { meses12, mesRef, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr };
 }
 
-async function renderizarRollingForecastLanding() {
-  const forecast = await calcularForecastAnualPresupuesto();
+async function renderizarRollingForecastLanding(distritoFiltro) {
+  const forecast = await calcularForecastAnualPresupuesto(distritoFiltro);
   presupuestoForecastAnualCache = forecast;
   const { meses12, mesRef, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr } = forecast;
 
@@ -7288,16 +7274,14 @@ async function renderizarRollingForecastLanding() {
   const forecastUtilidad = forecastIngreso - forecastGasto;
   const pptoUtilidadAnual = pptoIngresoAnual - pptoGastoAnual;
 
-  const pintarKpiForecast = (idMonto, idVar, monto, ppto, positivoEsBueno) => {
-    document.getElementById(idMonto).textContent = formatoCompacto(monto);
-    const variacion = monto - ppto;
-    const el = document.getElementById(idVar);
-    el.textContent = textoVariacionMoneda(variacion) + ' vs. Ppto';
-    el.className = 'text-xs font-gordita-bold ' + claseVariacion(variacion, positivoEsBueno);
-  };
-  pintarKpiForecast('presupuesto-rf-kpi-ingreso-monto', 'presupuesto-rf-kpi-ingreso-var', forecastIngreso, pptoIngresoAnual, true);
-  pintarKpiForecast('presupuesto-rf-kpi-gasto-monto', 'presupuesto-rf-kpi-gasto-var', forecastGasto, pptoGastoAnual, false);
-  pintarKpiForecast('presupuesto-rf-kpi-utilidad-monto', 'presupuesto-rf-kpi-utilidad-var', forecastUtilidad, pptoUtilidadAnual, true);
+  const elMontoCard = document.getElementById('presupuesto-card-rf-utilidad-monto');
+  const elVarCard = document.getElementById('presupuesto-card-rf-utilidad-var');
+  if (elMontoCard && elVarCard) {
+    elMontoCard.textContent = formatoCompacto(forecastUtilidad);
+    const variacionUtilidad = forecastUtilidad - pptoUtilidadAnual;
+    elVarCard.textContent = textoVariacionMoneda(variacionUtilidad) + ' vs. Ppto';
+    elVarCard.className = 'text-xs font-gordita-bold ' + claseVariacion(variacionUtilidad, true);
+  }
 }
 
 function renderizarGraficaTendenciaAnualForecast(canvasId, refGrafica, etiquetas, ingresoSerie, utilidadSerie, mesRef) {
@@ -7318,6 +7302,7 @@ function renderizarGraficaTendenciaAnualForecast(canvasId, refGrafica, etiquetas
     },
     options: {
       maintainAspectRatio: false,
+      layout: { padding: { top: 52, bottom: 28 } },
       plugins: {
         legend: { display: true, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
         tooltip: {
@@ -7329,7 +7314,7 @@ function renderizarGraficaTendenciaAnualForecast(canvasId, refGrafica, etiquetas
         },
       },
       scales: {
-        y: { grid: { color: '#e2e2e2' }, border: { display: false }, ticks: { callback: (v) => formatoCompactoCorto(v), font: { family: 'Gordita' } } },
+        y: { display: false, grid: { display: false }, border: { display: false } },
         x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita' } } },
       },
     },
@@ -7340,48 +7325,65 @@ function renderizarGraficaTendenciaAnualForecast(canvasId, refGrafica, etiquetas
         const { ctx: ctxDibujo, chartArea, scales } = chart;
         const xInicio = scales.x.getPixelForValue(mesRef);
         ctxDibujo.save();
-        ctxDibujo.fillStyle = 'rgba(0,0,0,0.04)';
+        ctxDibujo.fillStyle = 'rgba(0,0,0,0.05)';
         ctxDibujo.fillRect(xInicio, chartArea.top, chartArea.right - xInicio, chartArea.bottom - chartArea.top);
-        ctxDibujo.fillStyle = '#9a9a9a';
-        ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+
+        const centroX = (xInicio + chartArea.right) / 2;
+        const textoPronostico = 'PRONÓSTICO';
+        ctxDibujo.font = "bold 13px 'Gordita', sans-serif";
+        const anchoTexto = ctxDibujo.measureText(textoPronostico).width;
+        const padX = 10, altoBadge = 22;
+        const anchoBadge = anchoTexto + padX * 2;
+        const yBadge = 6;
+        ctxDibujo.fillStyle = '#1b1b1b';
+        ctxDibujo.beginPath();
+        ctxDibujo.roundRect(centroX - anchoBadge / 2, yBadge, anchoBadge, altoBadge, 11);
+        ctxDibujo.fill();
+        ctxDibujo.fillStyle = '#ffffff';
         ctxDibujo.textAlign = 'center';
-        ctxDibujo.fillText('PRONÓSTICO', (xInicio + chartArea.right) / 2, chartArea.top + 12);
+        ctxDibujo.textBaseline = 'middle';
+        ctxDibujo.fillText(textoPronostico, centroX, yBadge + altoBadge / 2 + 1);
         ctxDibujo.restore();
+      },
+    }, {
+      id: 'etiquetasTendenciaAnual',
+      afterDatasetsDraw(chart) {
+        const { ctx: ctxDibujo } = chart;
+        const metaIngreso = chart.getDatasetMeta(0);
+        const metaUtilidad = chart.getDatasetMeta(1);
+
+        metaIngreso.data.forEach((punto, i) => {
+          const v = ingresoSerie[i];
+          if (v === null || v === undefined) return;
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#1B4F72';
+          ctxDibujo.font = "bold 12px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'bottom';
+          ctxDibujo.fillText(formatoCompactoCorto(v), punto.x, punto.y - 8);
+          ctxDibujo.restore();
+        });
+
+        metaUtilidad.data.forEach((punto, i) => {
+          const v = utilidadSerie[i];
+          if (v === null || v === undefined) return;
+          ctxDibujo.save();
+          ctxDibujo.fillStyle = '#249c56';
+          ctxDibujo.font = "bold 12px 'Gordita', sans-serif";
+          ctxDibujo.textAlign = 'center';
+          ctxDibujo.textBaseline = 'top';
+          ctxDibujo.fillText(formatoCompactoCorto(v), punto.x, punto.y + 8);
+          ctxDibujo.restore();
+        });
       },
     }],
   });
 }
 
-async function renderizarPresupuestoTarjetasResumen() {
+async function renderizarPresupuestoTarjetasResumen(distritoFiltro) {
   const d = overviewDatos;
-  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
-  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
-
-  const meses6 = [];
-  for (let i = 5; i >= 0; i--) {
-    const base = new Date(anioRef, mesRef - i, 1);
-    meses6.push({ clave: claveMes(base.getFullYear(), base.getMonth()), etiqueta: etiquetaMesCorta(base.getFullYear(), base.getMonth()) });
-  }
-  const pptoIngresoPorMes = {};
-  (d.presupuesto || []).forEach((p) => {
-    if (p.tipo_gasto_categoria !== 'INGRESOS') return;
-    const clave = (p.mes || '').slice(0, 7);
-    pptoIngresoPorMes[clave] = (pptoIngresoPorMes[clave] || 0) + (Number(p.monto) || 0);
-  });
-  const ingresoRealPorMes = meses6.map((m) => {
-    let suma = 0;
-    d.listaDistritos.forEach((distrito) => {
-      const region = d.regionPorDistrito[distrito];
-      const r = Calc.calcularIngresosDistrito(d.datosIngresos, distrito, region, m.clave + '-01');
-      suma += r.plantaInterna + r.recolecciones + r.multidistrito;
-    });
-    return suma;
-  });
-  renderizarGraficaTendenciaSimple('presupuesto-card-ingreso-chart', 'graficaPresupuestoCardIngreso', meses6.map((m) => m.etiqueta), [
-    { label: 'Presupuesto', datos: meses6.map((m) => pptoIngresoPorMes[m.clave] || 0), color: '#85C1E9' },
-    { label: 'Real', datos: ingresoRealPorMes, color: '#1B4F72' },
-  ]);
-
+  const { presAgg, realAgg } = presupuestoDatosActuales;
+  const { presAgg: presAggNac, realAgg: realAggNac, ingresoReal: ingresoRealNac } = presupuestoDatosNacionales;
   const categorias = Object.keys(presAgg.porCategoria).map((cat) => {
     const ppto = presAgg.porCategoria[cat].monto;
     const real = (realAgg.porCategoria[cat] && realAgg.porCategoria[cat].monto) || 0;
@@ -7402,10 +7404,10 @@ async function renderizarPresupuestoTarjetasResumen() {
   }).join('');
 
   const rankingDistrito = d.listaDistritos.map((distrito) => {
-    const gastoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].gasto) || 0;
-    const ingresoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].ingreso) || 0;
-    const gastoReal = (realAgg.porDistrito[distrito] && realAgg.porDistrito[distrito].gasto) || 0;
-    const ingresoRealD = ingresoReal.porDistrito[distrito] || 0;
+    const gastoPpto = (presAggNac.porDistrito[distrito] && presAggNac.porDistrito[distrito].gasto) || 0;
+    const ingresoPpto = (presAggNac.porDistrito[distrito] && presAggNac.porDistrito[distrito].ingreso) || 0;
+    const gastoReal = (realAggNac.porDistrito[distrito] && realAggNac.porDistrito[distrito].gasto) || 0;
+    const ingresoRealD = ingresoRealNac.porDistrito[distrito] || 0;
     const variacion = (ingresoRealD - gastoReal) - (ingresoPpto - gastoPpto);
     return { distrito, variacion };
   }).sort((a, b) => a.variacion - b.variacion).slice(0, 5);
@@ -7466,8 +7468,9 @@ function cambiarVistaForecastPresupuesto(vista) {
 async function renderizarAreaPresupuestoResumen() {
   const d = overviewDatos;
   const mesRef = d.mesRef;
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
 
-  const forecast = presupuestoForecastAnualCache || await calcularForecastAnualPresupuesto();
+  const forecast = presupuestoForecastAnualCache || await calcularForecastAnualPresupuesto(distritoFiltro);
   const { meses12, ingresoRealPorMes, gastoRealPorMes, pptoIngresoArr, pptoGastoArr } = forecast;
 
   document.getElementById('presupuesto-forecast-nota').textContent =
@@ -7834,13 +7837,67 @@ function cambiarOrdenPresupuestoDistrito(orden) {
   construirTablaPresupuestoDistrito();
 }
 
+let presupuestoTendenciaDistrito = {};
+
+async function calcularTendenciaUtilidadPorDistrito() {
+  const d = overviewDatos;
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const meses6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    meses6.push({ anio: base.getFullYear(), mes: base.getMonth(), clave: claveMes(base.getFullYear(), base.getMonth()) });
+  }
+  const inicio = rangoDeMes(meses6[0].anio, meses6[0].mes).inicio;
+  const fin = rangoDeMes(meses6[5].anio, meses6[5].mes).fin;
+  const [facturas, filasFoliosPoliza] = await Promise.all([
+    obtenerFacturasEnRango(inicio, fin, 'sucursal, familia, gasto, monto, subtotal, fecha_pago'),
+    obtenerTablaCompleta('folios_poliza'),
+  ]);
+  const porMesFacturas = {};
+  facturas.forEach((f) => {
+    const clave = f.fecha_pago.slice(0, 7);
+    porMesFacturas[clave] = porMesFacturas[clave] || [];
+    porMesFacturas[clave].push(f);
+  });
+
+  const resultado = {};
+  d.listaDistritos.forEach((distrito) => {
+    const region = d.regionPorDistrito[distrito];
+    resultado[distrito] = meses6.map((m) => {
+      const mesISO = m.clave + '-01';
+      const foliosPI = obtenerFoliosPlantaInternaPorDistrito(filasFoliosPoliza, mesISO);
+      const r = Calc.calcularRentabilidadDistritoMes(porMesFacturas[m.clave] || [], d.datosIngresos, d.glosarioMap, distrito, region, mesISO, foliosPI);
+      return r.utilidadOperacion;
+    });
+  });
+  return resultado;
+}
+
+function sparklineSvg(valores, color) {
+  const w = 72, h = 26;
+  const max = Math.max(...valores, 0);
+  const min = Math.min(...valores, 0);
+  const rango = (max - min) || 1;
+  const puntos = valores.map((v, i) => {
+    const x = valores.length > 1 ? (i / (valores.length - 1)) * (w - 4) + 2 : w / 2;
+    const y = h - 2 - ((v - min) / rango) * (h - 4);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const yCero = h - 2 - ((0 - min) / rango) * (h - 4);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="inline-block align-middle">
+    <line x1="0" y1="${yCero.toFixed(1)}" x2="${w}" y2="${yCero.toFixed(1)}" stroke="#cfc4c5" stroke-width="1" stroke-dasharray="2,2"/>
+    <polyline points="${puntos}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
 async function renderizarAreaPresupuestoDistrito() {
+  presupuestoTendenciaDistrito = await calcularTendenciaUtilidadPorDistrito();
   construirTablaPresupuestoDistrito();
 }
 
 function construirTablaPresupuestoDistrito() {
   const d = overviewDatos;
-  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
+  const { presAgg, realAgg, ingresoReal } = presupuestoDatosNacionales;
 
   let filas = d.listaDistritos.map((distrito) => {
     const gastoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].gasto) || 0;
@@ -7862,15 +7919,23 @@ function construirTablaPresupuestoDistrito() {
     const abierta = presupuestoDistritoAbierto === f.distrito;
     const nombreCorto = nombreCortoDistritoFlota(f.distrito);
     const distritoEscapado = f.distrito.replace(/'/g, "\\'");
+    const sobrePpto = f.variacion < 0;
+    const badgeEstado = f.variacion === 0 ? '' :
+      `<span class="text-[9px] font-gordita-bold uppercase tracking-wide ${sobrePpto ? 'text-error' : 'text-qiora-green'}">${sobrePpto ? '▲ Sobre Ppto.' : '▼ Bajo Ppto.'}</span>`;
+    const tendencia = presupuestoTendenciaDistrito[f.distrito] || [];
     return `<div class="border-b border-outline-variant last:border-b-0">
-      <div class="grid grid-cols-6 gap-2 px-6 py-3 items-center cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="alternarDistritoPresupuesto('${distritoEscapado}')">
+      <div class="grid grid-cols-7 gap-2 px-6 py-3 items-center cursor-pointer hover:bg-surface-container-low/50 transition-colors" onclick="alternarDistritoPresupuesto('${distritoEscapado}')">
         <div class="col-span-2 flex items-center gap-2 min-w-0">
           <span class="material-symbols-outlined text-on-surface-variant text-sm shrink-0 transition-transform" style="${abierta ? 'transform:rotate(90deg);' : ''}">chevron_right</span>
           <span class="text-xs font-gordita-bold truncate" title="${f.distrito}">${nombreCorto}</span>
         </div>
         <div class="text-right text-xs">${formatoCompacto(f.utilidadPpto)}</div>
         <div class="text-right text-xs font-gordita-bold">${formatoCompacto(f.utilidadReal)}</div>
-        <div class="text-right text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+        <div class="text-right">
+          <div class="text-xs font-gordita-bold ${clase}">${textoVariacionMoneda(f.variacion)}</div>
+          ${badgeEstado}
+        </div>
+        <div class="flex justify-center">${sparklineSvg(tendencia, sobrePpto ? '#ba1a1a' : '#2ECC71')}</div>
         <div class="text-right">
           <div class="h-1 bg-surface-container rounded-full overflow-hidden mb-0.5"><div class="h-full rounded-full ${f.ejecutado > 100 ? 'bg-error' : 'bg-op-pi'}" style="width:${Math.min(f.ejecutado, 100)}%;"></div></div>
           <span class="text-[10px] text-on-surface-variant">${f.ejecutado.toFixed(0)}%</span>
@@ -7887,7 +7952,7 @@ function alternarDistritoPresupuesto(distrito) {
 }
 
 function construirDrillDistritoPresupuesto(distrito) {
-  const { presAgg, realAgg, ingresoReal } = presupuestoDatosActuales;
+  const { presAgg, realAgg, ingresoReal } = presupuestoDatosNacionales;
   const ingresoPpto = (presAgg.porDistrito[distrito] && presAgg.porDistrito[distrito].ingreso) || 0;
   const ingresoRealD = ingresoReal.porDistrito[distrito] || 0;
 
