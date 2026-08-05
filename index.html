@@ -566,6 +566,7 @@
           <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
           <button id="config-tab-flota" onclick="mostrarSubConfig('flota')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Flota Vehicular</button>
           <button id="config-tab-unidades" onclick="mostrarSubConfig('unidades')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Unidades Autorizadas</button>
+          <button id="config-tab-poliza" onclick="mostrarSubConfig('poliza')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Pólizas (Operaciones)</button>
           <button id="config-tab-presupuesto" onclick="mostrarSubConfig('presupuesto')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Presupuesto</button>
           <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
@@ -656,6 +657,25 @@
               <button onclick="confirmarCargaUnidadesAutorizadas()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y agregar vigencia</button>
             </div>
             <p id="estado-carga-unidades" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
+        <div id="config-sub-poliza" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el Excel de "Pólizas" (una fila por distrito y mes, con Meta Folios / Ordenes / Atención de Planta Interna, Multidistrito y Recolecciones). Cada carga <strong>reemplaza solo los meses incluidos en el archivo</strong> — los meses anteriores no incluidos no se tocan.</p>
+          <div id="dropzone-poliza" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel-poliza" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-poliza" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-1">Rango de meses detectado: <strong id="preview-rango-poliza" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-sm mb-1">Filas a cargar (distrito × póliza × mes): <strong id="preview-filas-poliza" class="font-gordita-bold text-primary"></strong></p>
+              <p id="preview-omitidos-poliza" class="text-xs text-on-surface-variant mb-3" style="display:none;"></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará los folios de póliza existentes en ese rango de meses.</p>
+              <button onclick="confirmarCargaPoliza()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga-poliza" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
           </div>
         </div>
 
@@ -1958,6 +1978,7 @@ async function cargarSesion() {
     document.getElementById('config-tab-cargar').style.display = 'none';
     document.getElementById('config-tab-flota').style.display = 'none';
     document.getElementById('config-tab-unidades').style.display = 'none';
+    document.getElementById('config-tab-poliza').style.display = 'none';
     document.getElementById('config-tab-presupuesto').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
@@ -2010,7 +2031,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'flota', 'unidades', 'presupuesto', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'flota', 'unidades', 'poliza', 'presupuesto', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -2404,6 +2425,118 @@ async function confirmarCargaUnidadesAutorizadas() {
   invalidarCache('unidades_autorizadas');
   document.getElementById('estado-carga-unidades').textContent = 'Vigencia agregada: ' + filasParaCargarUnidadesAutorizadas.length + ' combinaciones.';
   document.getElementById('preview-carga-unidades').style.display = 'none';
+}
+
+// Mapeo del código corto de distrito usado en el Excel de Pólizas al código completo del glosario.
+// '18.GDL MD' se omite intencionalmente: es un renglón de verificación (suma de los 4 distritos de
+// Guadalajara), no un distrito real — sus valores de Multidistrito ya vienen duplicados en cada uno
+// de los 4 distritos de GDL (Barranca/Estadio/López Mateos/Primavera).
+const MAPEO_DISTRITO_POLIZA = {
+  '01.GDL BAR': 'CTA-TPI-INT-GBA GDL BARRANCA',
+  '02.GDL EST': 'CTA-TPI-INT-GES GDL ESTADIO',
+  '03.GDL LPZ': 'CTA-TPI-INT-GLM GDL LOPEZ MATEOS',
+  '04.GDL PRI': 'CTA-TPI-INT-GPR GDL PRIMAVERA',
+  '05.LEÓN': 'CTA-TPI-INT-LON LEON',
+  '06.VERAC': 'CTA-TPI-INT-VRZ VERACRUZ',
+  '07.IRAP': 'CTA-TPI-INT-IRA IRAPUATO',
+  '08.CANCÚN': 'CTA-TPI-INT-CUN CANCUN 1',
+  '09.AGUASC': 'CTA-TPI-INT-AGS AGUASCALIENTES',
+  '10.PUEBLA': 'CTA-TPI-INT-PUE PUEBLA',
+  '11.CBA-ORI': 'CTA-TPI-INT-CBA CORDOBA ORIZABA',
+  '12.TUXTLA': 'CTA-TPI-INT-TUX TUXTLA',
+  '13.MORELIA': 'CTA-TPI-INT-MOR MORELIA',
+  '14.XALAPA': 'CTA-TPI-INT-XAL XALAPA',
+  '15.MÉRIDA': 'CTA-TPI-INT-MER MERIDA',
+  '16.TEPIC': 'CTA-TPI-INT-TEP TEPIC',
+  '17.COLIMA': 'CTA-TPI-INT-COL COLIMA',
+};
+
+let filasParaCargarPoliza = null;
+let rangoMesesPoliza = null;
+
+document.getElementById('input-excel-poliza').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: null });
+
+      const encabezado = (filas[0] || []).map((v) => (typeof v === 'string' ? v.trim() : v));
+      const idx = {};
+      encabezado.forEach((nombre, i) => { if (nombre) idx[nombre] = i; });
+      const columnasRequeridas = ['DISTRITO', 'Atención PI', 'Ordenes PI', 'Meta Folios PI', 'Meta Folios MD', 'Meta Folios REC', 'Ordenes MD', 'Ordenes REC', 'Atención MD', 'Atención REC', 'Fin Mes'];
+      const faltantes = columnasRequeridas.filter((c) => idx[c] === undefined);
+      if (faltantes.length > 0) {
+        throw new Error('No se encontraron las columnas: ' + faltantes.join(', '));
+      }
+
+      const combinaciones = [];
+      const distritosOmitidos = new Set();
+      const clavesMeses = new Set();
+
+      for (let i = 1; i < filas.length; i++) {
+        const fila = filas[i];
+        if (!fila) continue;
+        const distritoCrudo = (fila[idx['DISTRITO']] || '').toString().trim();
+        if (!distritoCrudo) continue;
+        const distrito = MAPEO_DISTRITO_POLIZA[distritoCrudo];
+        if (!distrito) { distritosOmitidos.add(distritoCrudo); continue; }
+
+        const finMes = fila[idx['Fin Mes']];
+        if (typeof finMes !== 'number') continue;
+        const mesISO = fechaISODesdeCelda(finMes).slice(0, 7) + '-01';
+        clavesMeses.add(mesISO);
+
+        const aPct = (v) => (typeof v === 'number' ? Math.round(v * 10000) / 100 : null);
+        const aNum = (v) => (typeof v === 'number' ? v : null);
+
+        combinaciones.push({ distrito, poliza: 'PLANTA INTERNA', mes: mesISO, folios_dimensionados: aNum(fila[idx['Meta Folios PI']]), folios_realizados: aNum(fila[idx['Ordenes PI']]), alcance_pct: aPct(fila[idx['Atención PI']]) });
+        combinaciones.push({ distrito, poliza: 'MULTIDISTRITO', mes: mesISO, folios_dimensionados: aNum(fila[idx['Meta Folios MD']]), folios_realizados: aNum(fila[idx['Ordenes MD']]), alcance_pct: aPct(fila[idx['Atención MD']]) });
+        combinaciones.push({ distrito, poliza: 'RECOLECCIONES', mes: mesISO, folios_dimensionados: aNum(fila[idx['Meta Folios REC']]), folios_realizados: aNum(fila[idx['Ordenes REC']]), alcance_pct: aPct(fila[idx['Atención REC']]) });
+      }
+
+      if (combinaciones.length === 0) {
+        throw new Error('No se detectaron filas válidas para cargar.');
+      }
+
+      const mesesOrdenados = Array.from(clavesMeses).sort();
+      rangoMesesPoliza = { min: mesesOrdenados[0], max: mesesOrdenados[mesesOrdenados.length - 1] };
+      filasParaCargarPoliza = combinaciones;
+
+      document.getElementById('preview-rango-poliza').textContent = rangoMesesPoliza.min + ' a ' + rangoMesesPoliza.max;
+      document.getElementById('preview-filas-poliza').textContent = combinaciones.length.toLocaleString('es-MX');
+      const elOmitidos = document.getElementById('preview-omitidos-poliza');
+      if (distritosOmitidos.size > 0) {
+        elOmitidos.style.display = 'block';
+        elOmitidos.textContent = 'Distritos omitidos (no reconocidos): ' + Array.from(distritosOmitidos).join(', ');
+      } else {
+        elOmitidos.style.display = 'none';
+      }
+      document.getElementById('preview-carga-poliza').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga-poliza').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaPoliza() {
+  document.getElementById('estado-carga-poliza').textContent = 'Cargando...';
+  const { error } = await supabaseClient.rpc('reemplazar_folios_poliza', {
+    filas: filasParaCargarPoliza,
+    p_mes_min: rangoMesesPoliza.min,
+    p_mes_max: rangoMesesPoliza.max,
+  });
+  if (error) {
+    document.getElementById('estado-carga-poliza').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('folios_poliza');
+  document.getElementById('estado-carga-poliza').textContent = 'Carga completada: ' + filasParaCargarPoliza.length.toLocaleString('es-MX') + ' filas.';
+  document.getElementById('preview-carga-poliza').style.display = 'none';
 }
 
 let filasParaCargarPresupuesto = null;
@@ -4937,20 +5070,29 @@ function obtenerFoliosPlantaInternaPorDistrito(filasFoliosPoliza, mesISO) {
 
 async function obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodo) {
   const filas = await obtenerTablaCompleta('folios_poliza');
-  const mesCorte = claveMes(anioRef, mesRef);
-  const filasVentana = filas.filter((f) => f.mes.slice(0, 7) <= mesCorte);
   const rangoPeriodo = calcularRangosPeriodo(modoPeriodo, anioRef, mesRef);
   const clavesPeriodo = clavesMesesEnRango(rangoPeriodo.actual);
-  const filasPeriodo = filasVentana.filter((f) => clavesPeriodo.includes(f.mes.slice(0, 7)));
+  const filasPeriodo = filas.filter((f) => clavesPeriodo.includes(f.mes.slice(0, 7)));
+
+  // La gráfica de tendencia siempre muestra los últimos 6 meses (independiente del periodo activo),
+  // para que no se siga amontonando conforme se acumule más historial en folios_poliza.
+  const claves = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    claves.push(claveMes(base.getFullYear(), base.getMonth()));
+  }
+  const filasVentana6 = filas.filter((f) => claves.includes(f.mes.slice(0, 7)));
 
   const porMes = {};
-  filasVentana.forEach((f) => {
-    const clave = f.mes.slice(0, 7);
-    porMes[clave] = porMes[clave] || {
+  claves.forEach((clave) => {
+    porMes[clave] = {
       'PLANTA INTERNA': { dimensionados: 0, realizados: 0, tieneRealizados: false },
       'RECOLECCIONES': { dimensionados: 0, realizados: 0, tieneRealizados: false },
       'MULTIDISTRITO': { dimensionados: 0, realizados: 0, tieneRealizados: false },
     };
+  });
+  filasVentana6.forEach((f) => {
+    const clave = f.mes.slice(0, 7);
     const nodo = porMes[clave][f.poliza];
     if (!nodo) return;
     nodo.dimensionados += f.folios_dimensionados || 0;
@@ -4960,7 +5102,6 @@ async function obtenerFoliosPolizaAgregado(anioRef, mesRef, modoPeriodo) {
     }
   });
 
-  const claves = Object.keys(porMes).sort();
   const etiquetas = claves.map((c) => {
     const [anio, mes] = c.split('-').map(Number);
     return etiquetaMesCorta(anio, mes - 1);
@@ -5108,7 +5249,11 @@ function renderizarGraficaFolioIndividual(canvasId, refGrafica, etiquetas, poliz
               if (c.dataset.yAxisID === 'y1') {
                 return c.dataset.label + ': ' + (c.parsed.y === null ? '—' : c.parsed.y.toFixed(1) + '%');
               }
-              return c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString('es-MX');
+              const realizado = poliza.realizados[c.dataIndex];
+              return [
+                c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString('es-MX'),
+                'Realizados: ' + (realizado === null || realizado === undefined ? '—' : Math.round(realizado).toLocaleString('es-MX')),
+              ];
             },
           },
         },
@@ -8062,6 +8207,7 @@ function configurarDropzone(dropzoneId, inputId) {
 configurarDropzone('dropzone-cargar', 'input-excel');
 configurarDropzone('dropzone-flota', 'input-excel-flota');
 configurarDropzone('dropzone-unidades', 'input-excel-unidades');
+configurarDropzone('dropzone-poliza', 'input-excel-poliza');
 configurarDropzone('dropzone-presupuesto', 'input-excel-presupuesto');
 
 cargarSesion();
