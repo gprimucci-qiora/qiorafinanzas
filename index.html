@@ -568,6 +568,7 @@
           <button id="config-tab-unidades" onclick="mostrarSubConfig('unidades')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Unidades Autorizadas</button>
           <button id="config-tab-poliza" onclick="mostrarSubConfig('poliza')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Pólizas (Operaciones)</button>
           <button id="config-tab-presupuesto" onclick="mostrarSubConfig('presupuesto')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Presupuesto</button>
+          <button id="config-tab-contratistas" onclick="mostrarSubConfig('contratistas')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Contratistas</button>
           <button id="config-tab-usuarios" onclick="mostrarSubConfig('usuarios')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gestión de Usuarios</button>
         </div>
 
@@ -696,6 +697,26 @@
           </div>
         </div>
 
+        <div id="config-sub-contratistas" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube el Excel general de "Estado de Cuenta Contratistas" del cierre del mes (una hoja por contratista) <strong>y</strong> el Excel de Marco Anaya, juntos o por separado — ambos deben ser del mismo mes. Cada carga <strong>reemplaza solo ese mes</strong> en las 4 tablas de contratistas; los meses anteriores no se tocan.</p>
+          <div id="dropzone-contratistas" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra los archivos aquí, o usa el botón (puedes seleccionar los 2 a la vez)</p>
+            </div>
+            <input type="file" id="input-excel-contratistas" accept=".xlsx,.xls" multiple class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-contratistas" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-1">Mes detectado: <strong id="preview-mes-contratistas" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-sm mb-1">Contratistas a cargar: <strong id="preview-contratistas-contratistas" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-sm mb-1">Cuadrillas (técnico × mes) a cargar: <strong id="preview-filas-contratistas" class="font-gordita-bold text-primary"></strong></p>
+              <p id="preview-omitidos-contratistas" class="text-xs text-on-surface-variant mb-3" style="display:none;"></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará el estado de cuenta de contratistas existente para ese mes.</p>
+              <button onclick="confirmarCargaContratistas()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga-contratistas" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
         <div id="config-sub-usuarios" class="config-sub" style="display:none;">
           <div class="mb-6 flex justify-end">
             <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
@@ -708,6 +729,7 @@
             <input id="usuario-password" type="password" placeholder="Contraseña inicial" class="px-3 py-2 border border-outline-variant rounded text-sm">
             <select id="usuario-rol" class="px-3 py-2 border border-outline-variant rounded text-sm">
               <option value="finanzas">finanzas</option>
+              <option value="operaciones">operaciones</option>
               <option value="admin">admin</option>
             </select>
             <button onclick="crearUsuario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Crear</button>
@@ -781,7 +803,7 @@
       </div>
 
       <div class="vista" id="vista-pilar-operaciones">
-        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+        <button id="btn-volver-overview-operaciones" onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
         </button>
         <div class="mb-8">
@@ -813,57 +835,45 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-lg">
+
+        <div class="flex items-center justify-between mb-4 mt-lg">
+          <h3 class="font-gordita-bold text-lg text-primary">Contratistas</h3>
+          <p id="op-ctr-periodo" class="text-xs text-on-surface-variant">-</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Top Distritos por Alcance</h3>
-            <p class="text-xs text-on-surface-variant mb-4">% de alcance promedio (todas las pólizas)</p>
-            <div id="op-ranking-distritos" class="space-y-3"></div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Contratistas Activos</p>
+            <h2 id="op-ctr-kpi-contratistas" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Distribución de OS Dimensionadas</h3>
-            <p class="text-xs text-on-surface-variant mb-4">OS dimensionadas por distrito · mes vigente</p>
-            <h2 id="op-alcance-grande" class="font-gordita-bold text-3xl text-primary mb-4">-</h2>
-            <div class="w-full h-3 rounded-full overflow-hidden flex bg-surface-container">
-              <div id="op-alcance-seg-pi" class="h-full bg-op-pi" style="width:0%;"></div>
-              <div id="op-alcance-seg-rec" class="h-full bg-op-rec" style="width:0%;"></div>
-              <div id="op-alcance-seg-md" class="h-full bg-op-md" style="width:0%;"></div>
-            </div>
-            <div class="flex justify-between text-[10px] text-on-surface-variant mt-2">
-              <span class="text-op-pi font-gordita-bold">PI</span>
-              <span class="text-op-rec font-gordita-bold">Recolecciones</span>
-              <span class="text-op-md font-gordita-bold">Multidistrito</span>
-            </div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Cuadrillas (Técnicos)</p>
+            <h2 id="op-ctr-kpi-cuadrillas" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
           <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Multidistrito por Bolsa Regional</h3>
-            <p class="text-xs text-on-surface-variant mb-4">Cuadrillas autorizadas · mes vigente</p>
-            <div id="op-bolsas-regionales" class="space-y-3"></div>
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">OS Totales</p>
+            <h2 id="op-ctr-kpi-os" class="font-gordita-bold text-2xl text-primary">-</h2>
+          </div>
+          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Comisiones Pagadas</p>
+            <h2 id="op-ctr-kpi-pago" class="font-gordita-bold text-2xl text-primary">-</h2>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-xs text-op-pi uppercase tracking-wider mb-3">Planta Interna</p>
-            <h2 id="op-pi-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
-            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
-            <div class="flex justify-between mt-3 text-xs"><span id="op-pi-os" class="font-gordita-bold">-</span><span id="op-pi-precio" class="font-gordita-bold">-</span></div>
-            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS dimensionadas</span><span>Precio/OS</span></div>
+        <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+          <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="font-gordita-bold text-lg text-primary">Desglose por Contratista</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Clic en un contratista para ver su auditoría completa. Barras = pago mensual, línea = folios (con HC activo) · últimos 6 meses.</p>
+            </div>
+            <div class="flex gap-2 flex-wrap" id="op-ctr-orden-botones">
+              <button onclick="cambiarOrdenContratistas('pago')" data-orden="pago" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors bg-primary text-on-primary border-primary">Mayor pago</button>
+              <button onclick="cambiarOrdenContratistas('os')" data-orden="os" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">Mayor OS</button>
+              <button onclick="cambiarOrdenContratistas('az')" data-orden="az" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded-full border transition-colors border-outline-variant text-on-surface-variant">A–Z</button>
+            </div>
           </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-xs text-op-rec uppercase tracking-wider mb-3">Recolecciones</p>
-            <h2 id="op-rec-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
-            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
-            <div class="flex justify-between mt-3 text-xs"><span id="op-rec-os" class="font-gordita-bold">-</span><span id="op-rec-precio" class="font-gordita-bold">-</span></div>
-            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS dimensionadas</span><span>Precio/OS</span></div>
-          </div>
-          <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
-            <p class="font-gordita-bold text-xs text-op-md uppercase tracking-wider mb-3">Multidistrito</p>
-            <h2 id="op-md-alcance" class="font-gordita-bold text-xl text-primary mb-1">-</h2>
-            <p class="text-xs text-on-surface-variant">Alcance Promedio</p>
-            <div class="flex justify-between mt-3 text-xs"><span id="op-md-os" class="font-gordita-bold">-</span><span id="op-md-precio" class="font-gordita-bold">-</span></div>
-            <div class="flex justify-between text-[10px] text-on-surface-variant"><span>OS asignadas</span><span>Precio/OS (bolsa)</span></div>
-          </div>
-        </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-6" id="op-ctr-tabla"></div>
+        </section>
+
       </div>
 
       <div class="vista" id="vista-pilar-financieros">
@@ -1833,6 +1843,65 @@
   </div>
 </div>
 
+<div id="modal-drilldown-contratista" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start sticky top-0 bg-white z-10">
+      <div>
+        <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Auditoría de Contratista</p>
+        <h3 id="drilldown-contratista-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+        <p id="drilldown-contratista-subtitulo" class="text-xs text-on-surface-variant mt-1">-</p>
+      </div>
+      <button onclick="cerrarDetalleContratista()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6 space-y-8">
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="drilldown-contratista-kpis"></div>
+
+      <div>
+        <div class="flex items-center gap-4 mb-3">
+          <h4 class="font-gordita-bold text-sm text-primary">Pago y OS (últimos 6 meses)</h4>
+          <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:#1B4F72;"></span>Pago</span>
+          <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#5B93D6;"></span>OS · HC activo</span>
+          <span class="text-[10px] text-on-surface-variant">· Clic en una barra para ver el desglose por tipo de folio</span>
+        </div>
+        <div style="height:320px;"><canvas id="grafica-drilldown-contratista-combo"></canvas></div>
+        <div id="drilldown-contratista-desglose-tipo" class="mt-3"></div>
+      </div>
+
+      <div>
+        <h4 class="font-gordita-bold text-sm text-primary mb-1">Rentabilidad (últimos 12 meses)</h4>
+        <p class="text-[11px] text-on-surface-variant mb-3">Folios × precio a destajo (costo) vs. folios × precio de póliza (ingreso). No incluye adicionales/descuentos ni folios sin destajo conocido.</p>
+        <div class="overflow-x-auto"><div id="drilldown-contratista-rentabilidad"></div></div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-gordita-bold text-sm text-primary">Cuadrillas / técnicos por distrito — periodo activo</h4>
+          <p class="text-[11px] text-on-surface-variant">Click en un distrito, luego en un técnico para ver su tendencia</p>
+        </div>
+        <div class="overflow-x-auto">
+          <div id="drilldown-contratista-tecnicos-header"></div>
+          <div id="drilldown-contratista-tecnicos"></div>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-gordita-bold text-sm text-primary mb-1">Adicionales y descuentos</h4>
+        <p id="drilldown-contratista-nota-distrito" class="text-[11px] text-on-surface-variant mb-3"></p>
+        <div id="drilldown-contratista-adicionales"></div>
+      </div>
+
+      <div>
+        <h4 class="font-gordita-bold text-sm text-primary mb-3">Facturación — periodo activo</h4>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="drilldown-contratista-facturacion"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div id="modal-drilldown-folios" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
   <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
@@ -1930,6 +1999,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
+// Roles que solo pueden ver un pilar específico de la app (todo lo demás queda oculto/bloqueado).
+const PILAR_EXCLUSIVO_POR_ROL = { operaciones: 'operaciones' };
 let ultimaFechaConDatos = null;
 let modoPeriodoGlobal = 'mes';
 let rangoGlobalDesde = null;
@@ -1980,16 +2051,28 @@ async function cargarSesion() {
     document.getElementById('config-tab-unidades').style.display = 'none';
     document.getElementById('config-tab-poliza').style.display = 'none';
     document.getElementById('config-tab-presupuesto').style.display = 'none';
+    document.getElementById('config-tab-contratistas').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
   } else {
     const seccionAdminIngresos = document.getElementById('admin-ingresos');
     if (seccionAdminIngresos) seccionAdminIngresos.style.display = 'block';
   }
+
+  const pilarExclusivo = PILAR_EXCLUSIVO_POR_ROL[perfil.rol];
+  if (pilarExclusivo) {
+    document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => {
+      if (b.dataset.vista !== pilarExclusivo) b.closest('li').style.display = 'none';
+    });
+    const btnVolver = document.getElementById('btn-volver-overview-operaciones');
+    if (btnVolver) btnVolver.style.display = 'none';
+  }
+
   mesGlobalSeleccionado = await obtenerUltimoMesConDatos();
   actualizarEtiquetaMesGlobal();
   await cargarGlosario();
-  mostrarVista('overview');
+  if (pilarExclusivo) await abrirPilar(pilarExclusivo);
+  else mostrarVista('overview');
 }
 
 function alternarSidebar() {
@@ -2007,6 +2090,8 @@ function ocultarIndicadorCarga() {
 }
 
 async function mostrarVista(nombre) {
+  const pilarExclusivo = usuarioActual && PILAR_EXCLUSIVO_POR_ROL[usuarioActual.rol];
+  if (pilarExclusivo && nombre !== pilarExclusivo) return abrirPilar(pilarExclusivo);
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
   document.getElementById('vista-' + nombre).classList.add('activa');
@@ -2031,7 +2116,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'flota', 'unidades', 'poliza', 'presupuesto', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'flota', 'unidades', 'poliza', 'presupuesto', 'contratistas', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -2537,6 +2622,266 @@ async function confirmarCargaPoliza() {
   invalidarCache('folios_poliza');
   document.getElementById('estado-carga-poliza').textContent = 'Carga completada: ' + filasParaCargarPoliza.length.toLocaleString('es-MX') + ' filas.';
   document.getElementById('preview-carga-poliza').style.display = 'none';
+}
+
+// ─── Contratistas: parser adaptado de "BI Contratistas / generador_estados.html" ───────────
+// Fase 1: solo captura de datos crudos del estado de cuenta (cuadrillas, pago, adicionales).
+// El cálculo de potencial/rentabilidad queda para una siguiente fase.
+const CONTRATISTAS_OS_MAP = {
+  'Addons': 'Addons', 'Cambio de domicilio': 'Cambio de Domicilio', 'Cambio De Plan': 'Cambio de Plan',
+  'Cambio de equipo': 'Cambio de Equipo', 'Factibilidad': 'Factibilidad', 'Instalacion': 'Instalacion',
+  'Instalacion Empresarial': 'Instalacion Empresarial', 'Mantenimiento': 'Mantenimiento',
+  'Mantenimiento mayor': 'Mantenimiento Mayor', 'Recoleccion': 'Recoleccion', 'Soporte': 'Soporte',
+  'Soporte empresarial': 'Soporte Empresarial', 'No aplica': 'No Aplica',
+};
+const CONTRATISTAS_EXCLUIDOS = ['grupo dian', 'sari comunicaciones'];
+
+function contratistasEncontrarFilaHeader(filas) {
+  for (let i = 0; i < filas.length; i++) {
+    const fila = filas[i];
+    if (!fila) continue;
+    let hffm = false, hid = false;
+    for (let j = 0; j < fila.length; j++) {
+      if (fila[j] === '# FFM') hffm = true;
+      if (fila[j] === 'id') hid = true;
+    }
+    if (hffm && hid) {
+      const col = {};
+      fila.forEach((v, j) => { if (v !== null && v !== undefined) col[String(v).trim()] = j; });
+      return { idx: i, col };
+    }
+  }
+  return null;
+}
+
+function contratistasParsearCuadrillas(filas, hdr, contratista, mesISO) {
+  const cuadrillas = [];
+  const osTipo = [];
+  for (let i = hdr.idx + 1; i < filas.length; i++) {
+    const fila = filas[i];
+    if (!fila) continue;
+    const idCol = hdr.col['id'];
+    const idVal = idCol !== undefined ? parseFloat(fila[idCol]) : NaN;
+    if (isNaN(idVal) || idVal <= 0) continue;
+    const os = parseFloat(fila[hdr.col['# DE OS']]) || 0;
+    if (os <= 0) continue;
+    const ffm = String(fila[hdr.col['# FFM']] || '').trim();
+    cuadrillas.push({
+      contratista, mes: mesISO, ffm,
+      nombre_tecnico: String(fila[hdr.col['NOMBRE DEL TÉCNICO']] || '').replace(/[\n\t]+/g, ' ').trim(),
+      distrito: String(fila[hdr.col['DISTRITO']] || '').trim(),
+      asistencias: parseFloat(fila[hdr.col['ASISTENCIAS']]) || 0,
+      os_totales: os,
+      productividad_diaria: hdr.col['PRODUCTIVIDAD DIARIA'] !== undefined ? (parseFloat(fila[hdr.col['PRODUCTIVIDAD DIARIA']]) || null) : null,
+      estrellas: parseFloat(fila[hdr.col['ESTRELLAS LOGRADAS']]) || 0,
+      pago_total: parseFloat(fila[hdr.col['Total']]) || 0,
+    });
+    Object.keys(CONTRATISTAS_OS_MAP).forEach((colExcel) => {
+      const colIdx = hdr.col[colExcel];
+      const monto = (colIdx !== undefined && fila[colIdx] !== null) ? (parseFloat(fila[colIdx]) || 0) : 0;
+      if (monto !== 0) osTipo.push({ contratista, mes: mesISO, ffm, tipo_os: CONTRATISTAS_OS_MAP[colExcel], monto });
+    });
+  }
+  return { cuadrillas, osTipo };
+}
+
+// Parser genérico de una hoja "estándar" (encabezado + adicionales + facturación + cuadrillas).
+// Aplica igual a contratistas normales y a las hojas de Marco Anaya (principal/León/Veracruz),
+// que comparten exactamente esta misma estructura de encabezado.
+function contratistasParsearHoja(nombreHoja, filas) {
+  const d = {
+    nombre: nombreHoja.trim(), mesISO: null,
+    cuadrillas_activas: 0, asistencias_totales: 0, os_totales: 0, estrellas_totales: 0,
+    productividad_promedio: 0, os_promedio: 0, estrellas_promedio: 0, pago_total: 0,
+    adicionales: [], adicionales_total: 0,
+    subtotal_facturar: 0, iva: 0, total_final: 0,
+  };
+  let enAdicionales = false, adicionalesListo = false, subtotalEncontrado = false, mesFecha = null;
+
+  for (let i = 0; i < filas.length; i++) {
+    const fila = filas[i];
+    if (!fila) continue;
+
+    for (let j = 0; j < fila.length - 1; j++) {
+      if (fila[j] && String(fila[j]).toUpperCase().trim() === 'ESTADO DE CUENTA CONTRATISTA') {
+        for (let k = j + 1; k < fila.length; k++) {
+          const v = fila[k];
+          if (v && String(v).trim() && String(v).trim() !== ' ') { d.nombre = String(v).trim(); break; }
+        }
+      }
+    }
+
+    let lbl = null, num = null, fecha = null;
+    for (let j = 0; j < fila.length; j++) {
+      const rv = fila[j];
+      if (rv === null || rv === undefined) continue;
+      if (lbl === null && typeof rv === 'string' && rv.trim() && rv.trim() !== 'x' && rv.trim() !== ' ') lbl = rv.trim();
+      if (num === null && typeof rv === 'number') num = rv;
+      if (fecha === null && rv instanceof Date) fecha = rv;
+    }
+    if (!lbl) continue;
+    const ll = lbl.toLowerCase();
+
+    if (ll.indexOf('fechas') >= 0 && fecha) mesFecha = fecha;
+
+    if (ll === 'cuadrillas activas' && num !== null) d.cuadrillas_activas = num;
+    if (ll === 'asistencias totales' && num !== null) d.asistencias_totales = num;
+    if (ll === 'os totales' && num !== null) d.os_totales = num;
+    if (ll === 'estrellas totales' && num !== null) d.estrellas_totales = num;
+    if (ll === 'productividad promedio diaria' && num !== null) d.productividad_promedio = num;
+    if (ll === 'os promedio por cuadrilla' && num !== null) d.os_promedio = num;
+    if (ll === 'estrellas promedio por cuadrilla' && num !== null) d.estrellas_promedio = num;
+    if ((ll === 'pago por os realizadas' || ll === 'pago total') && num !== null && !d.pago_total) d.pago_total = num;
+
+    if (ll.indexOf('adicionales') >= 0) { enAdicionales = true; adicionalesListo = false; }
+    if (enAdicionales && !adicionalesListo) {
+      if (ll === 'total') { d.adicionales_total = num || 0; adicionalesListo = true; enAdicionales = false; }
+      else if (ll.indexOf('adicionales') < 0) d.adicionales.push({ concepto: lbl, monto: num || 0 });
+    }
+    if (ll.indexOf('subtotal') >= 0 && ll.indexOf('facturar') >= 0 && num !== null) { d.subtotal_facturar = num; subtotalEncontrado = true; }
+    if ((ll === 'iva' || ll === 'iva y retenciones') && num !== null) d.iva = num;
+    if (ll === 'total' && subtotalEncontrado && num !== null && num > d.subtotal_facturar) d.total_final = num;
+  }
+
+  if (mesFecha) d.mesISO = claveMes(mesFecha.getFullYear(), mesFecha.getMonth()) + '-01';
+
+  const hdr = contratistasEncontrarFilaHeader(filas);
+  let cuadrillas = [], osTipo = [];
+  if (hdr && d.mesISO) {
+    const r = contratistasParsearCuadrillas(filas, hdr, d.nombre, d.mesISO);
+    cuadrillas = r.cuadrillas;
+    osTipo = r.osTipo;
+  }
+  return { resumen: d, cuadrillas, osTipo };
+}
+
+function contratistasResumenARow(d, mesISO) {
+  return {
+    contratista: d.nombre, mes: mesISO,
+    cuadrillas_activas: d.cuadrillas_activas, asistencias_totales: d.asistencias_totales,
+    os_totales: d.os_totales, estrellas_totales: d.estrellas_totales,
+    productividad_promedio: d.productividad_promedio, os_promedio: d.os_promedio,
+    estrellas_promedio: d.estrellas_promedio, pago_total: d.pago_total,
+    adicionales_total: d.adicionales_total, subtotal_facturar: d.subtotal_facturar,
+    iva: d.iva, total_final: d.total_final,
+  };
+}
+
+function contratistasEsWorkbookMarcoAnaya(libro) {
+  const nombres = libro.SheetNames.map((n) => n.trim().toLowerCase());
+  return nombres.some((n) => n.indexOf('marco anaya') >= 0) && nombres.some((n) => n === 'leon');
+}
+
+async function contratistasProcesarArchivo(archivo) {
+  const buffer = await archivo.arrayBuffer();
+  const libro = XLSX.read(buffer, { type: 'array', cellDates: true });
+  const resultados = { resumenes: [], cuadrillas: [], osTipo: [], adicionales: [], omitidos: [] };
+  const esMarcoAnaya = contratistasEsWorkbookMarcoAnaya(libro);
+
+  if (esMarcoAnaya) {
+    let nombreHojaPrincipal = null;
+    libro.SheetNames.forEach((n) => { if (n.trim().toLowerCase().indexOf('marco anaya') >= 0) nombreHojaPrincipal = n; });
+    const filasPrincipal = XLSX.utils.sheet_to_json(libro.Sheets[nombreHojaPrincipal], { header: 1, defval: null, cellDates: true });
+    const principal = contratistasParsearHoja(nombreHojaPrincipal, filasPrincipal);
+    if (!principal.resumen.mesISO) throw new Error('No se detectó el mes ("Fechas") en la hoja "' + nombreHojaPrincipal + '".');
+    const mesRef = principal.resumen.mesISO;
+    principal.resumen.nombre = 'Marco Anaya';
+    resultados.resumenes.push(contratistasResumenARow(principal.resumen, mesRef));
+    principal.resumen.adicionales.forEach((a) => resultados.adicionales.push({ contratista: 'Marco Anaya', mes: mesRef, concepto: a.concepto, monto: a.monto }));
+
+    libro.SheetNames.forEach((nombreHoja) => {
+      const nl = nombreHoja.trim().toLowerCase();
+      if (CONTRATISTAS_EXCLUIDOS.some((ex) => nl.indexOf(ex) >= 0)) return;
+      const filas = XLSX.utils.sheet_to_json(libro.Sheets[nombreHoja], { header: 1, defval: null, cellDates: true });
+      const hdr = contratistasEncontrarFilaHeader(filas);
+      if (!hdr) return;
+      // Si la hoja tiene su propio bloque "Fechas" se usa para validar que sea del mismo mes que
+      // el cierre principal (así se descarta automáticamente, por ejemplo, un territorio cuya
+      // hoja quedó con datos de un mes anterior sin actualizar).
+      const propio = contratistasParsearHoja(nombreHoja, filas);
+      const mesHoja = propio.resumen.mesISO || mesRef;
+      if (mesHoja !== mesRef) {
+        resultados.omitidos.push(nombreHoja + ' (mes ' + mesHoja + ', se esperaba ' + mesRef + ')');
+        return;
+      }
+      const r = contratistasParsearCuadrillas(filas, hdr, 'Marco Anaya', mesRef);
+      resultados.cuadrillas.push(...r.cuadrillas);
+      resultados.osTipo.push(...r.osTipo);
+    });
+  } else {
+    libro.SheetNames.forEach((nombreHoja) => {
+      const nl = nombreHoja.trim().toLowerCase();
+      if (CONTRATISTAS_EXCLUIDOS.some((ex) => nl.indexOf(ex) >= 0)) return;
+      const filas = XLSX.utils.sheet_to_json(libro.Sheets[nombreHoja], { header: 1, defval: null, cellDates: true });
+      const parsed = contratistasParsearHoja(nombreHoja, filas);
+      if (!parsed.cuadrillas.length) { resultados.omitidos.push(nombreHoja + ' (sin cuadrillas con OS)'); return; }
+      if (!parsed.resumen.mesISO) { resultados.omitidos.push(nombreHoja + ' (sin mes detectado)'); return; }
+      resultados.resumenes.push(contratistasResumenARow(parsed.resumen, parsed.resumen.mesISO));
+      parsed.resumen.adicionales.forEach((a) => resultados.adicionales.push({ contratista: parsed.resumen.nombre, mes: parsed.resumen.mesISO, concepto: a.concepto, monto: a.monto }));
+      resultados.cuadrillas.push(...parsed.cuadrillas);
+      resultados.osTipo.push(...parsed.osTipo);
+    });
+  }
+  return resultados;
+}
+
+let contratistasDatosParaCargar = null;
+
+document.getElementById('input-excel-contratistas').addEventListener('change', async function (evento) {
+  const archivos = Array.from(evento.target.files || []);
+  if (archivos.length === 0) return;
+  document.getElementById('estado-carga-contratistas').textContent = 'Procesando...';
+  try {
+    const combinado = { resumenes: [], cuadrillas: [], osTipo: [], adicionales: [], omitidos: [] };
+    const mesesDetectados = {};
+    for (const archivo of archivos) {
+      const r = await contratistasProcesarArchivo(archivo);
+      combinado.resumenes.push(...r.resumenes);
+      combinado.cuadrillas.push(...r.cuadrillas);
+      combinado.osTipo.push(...r.osTipo);
+      combinado.adicionales.push(...r.adicionales);
+      combinado.omitidos.push(...r.omitidos.map((o) => archivo.name + ': ' + o));
+      r.resumenes.forEach((res) => { mesesDetectados[res.mes] = (mesesDetectados[res.mes] || 0) + 1; });
+    }
+    const meses = Object.keys(mesesDetectados);
+    if (meses.length === 0) throw new Error('No se detectó ningún mes válido en los archivos.');
+    if (meses.length > 1) throw new Error('Los archivos no coinciden en el mes de cierre (' + meses.join(', ') + '). Sube solo archivos del mismo mes.');
+
+    contratistasDatosParaCargar = Object.assign({ mes: meses[0] }, combinado);
+    document.getElementById('preview-mes-contratistas').textContent = meses[0];
+    document.getElementById('preview-contratistas-contratistas').textContent = combinado.resumenes.length;
+    document.getElementById('preview-filas-contratistas').textContent = combinado.cuadrillas.length.toLocaleString('es-MX');
+    const elOmitidos = document.getElementById('preview-omitidos-contratistas');
+    if (combinado.omitidos.length > 0) {
+      elOmitidos.style.display = 'block';
+      elOmitidos.textContent = 'Hojas omitidas: ' + combinado.omitidos.join(' · ');
+    } else {
+      elOmitidos.style.display = 'none';
+    }
+    document.getElementById('preview-carga-contratistas').style.display = 'block';
+    document.getElementById('estado-carga-contratistas').textContent = '';
+  } catch (error) {
+    document.getElementById('estado-carga-contratistas').textContent = 'Error al leer los archivos: ' + error.message;
+  }
+});
+
+async function confirmarCargaContratistas() {
+  document.getElementById('estado-carga-contratistas').textContent = 'Cargando...';
+  const { mes, cuadrillas, osTipo, resumenes, adicionales } = contratistasDatosParaCargar;
+  const { error } = await supabaseClient.rpc('reemplazar_contratistas_mes', {
+    p_mes: mes, cuadrillas, os_tipo: osTipo, resumen: resumenes, adicionales,
+  });
+  if (error) {
+    document.getElementById('estado-carga-contratistas').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('contratistas_cuadrillas');
+  invalidarCache('contratistas_cuadrillas_os_tipo');
+  invalidarCache('contratistas_resumen_mensual');
+  invalidarCache('contratistas_adicionales');
+  document.getElementById('estado-carga-contratistas').textContent =
+    'Carga completada: ' + cuadrillas.length.toLocaleString('es-MX') + ' cuadrillas, ' + resumenes.length + ' contratistas, mes ' + mes + '.';
+  document.getElementById('preview-carga-contratistas').style.display = 'none';
 }
 
 let filasParaCargarPresupuesto = null;
@@ -4148,7 +4493,7 @@ async function cargarUsuarios() {
     const accionBoton = u.activo
       ? `<button onclick="desactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-error hover:underline">Desactivar</button>`
       : `<button onclick="reactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-qiora-green hover:underline">Reactivar</button>`;
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td><td class="px-6 py-4">${accionBoton}</td>`;
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="operaciones" ${u.rol === 'operaciones' ? 'selected' : ''}>operaciones</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td><td class="px-6 py-4">${accionBoton}</td>`;
     cuerpo.appendChild(tr);
   });
 }
@@ -5321,43 +5666,6 @@ async function cargarOverview() {
   });
   const ingresoOperacionesYTD = ytdPlantaInterna + ytdRecolecciones + ytdMultidistrito;
 
-  let osPI = 0, osRec = 0, osMD = 0;
-  let ingresoVigentePI = 0, ingresoVigenteRec = 0, ingresoVigenteMD = 0;
-  let distritosConPoliza = 0;
-  const preciosVigentes = [];
-  listaDistritos.forEach((distrito) => {
-    const region = regionPorDistrito[distrito];
-    const regionBolsa = Calc.bolsaMultidistritoDeRegion(region);
-    const vigentePI = Calc.obtenerParametroVigente(polizaParametros.filter((p) => p.poliza === 'PLANTA INTERNA' && p.distrito === distrito), mesVigenteISO);
-    const vigenteRec = Calc.obtenerParametroVigente(polizaParametros.filter((p) => p.poliza === 'RECOLECCIONES' && p.distrito === distrito), mesVigenteISO);
-    const vigenteBolsa = regionBolsa ? Calc.obtenerParametroVigente(multidistritoBolsas.filter((b) => b.region_bolsa === regionBolsa), mesVigenteISO) : null;
-    const ingresoMDVigente = Calc.calcularIngresoMultidistritoDistrito(multidistritoBolsas, hcAutorizado, listaDistritos, regionPorDistrito, distrito, region, mesVigenteISO);
-
-    let tienePoliza = false;
-    if (vigentePI) {
-      osPI += vigentePI.ordenes_dimensionadas;
-      ingresoVigentePI += vigentePI.precio_por_orden * vigentePI.ordenes_dimensionadas;
-      preciosVigentes.push(vigentePI.precio_por_orden);
-      tienePoliza = true;
-    }
-    if (vigenteRec) {
-      osRec += vigenteRec.ordenes_dimensionadas;
-      ingresoVigenteRec += vigenteRec.precio_por_orden * vigenteRec.ordenes_dimensionadas;
-      preciosVigentes.push(vigenteRec.precio_por_orden);
-      tienePoliza = true;
-    }
-    if (ingresoMDVigente > 0 && vigenteBolsa) {
-      osMD += ingresoMDVigente / vigenteBolsa.precio_por_orden;
-      ingresoVigenteMD += ingresoMDVigente;
-      preciosVigentes.push(vigenteBolsa.precio_por_orden);
-      tienePoliza = true;
-    }
-    if (tienePoliza) distritosConPoliza++;
-  });
-  const osTotalVigente = osPI + osRec + osMD;
-  const precioPromedioGeneral = preciosVigentes.length ? preciosVigentes.reduce((s, v) => s + v, 0) / preciosVigentes.length : null;
-  const alcancePromedio = distritosConPoliza > 0 ? osTotalVigente / distritosConPoliza : null;
-
   const kpisGasto = Calc.calcularKPIs(facturasYTD, glosarioMap);
   const gastoTotalYTD = kpisGasto.totalPagado;
 
@@ -5367,8 +5675,6 @@ async function cargarOverview() {
   overviewDatos = {
     glosarioMap, regionPorDistrito, datosIngresos, listaDistritos, anioRef, mesRef, mesVigenteISO,
     ingresoPorDistritoYTD, ytdPlantaInterna, ytdRecolecciones, ytdMultidistrito, ingresoOperacionesYTD,
-    osPI, osRec, osMD, osTotalVigente, ingresoVigentePI, ingresoVigenteRec, ingresoVigenteMD,
-    precioPromedioGeneral, alcancePromedio, distritosConPoliza,
     facturasYTD, gastoTotalYTD, kpisGasto,
     utilidadYTD, margenYTD, unidadesAutorizadas, presupuesto,
   };
@@ -5519,6 +5825,8 @@ async function cargarOverview() {
 }
 
 async function abrirPilar(nombre) {
+  const pilarExclusivo = usuarioActual && PILAR_EXCLUSIVO_POR_ROL[usuarioActual.rol];
+  if (pilarExclusivo && nombre !== pilarExclusivo) nombre = pilarExclusivo;
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
   document.getElementById('vista-pilar-' + nombre).classList.add('activa');
@@ -5539,10 +5847,6 @@ async function abrirPilar(nombre) {
   }
 }
 
-function textoAlcanceOp(pct) {
-  return pct === null ? '—' : pct.toFixed(1) + '%';
-}
-
 async function cargarPilarOperaciones() {
   const d = overviewDatos;
   const etiquetaPeriodo = 'Año en curso ' + d.anioRef + ' (Ene–' + MESES_LARGOS[d.mesRef] + ') · parámetros vigentes de ' + MESES_LARGOS[d.mesRef] + ' ' + d.anioRef;
@@ -5550,56 +5854,797 @@ async function cargarPilarOperaciones() {
 
   await renderizarRankingsAlcancePoliza();
 
-  const rankingDistritos = Object.keys(d.foliosPoliza.porDistrito)
-    .map((distrito) => ({ distrito, alcancePct: d.foliosPoliza.porDistrito[distrito].alcancePct }))
-    .filter((f) => f.alcancePct !== null)
-    .sort((a, b) => b.alcancePct - a.alcancePct)
-    .slice(0, 7);
-  document.getElementById('op-ranking-distritos').innerHTML = rankingDistritos.map((f) => {
-    const nombreCorto = f.distrito.replace(/^CTA-TPI-INT-[A-Z]+\s/, '');
-    return `<div>
-      <div class="flex justify-between text-xs mb-1"><span class="font-gordita-bold">${nombreCorto}</span><span>${f.alcancePct.toFixed(1)}%</span></div>
-      <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-op-pi rounded-full" style="width:${Math.min(f.alcancePct, 100)}%;"></div></div>
-    </div>`;
-  }).join('');
+  await cargarSeccionContratistas();
+}
 
-  document.getElementById('op-alcance-grande').textContent = d.alcancePromedio === null ? '—' : Math.round(d.alcancePromedio).toLocaleString('es-MX') + ' OS';
-  const totalAlcance = d.osPI + d.osRec + d.osMD;
-  const pctAlcance = (v) => (totalAlcance > 0 ? (v / totalAlcance) * 100 : 0);
-  document.getElementById('op-alcance-seg-pi').style.width = pctAlcance(d.osPI) + '%';
-  document.getElementById('op-alcance-seg-rec').style.width = pctAlcance(d.osRec) + '%';
-  document.getElementById('op-alcance-seg-md').style.width = pctAlcance(d.osMD) + '%';
+let contratistasSeccionDatos = null;
+let contratistasOrden = 'pago';
+let contratistasCardCharts = [];
+let contratistaDetalleActivo = null;
+let contratistaDetalleTecnicoAbierto = null;
+let contratistaDetalleDistritoAbierto = null;
+let contratistaDetalleDatos = null;
+let contratistaTecnicoOrdenCampo = 'pago';
+let contratistaTecnicoOrdenDir = 'desc';
+const CONTRATISTA_TECNICO_COLUMNAS = [
+  { campo: 'nombre_tecnico', label: 'Distrito / Técnico', clase: 'col-span-2' },
+  { campo: 'asistencias', label: 'Asistencias', clase: 'text-right' },
+  { campo: 'os', label: 'OS', clase: 'text-right' },
+  { campo: 'productividad', label: 'Productividad', clase: 'text-right' },
+  { campo: 'pago', label: 'Pago', clase: 'text-right' },
+];
+const CONTRATISTA_COLOR_PRIMARIO = '#1B4F72';
+const CONTRATISTA_COLOR_SECUNDARIO = '#5B93D6';
+const DIAS_PRODUCTIVIDAD_MES = 26;
 
-  const bolsasNombres = ['BAJIO', 'OCCIDENTE', 'ORIENTE', 'SURESTE'];
-  const cuadrillasPorBolsa = {};
-  bolsasNombres.forEach((b) => { cuadrillasPorBolsa[b] = 0; });
-  d.listaDistritos.forEach((distrito) => {
-    const regionBolsa = Calc.bolsaMultidistritoDeRegion(d.regionPorDistrito[distrito]);
-    if (!regionBolsa) return;
-    cuadrillasPorBolsa[regionBolsa] += Calc.obtenerCuadrillasMultidistrito(d.datosIngresos.hcAutorizado, distrito, d.mesVigenteISO);
+function calcularProductividadPromedio(paresOsHc) {
+  const valores = paresOsHc.filter((p) => p.hc > 0).map((p) => (p.os / p.hc) / DIAS_PRODUCTIVIDAD_MES);
+  return valores.length ? valores.reduce((s, v) => s + v, 0) / valores.length : 0;
+}
+
+function inicialesContratista(nombre) {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  const letras = partes.length > 1 ? partes[0][0] + partes[1][0] : (nombre.slice(0, 2) || '--');
+  return letras.toUpperCase();
+}
+
+// Precios a destajo por tipo de folio (MXN$/folio). Tepic y Colima quedan fuera porque ahí no se
+// paga a destajo, sino por un esquema de póliza fija a Marco Anaya.
+const PRECIOS_FOLIO_ESTANDAR = {
+  'Addons': 440, 'Cambio de Domicilio': 440, 'Cambio de Plan': 440, 'Cambio de Equipo': 440,
+  'Factibilidad': 440, 'Instalacion': 440, 'Instalacion Empresarial': 440,
+  'Mantenimiento': 150, 'Mantenimiento Mayor': 440, 'Recoleccion': 150,
+  'Soporte': 400, 'Soporte Empresarial': 440,
+};
+const PRECIOS_FOLIO_GDL = Object.assign({}, PRECIOS_FOLIO_ESTANDAR, {
+  'Addons': 480, 'Cambio de Domicilio': 480, 'Cambio de Plan': 480, 'Cambio de Equipo': 480,
+  'Factibilidad': 480, 'Instalacion': 480, 'Instalacion Empresarial': 480,
+  'Mantenimiento Mayor': 480, 'Soporte': 480, 'Soporte Empresarial': 480,
+});
+
+function precioFolioPorDistrito(distrito, tipoOs) {
+  const d = (distrito || '').toUpperCase();
+  if (d.indexOf('TEPIC') >= 0 || d.indexOf('COLIMA') >= 0) return null;
+  const tabla = d.indexOf('GDL') >= 0 ? PRECIOS_FOLIO_GDL : PRECIOS_FOLIO_ESTANDAR;
+  return tabla[tipoOs] || null;
+}
+
+async function cargarSeccionContratistas() {
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const clavesPeriodo = clavesMesesEnRango(rangos.actual);
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+
+  const [cuadrillas, resumenes] = await Promise.all([
+    obtenerTablaCompleta('contratistas_cuadrillas'),
+    obtenerTablaCompleta('contratistas_resumen_mensual'),
+  ]);
+
+  let cuadrillasPeriodo = cuadrillas.filter((c) => clavesPeriodo.includes((c.mes || '').slice(0, 7)));
+  if (distritoFiltro) cuadrillasPeriodo = cuadrillasPeriodo.filter((c) => c.distrito === distritoFiltro);
+  const resumenesPeriodo = resumenes.filter((r) => clavesPeriodo.includes((r.mes || '').slice(0, 7)));
+
+  document.getElementById('op-ctr-periodo').textContent = textoPeriodoActivo(anioRef, mesRef) + (distritoFiltro ? ' · ' + distritoFiltro : '');
+
+  const contratistasSet = new Set(cuadrillasPeriodo.map((c) => c.contratista));
+  const tecnicosSet = new Set(cuadrillasPeriodo.map((c) => c.ffm));
+  const osTotal = cuadrillasPeriodo.reduce((s, c) => s + (c.os_totales || 0), 0);
+  // El pago solo se puede filtrar por distrito a nivel cuadrilla; el resumen mensual es siempre
+  // a nivel contratista completo (el Excel no lo desglosa por distrito).
+  const pagoTotal = distritoFiltro
+    ? cuadrillasPeriodo.reduce((s, c) => s + (c.pago_total || 0), 0)
+    : resumenesPeriodo.reduce((s, r) => s + (r.pago_total || 0), 0);
+
+  document.getElementById('op-ctr-kpi-contratistas').textContent = contratistasSet.size.toLocaleString('es-MX');
+  document.getElementById('op-ctr-kpi-cuadrillas').textContent = tecnicosSet.size.toLocaleString('es-MX');
+  document.getElementById('op-ctr-kpi-os').textContent = Math.round(osTotal).toLocaleString('es-MX');
+  document.getElementById('op-ctr-kpi-pago').textContent = formatoCompacto(pagoTotal);
+
+  const pagoPorContratista = {};
+  if (distritoFiltro) {
+    cuadrillasPeriodo.forEach((c) => { pagoPorContratista[c.contratista] = (pagoPorContratista[c.contratista] || 0) + (c.pago_total || 0); });
+  } else {
+    resumenesPeriodo.forEach((r) => { pagoPorContratista[r.contratista] = (pagoPorContratista[r.contratista] || 0) + (r.pago_total || 0); });
+  }
+
+  const claves6 = [], etiquetas6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    claves6.push(claveMes(base.getFullYear(), base.getMonth()));
+    etiquetas6.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+  }
+
+  contratistasSeccionDatos = { cuadrillasPeriodo, resumenesPeriodo, cuadrillas, resumenes, claves6, etiquetas6, distritoFiltro, pagoPorContratista };
+  renderizarTablaContratistas();
+}
+
+// Rentabilidad por contratista: Folios = OS totales exactos (contratistas_cuadrillas). Costo =
+// suma del monto a destajo capturado por tipo de OS (solo tipos/distritos con precio conocido —
+// Tepic/Colima quedan fuera porque ahí se paga por póliza fija, no a destajo). Ingreso = folios de
+// Recolección al precio de RECOLECCIONES de su distrito + el resto al precio de PLANTA INTERNA,
+// ambos vigentes al mes correspondiente. Es una aproximación: ignora adicionales/descuentos y
+// folios sin destajo conocido (por eso "simple").
+function calcularRentabilidadContratistas(cuadrillasTodas, osTipoTodas, claves12) {
+  const clavesSet = new Set(claves12);
+  const porContratistaMes = {};
+  const asegurarNodo = (contratista, clave) => {
+    porContratistaMes[contratista] = porContratistaMes[contratista] || {};
+    porContratistaMes[contratista][clave] = porContratistaMes[contratista][clave] || { folios: 0, hc: new Set(), costo: 0, ingreso: 0 };
+    return porContratistaMes[contratista][clave];
+  };
+
+  const distritoPorFfmMes = {};
+  cuadrillasTodas.forEach((c) => {
+    const clave = (c.mes || '').slice(0, 7);
+    if (!clavesSet.has(clave)) return;
+    const nodo = asegurarNodo(c.contratista, clave);
+    nodo.folios += c.os_totales || 0;
+    nodo.hc.add(c.ffm);
+    distritoPorFfmMes[c.ffm + '|' + clave] = c.distrito;
   });
-  const maxBolsa = Math.max(...Object.values(cuadrillasPorBolsa), 1);
-  const etiquetaBolsa = { BAJIO: 'Bajío', OCCIDENTE: 'Occidente', ORIENTE: 'Oriente', SURESTE: 'Sureste' };
-  document.getElementById('op-bolsas-regionales').innerHTML = bolsasNombres.map((b) => {
-    const pct = (cuadrillasPorBolsa[b] / maxBolsa) * 100;
-    return `<div>
-      <div class="flex justify-between text-xs mb-1"><span class="font-gordita-bold">${etiquetaBolsa[b]}</span><span>${cuadrillasPorBolsa[b].toLocaleString('es-MX')} cuadrillas</span></div>
-      <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-op-md rounded-full" style="width:${pct}%;"></div></div>
-    </div>`;
-  }).join('');
 
-  const precioPI = d.osPI > 0 ? d.ingresoVigentePI / d.osPI : null;
-  const precioRec = d.osRec > 0 ? d.ingresoVigenteRec / d.osRec : null;
-  const precioMD = d.osMD > 0 ? d.ingresoVigenteMD / d.osMD : null;
-  document.getElementById('op-pi-alcance').textContent = textoAlcanceOp(d.foliosPoliza.planta.alcancePromedio);
-  document.getElementById('op-pi-os').textContent = Math.round(d.osPI).toLocaleString('es-MX');
-  document.getElementById('op-pi-precio').textContent = precioPI === null ? '—' : formatoMoneda(precioPI);
-  document.getElementById('op-rec-alcance').textContent = textoAlcanceOp(d.foliosPoliza.recolecciones.alcancePromedio);
-  document.getElementById('op-rec-os').textContent = Math.round(d.osRec).toLocaleString('es-MX');
-  document.getElementById('op-rec-precio').textContent = precioRec === null ? '—' : formatoMoneda(precioRec);
-  document.getElementById('op-md-alcance').textContent = textoAlcanceOp(d.foliosPoliza.multidistrito.alcancePromedio);
-  document.getElementById('op-md-os').textContent = Math.round(d.osMD).toLocaleString('es-MX');
-  document.getElementById('op-md-precio').textContent = precioMD === null ? '—' : formatoMoneda(precioMD);
+  const datosIngresos = overviewDatos.datosIngresos;
+  osTipoTodas.forEach((o) => {
+    const clave = (o.mes || '').slice(0, 7);
+    if (!clavesSet.has(clave)) return;
+    const nodo = porContratistaMes[o.contratista] && porContratistaMes[o.contratista][clave];
+    if (!nodo) return;
+    const distrito = distritoPorFfmMes[o.ffm + '|' + clave];
+    const precioDestajo = precioFolioPorDistrito(distrito, o.tipo_os);
+    if (!precioDestajo) return;
+    const folios = (o.monto || 0) / precioDestajo;
+    const poliza = o.tipo_os === 'Recoleccion' ? 'RECOLECCIONES' : 'PLANTA INTERNA';
+    const precioIngreso = obtenerPrecioPolizaDistrito(datosIngresos, poliza, distrito, null, clave + '-01');
+    nodo.costo += o.monto || 0;
+    if (precioIngreso) nodo.ingreso += folios * precioIngreso;
+  });
+
+  return porContratistaMes;
+}
+
+function calcularSerieContratista6m(nombre, cuadrillasTodas, resumenesTodas, claves6, distritoFiltro) {
+  const cuadrillasContratista = cuadrillasTodas.filter((c) => c.contratista === nombre);
+  const resumenesContratista = resumenesTodas.filter((r) => r.contratista === nombre);
+  const pagoSerie = claves6.map((clave) => {
+    if (distritoFiltro) return cuadrillasContratista.filter((c) => c.mes.slice(0, 7) === clave && c.distrito === distritoFiltro).reduce((s, c) => s + (c.pago_total || 0), 0);
+    const r = resumenesContratista.find((r) => r.mes.slice(0, 7) === clave);
+    if (r) return r.pago_total || 0;
+    return cuadrillasContratista.filter((c) => c.mes.slice(0, 7) === clave).reduce((s, c) => s + (c.pago_total || 0), 0);
+  });
+  const foliosSerie = claves6.map((clave) => {
+    let filas = cuadrillasContratista.filter((c) => c.mes.slice(0, 7) === clave);
+    if (distritoFiltro) filas = filas.filter((c) => c.distrito === distritoFiltro);
+    return filas.reduce((s, c) => s + (c.os_totales || 0), 0);
+  });
+  const hcSerie = claves6.map((clave) => {
+    let filas = cuadrillasContratista.filter((c) => c.mes.slice(0, 7) === clave);
+    if (distritoFiltro) filas = filas.filter((c) => c.distrito === distritoFiltro);
+    return new Set(filas.map((c) => c.ffm)).size;
+  });
+  return { pagoSerie, foliosSerie, hcSerie };
+}
+
+function cambiarOrdenContratistas(orden) {
+  contratistasOrden = orden;
+  document.querySelectorAll('#op-ctr-orden-botones button').forEach((btn) => {
+    const activo = btn.dataset.orden === orden;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('border-primary', activo);
+    btn.classList.toggle('border-outline-variant', !activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  renderizarTablaContratistas();
+}
+
+// Combo barras+línea reutilizado en 3 niveles: tarjeta de contratista (chico), tendencia del
+// modal de auditoría (grande) y tendencia individual de técnico (chico). `etiquetaLineaFn(i)`
+// regresa { l1, l2 } con las dos líneas de etiqueta flotante sobre cada punto de la línea, o null.
+function renderizarGraficaComboBarraLinea(canvasId, refGrafica, etiquetas, barSerie, colorBarra, lineaSerie, colorLinea, etiquetaLineaFn, grande, onBarClickFn, tresLineas) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const fBarra = grande ? 12 : 8;
+  const fLinea1 = grande ? 11 : 7;
+  const fLinea2 = grande ? 10 : 7;
+  const alturaMinima = grande ? 20 : 12;
+  const offsetBarraFuera = grande ? 12 : 7;
+  const offsetBase = grande ? 10 : 6;
+  const padXCaja = grande ? 8 : 5;
+  const padYCaja = grande ? 6 : 4;
+  const alturaLineaPrincipal = grande ? 15 : 11;
+  const alturaLineaSecundaria = grande ? 12 : 9;
+  const numLineasMax = tresLineas ? 3 : 2;
+  const altoCajaMax = alturaLineaPrincipal + (numLineasMax - 1) * alturaLineaSecundaria + padYCaja * 2;
+
+  const dibujarEtiquetasBarra = (ctxDibujo, meta) => {
+    meta.data.forEach((barra, i) => {
+      const valor = barSerie[i];
+      if (!valor) return;
+      const altura = Math.abs(barra.base - barra.y);
+      const dentro = altura >= alturaMinima;
+      const texto = grande ? formatoCompacto(valor) : formatoCompactoCorto(valor);
+      ctxDibujo.save();
+      ctxDibujo.font = `bold ${fBarra}px 'Gordita', sans-serif`;
+      ctxDibujo.fillStyle = dentro ? '#ffffff' : colorBarra;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.textBaseline = 'middle';
+      ctxDibujo.fillText(texto, barra.x, dentro ? (barra.y + barra.base) / 2 : barra.y - offsetBarraFuera);
+      ctxDibujo.restore();
+    });
+  };
+
+  const dibujarEtiquetasLinea = (ctxDibujo, meta) => {
+    meta.data.forEach((punto, i) => {
+      const etq = etiquetaLineaFn(i);
+      if (!etq) return;
+      const lineas = [etq.l1, etq.l2, etq.l3].filter(Boolean);
+      if (!lineas.length) return;
+
+      // Todas las líneas de la etiqueta (productividad, OS, asistencias, HC, etc.) se agrupan en
+      // UNA sola caja con fondo, para que ningún punto se pierda ni se encime con el siguiente.
+      ctxDibujo.save();
+      ctxDibujo.textAlign = 'center';
+
+      ctxDibujo.font = `bold ${fLinea1}px 'Gordita', sans-serif`;
+      let anchoCaja = ctxDibujo.measureText(lineas[0]).width;
+      ctxDibujo.font = `${fLinea2}px 'Gordita', sans-serif`;
+      for (let k = 1; k < lineas.length; k++) anchoCaja = Math.max(anchoCaja, ctxDibujo.measureText(lineas[k]).width);
+      anchoCaja += padXCaja * 2;
+
+      const altoCaja = alturaLineaPrincipal + (lineas.length - 1) * alturaLineaSecundaria + padYCaja * 2;
+      const yCaja = punto.y - offsetBase - altoCaja;
+
+      ctxDibujo.fillStyle = 'rgba(27,79,114,0.94)';
+      ctxDibujo.beginPath();
+      ctxDibujo.roundRect(punto.x - anchoCaja / 2, yCaja, anchoCaja, altoCaja, 6);
+      ctxDibujo.fill();
+
+      let yTexto = yCaja + padYCaja + alturaLineaPrincipal * 0.7;
+      ctxDibujo.font = `bold ${fLinea1}px 'Gordita', sans-serif`;
+      ctxDibujo.fillStyle = '#ffffff';
+      ctxDibujo.fillText(lineas[0], punto.x, yTexto);
+
+      ctxDibujo.font = `${fLinea2}px 'Gordita', sans-serif`;
+      ctxDibujo.fillStyle = 'rgba(255,255,255,0.85)';
+      for (let k = 1; k < lineas.length; k++) {
+        yTexto += alturaLineaSecundaria;
+        ctxDibujo.fillText(lineas[k], punto.x, yTexto);
+      }
+      ctxDibujo.restore();
+    });
+  };
+
+  window[refGrafica] = new Chart(ctx, {
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { type: 'bar', label: 'Barra', data: barSerie, backgroundColor: colorBarra, yAxisID: 'y', maxBarThickness: grande ? 64 : 36, categoryPercentage: 0.75, barPercentage: 0.92 },
+        { type: 'line', label: 'Línea', data: lineaSerie, borderColor: colorLinea, backgroundColor: colorLinea, yAxisID: 'y1', tension: 0.3, borderWidth: grande ? 2 : 1.5, pointRadius: grande ? 3 : 2, pointBackgroundColor: colorLinea, spanGaps: true },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: offsetBase + altoCajaMax + (grande ? 8 : 5) } },
+      interaction: { mode: 'index', intersect: false },
+      onHover: onBarClickFn ? (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; } : undefined,
+      onClick: onBarClickFn ? (evt, elements) => { if (elements.length) onBarClickFn(elements[0].index); } : undefined,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 8,
+          titleFont: { family: 'Gordita', weight: 'bold', size: grande ? 11 : 10 }, bodyFont: { family: 'Gordita', size: grande ? 11 : 10 },
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.yAxisID === 'y1') {
+                const etq = etiquetaLineaFn(c.dataIndex);
+                if (!etq) return String(Math.round(c.parsed.y));
+                return [etq.l1, etq.l2, etq.l3].filter(Boolean).join(' · ');
+              }
+              return formatoMoneda(c.parsed.y);
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Gordita', size: grande ? 11 : 9 } } },
+        y: { display: false, beginAtZero: true },
+        y1: { display: false, beginAtZero: true },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasComboBarraLinea',
+      afterDatasetsDraw(chart) {
+        dibujarEtiquetasBarra(chart.ctx, chart.getDatasetMeta(0));
+        dibujarEtiquetasLinea(chart.ctx, chart.getDatasetMeta(1));
+      },
+    }],
+  });
+}
+
+function renderizarTablaContratistas() {
+  if (!contratistasSeccionDatos) return;
+  const { cuadrillasPeriodo, pagoPorContratista, cuadrillas, resumenes, claves6, etiquetas6, distritoFiltro } = contratistasSeccionDatos;
+
+  const osPorContratista = {};
+  cuadrillasPeriodo.forEach((c) => { osPorContratista[c.contratista] = (osPorContratista[c.contratista] || 0) + (c.os_totales || 0); });
+
+  let nombres = Array.from(new Set([...Object.keys(pagoPorContratista), ...Object.keys(osPorContratista)]));
+  if (contratistasOrden === 'pago') nombres.sort((a, b) => (pagoPorContratista[b] || 0) - (pagoPorContratista[a] || 0));
+  else if (contratistasOrden === 'os') nombres.sort((a, b) => (osPorContratista[b] || 0) - (osPorContratista[a] || 0));
+  else nombres.sort((a, b) => a.localeCompare(b));
+
+  contratistasCardCharts.forEach((ref) => { if (window[ref]) window[ref].destroy(); });
+  contratistasCardCharts = [];
+
+  document.getElementById('op-ctr-tabla').innerHTML = nombres.map((nombre, idx) => {
+    const nombreEscapado = nombre.replace(/'/g, "\\'");
+    const { pagoSerie, foliosSerie, hcSerie } = calcularSerieContratista6m(nombre, cuadrillas, resumenes, claves6, distritoFiltro);
+    const mesesActivos = hcSerie.map((hc, i) => ({ os: foliosSerie[i], hc })).filter((p) => p.hc > 0);
+    const cuadrillasActivas = hcSerie[hcSerie.length - 1] || 0;
+    const pagoPromedioMensual = mesesActivos.length ? pagoSerie.reduce((s, v, i) => s + (hcSerie[i] > 0 ? v : 0), 0) / mesesActivos.length : 0;
+    const productividadPromedio = calcularProductividadPromedio(mesesActivos);
+
+    return `<div class="bg-white border border-outline-variant rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="abrirDetalleContratista('${nombreEscapado}')">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-gordita-bold" style="background:${CONTRATISTA_COLOR_PRIMARIO};">${inicialesContratista(nombre)}</div>
+        <span class="text-sm font-gordita-bold truncate flex-1">${nombre}</span>
+        <span class="material-symbols-outlined text-on-surface-variant text-lg shrink-0">chevron_right</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="bg-surface-container-low rounded-lg px-2 py-1.5">
+          <p class="text-[8px] text-on-surface-variant uppercase tracking-wide">Cuadrillas</p>
+          <p class="text-sm font-gordita-bold text-primary">${cuadrillasActivas}</p>
+        </div>
+        <div class="bg-surface-container-low rounded-lg px-2 py-1.5">
+          <p class="text-[8px] text-on-surface-variant uppercase tracking-wide">Pago Prom./Mes</p>
+          <p class="text-sm font-gordita-bold text-primary">${formatoCompactoCorto(pagoPromedioMensual)}</p>
+        </div>
+        <div class="bg-surface-container-low rounded-lg px-2 py-1.5">
+          <p class="text-[8px] text-on-surface-variant uppercase tracking-wide">Productividad</p>
+          <p class="text-sm font-gordita-bold text-primary">${productividadPromedio.toFixed(1)}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-[9px] text-on-surface-variant mb-1">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm inline-block" style="background:${CONTRATISTA_COLOR_PRIMARIO};"></span>Pago</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" style="background:${CONTRATISTA_COLOR_SECUNDARIO};"></span>Folios · HC activo</span>
+      </div>
+      <div style="height:140px;"><canvas id="op-ctr-card-chart-${idx}"></canvas></div>
+    </div>`;
+  }).join('') || '<div class="col-span-full px-6 py-8 text-center text-sm text-on-surface-variant">Sin datos de contratistas para el periodo/distrito activo.</div>';
+
+  nombres.forEach((nombre, idx) => {
+    const refGrafica = 'graficaOpCtrCard' + idx;
+    contratistasCardCharts.push(refGrafica);
+    const { pagoSerie, foliosSerie, hcSerie } = calcularSerieContratista6m(nombre, cuadrillas, resumenes, claves6, distritoFiltro);
+    const etiquetaLinea = (i) => (foliosSerie[i] === null || foliosSerie[i] === undefined)
+      ? null
+      : { l1: Math.round(foliosSerie[i]).toLocaleString('es-MX') + ' fol.', l2: (hcSerie[i] || 0) + ' HC' };
+    renderizarGraficaComboBarraLinea('op-ctr-card-chart-' + idx, refGrafica, etiquetas6, pagoSerie, CONTRATISTA_COLOR_PRIMARIO, foliosSerie, CONTRATISTA_COLOR_SECUNDARIO, etiquetaLinea, false);
+  });
+}
+
+function cerrarDetalleContratista() {
+  document.getElementById('modal-drilldown-contratista').style.display = 'none';
+  contratistaDetalleActivo = null;
+  contratistaDetalleTecnicoAbierto = null;
+  contratistaDetalleDistritoAbierto = null;
+  contratistaDetalleDatos = null;
+}
+
+async function abrirDetalleContratista(nombreContratista) {
+  contratistaDetalleActivo = nombreContratista;
+  contratistaDetalleTecnicoAbierto = null;
+  contratistaDetalleDistritoAbierto = null;
+  document.getElementById('modal-drilldown-contratista').style.display = 'flex';
+  document.getElementById('drilldown-contratista-titulo').textContent = nombreContratista;
+  document.getElementById('drilldown-contratista-subtitulo').textContent = 'Cargando...';
+
+  const { anio: anioRef, mes: mesRef } = mesGlobalSeleccionado;
+  const rangos = calcularRangosPeriodo(modoPeriodoGlobal, anioRef, mesRef);
+  const clavesPeriodo = clavesMesesEnRango(rangos.actual);
+  const distritoFiltro = finDistritoSeleccionado === 'TODAS' ? null : finDistritoSeleccionado;
+
+  const [cuadrillasTodas, osTipoTodas, resumenesTodas, adicionalesTodas] = await Promise.all([
+    obtenerTablaCompleta('contratistas_cuadrillas'),
+    obtenerTablaCompleta('contratistas_cuadrillas_os_tipo'),
+    obtenerTablaCompleta('contratistas_resumen_mensual'),
+    obtenerTablaCompleta('contratistas_adicionales'),
+  ]);
+
+  const cuadrillas = cuadrillasTodas.filter((c) => c.contratista === nombreContratista);
+  const osTipo = osTipoTodas.filter((o) => o.contratista === nombreContratista);
+  const resumenes = resumenesTodas.filter((r) => r.contratista === nombreContratista);
+  const adicionales = adicionalesTodas.filter((a) => a.contratista === nombreContratista);
+
+  let cuadrillasPeriodo = cuadrillas.filter((c) => clavesPeriodo.includes((c.mes || '').slice(0, 7)));
+  if (distritoFiltro) cuadrillasPeriodo = cuadrillasPeriodo.filter((c) => c.distrito === distritoFiltro);
+  const resumenesPeriodo = resumenes.filter((r) => clavesPeriodo.includes((r.mes || '').slice(0, 7)));
+  const adicionalesPeriodo = adicionales.filter((a) => clavesPeriodo.includes((a.mes || '').slice(0, 7)));
+
+  const claves6 = [], etiquetas6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    claves6.push(claveMes(base.getFullYear(), base.getMonth()));
+    etiquetas6.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+  }
+
+  document.getElementById('drilldown-contratista-subtitulo').textContent =
+    textoPeriodoActivo(anioRef, mesRef) + ' · ' + (distritoFiltro || 'Todos los distritos');
+
+  contratistaDetalleDatos = { cuadrillas, osTipo, cuadrillasPeriodo, resumenes, adicionales, claves6, etiquetas6, distritoFiltro };
+
+  renderizarKpisDetalleContratista(cuadrillasPeriodo);
+  renderizarRentabilidadDetalleContratista(anioRef, mesRef);
+  renderizarTecnicosDetalleContratista();
+  renderizarAdicionalesDetalleContratista(adicionalesPeriodo, distritoFiltro);
+  renderizarFacturacionDetalleContratista(resumenesPeriodo, distritoFiltro);
+  renderizarTendenciasDetalleContratista();
+}
+
+function renderizarKpisDetalleContratista(cuadrillasPeriodo) {
+  const ffms = new Set(cuadrillasPeriodo.map((c) => c.ffm));
+  const osTotales = cuadrillasPeriodo.reduce((s, c) => s + (c.os_totales || 0), 0);
+  const pagoCuadrillas = cuadrillasPeriodo.reduce((s, c) => s + (c.pago_total || 0), 0);
+
+  // Productividad = OS totales del mes / cuadrillas activas de ese mes / 26 días, promediada
+  // sobre los meses del periodo activo.
+  const porMes = {};
+  cuadrillasPeriodo.forEach((c) => {
+    const clave = (c.mes || '').slice(0, 7);
+    porMes[clave] = porMes[clave] || { os: 0, ffms: new Set() };
+    porMes[clave].os += c.os_totales || 0;
+    porMes[clave].ffms.add(c.ffm);
+  });
+  const productividadProm = calcularProductividadPromedio(Object.values(porMes).map((m) => ({ os: m.os, hc: m.ffms.size })));
+
+  const tarjetas = [
+    { label: 'Cuadrillas Activas', valor: ffms.size.toLocaleString('es-MX') },
+    { label: 'OS Totales', valor: Math.round(osTotales).toLocaleString('es-MX') },
+    { label: 'Pago Cuadrillas', valor: formatoCompacto(pagoCuadrillas) },
+    { label: 'Productividad Prom.', valor: productividadProm.toFixed(1) },
+  ];
+  document.getElementById('drilldown-contratista-kpis').innerHTML = tarjetas.map((t) => `
+    <div class="bg-white p-4 border border-outline-variant rounded-xl shadow-sm">
+      <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">${t.label}</p>
+      <h2 class="font-gordita-bold text-xl text-primary">${t.valor}</h2>
+    </div>`).join('');
+}
+
+function renderizarRentabilidadDetalleContratista(anioRef, mesRef) {
+  const { cuadrillas, osTipo } = contratistaDetalleDatos;
+  const claves12 = [], etiquetas12 = [];
+  for (let i = 11; i >= 0; i--) {
+    const base = new Date(anioRef, mesRef - i, 1);
+    claves12.push(claveMes(base.getFullYear(), base.getMonth()));
+    etiquetas12.push(etiquetaMesCorta(base.getFullYear(), base.getMonth()));
+  }
+  const datos = calcularRentabilidadContratistas(cuadrillas, osTipo, claves12);
+  const porMes = datos[contratistaDetalleActivo] || {};
+
+  const celdas = claves12.map((clave) => {
+    const nodo = porMes[clave];
+    if (!nodo || (!nodo.ingreso && !nodo.costo)) return { folios: '—', hc: '—', ingreso: '—', costo: '—', utilidad: '—', margen: '—', clase: '' };
+    const utilidad = nodo.ingreso - nodo.costo;
+    const margen = nodo.ingreso > 0 ? (utilidad / nodo.ingreso) * 100 : null;
+    return {
+      folios: Math.round(nodo.folios).toLocaleString('es-MX'),
+      hc: String(nodo.hc.size),
+      ingreso: formatoCompactoCorto(nodo.ingreso),
+      costo: formatoCompactoCorto(nodo.costo),
+      utilidad: formatoCompactoCorto(utilidad),
+      margen: margen === null ? '—' : margen.toFixed(0) + '%',
+      clase: utilidad >= 0 ? 'text-qiora-green' : 'text-error',
+    };
+  });
+
+  const filaConcepto = (label, campo, negrita) => `<tr class="border-b border-outline-variant">
+    <td class="w-20 px-2 py-1.5 text-[11px] ${negrita ? 'font-gordita-bold' : 'text-on-surface-variant'} sticky left-0 bg-white">${label}</td>
+    ${celdas.map((c) => `<td class="px-2 py-1.5 text-right text-[11px] ${negrita ? 'font-gordita-bold ' + c.clase : ''}">${c[campo]}</td>`).join('')}
+  </tr>`;
+
+  const encabezado = `<thead><tr class="border-b border-outline-variant">
+    <th class="w-20 px-2 py-2 text-left text-[10px] font-gordita-bold text-on-surface-variant uppercase sticky left-0 bg-white">Mes</th>
+    ${etiquetas12.map((et) => `<th class="px-2 py-2 text-right text-[10px] font-gordita-bold text-on-surface-variant uppercase">${et}</th>`).join('')}
+  </tr></thead>`;
+
+  const filas = filaConcepto('Folios', 'folios', false) + filaConcepto('HC', 'hc', false) +
+    filaConcepto('Ingreso', 'ingreso', false) + filaConcepto('Costo', 'costo', false) +
+    filaConcepto('Utilidad', 'utilidad', true) + filaConcepto('Margen', 'margen', false);
+
+  document.getElementById('drilldown-contratista-rentabilidad').innerHTML = `<table class="w-full table-fixed border-collapse">${encabezado}<tbody>${filas}</tbody></table>`;
+}
+
+function ordenarTecnicosDetalle(campo) {
+  if (contratistaTecnicoOrdenCampo === campo) {
+    contratistaTecnicoOrdenDir = contratistaTecnicoOrdenDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    contratistaTecnicoOrdenCampo = campo;
+    contratistaTecnicoOrdenDir = campo === 'nombre_tecnico' ? 'asc' : 'desc';
+  }
+  renderizarTecnicosDetalleContratista();
+}
+
+function renderizarTecnicosDetalleContratista() {
+  if (!contratistaDetalleDatos) return;
+  const { cuadrillasPeriodo, cuadrillas, claves6, etiquetas6 } = contratistaDetalleDatos;
+
+  const porDistrito = {};
+  cuadrillasPeriodo.forEach((c) => {
+    porDistrito[c.distrito] = porDistrito[c.distrito] || { asistencias: 0, os: 0, pago: 0, ffms: new Set(), tecnicos: {} };
+    const dNodo = porDistrito[c.distrito];
+    dNodo.asistencias += c.asistencias || 0;
+    dNodo.os += c.os_totales || 0;
+    dNodo.pago += c.pago_total || 0;
+    dNodo.ffms.add(c.ffm);
+    dNodo.tecnicos[c.ffm] = dNodo.tecnicos[c.ffm] || { nombre_tecnico: c.nombre_tecnico, asistencias: 0, os: 0, pago: 0, productividades: [] };
+    dNodo.tecnicos[c.ffm].asistencias += c.asistencias || 0;
+    dNodo.tecnicos[c.ffm].os += c.os_totales || 0;
+    dNodo.tecnicos[c.ffm].pago += c.pago_total || 0;
+    dNodo.tecnicos[c.ffm].productividades.push((c.os_totales || 0) / DIAS_PRODUCTIVIDAD_MES);
+  });
+
+  let distritos = Object.keys(porDistrito).map((distrito) => {
+    const d = porDistrito[distrito];
+    const productividad = calcularProductividadPromedio([{ os: d.os, hc: d.ffms.size }]);
+    return { distrito, asistencias: d.asistencias, os: d.os, pago: d.pago, cuadrillas: d.ffms.size, productividad, tecnicos: d.tecnicos };
+  });
+
+  const campo = contratistaTecnicoOrdenCampo;
+  const dir = contratistaTecnicoOrdenDir === 'asc' ? 1 : -1;
+  const campoDistrito = campo === 'nombre_tecnico' ? 'distrito' : campo;
+  distritos.sort((a, b) => campoDistrito === 'distrito' ? a.distrito.localeCompare(b.distrito) * dir : (a[campoDistrito] - b[campoDistrito]) * dir);
+
+  document.getElementById('drilldown-contratista-tecnicos-header').innerHTML = `<div class="grid grid-cols-6 gap-2 px-2 py-2 text-[10px] font-gordita-bold text-on-surface-variant uppercase border-b border-outline-variant">
+    ${CONTRATISTA_TECNICO_COLUMNAS.map((col) => {
+      const activo = contratistaTecnicoOrdenCampo === col.campo;
+      const flecha = activo ? (contratistaTecnicoOrdenDir === 'asc' ? '▲' : '▼') : '';
+      return `<div class="${col.clase} cursor-pointer select-none hover:text-primary transition-colors ${activo ? 'text-primary' : ''}" onclick="ordenarTecnicosDetalle('${col.campo}')">${col.label} ${flecha}</div>`;
+    }).join('')}
+  </div>`;
+
+  let datosGraficaAbierta = null;
+
+  document.getElementById('drilldown-contratista-tecnicos').innerHTML = distritos.map((d) => {
+    const distritoEscapado = d.distrito.replace(/'/g, "\\'");
+    const abiertoDistrito = contratistaDetalleDistritoAbierto === d.distrito;
+    const filaDistrito = `<div class="grid grid-cols-6 gap-2 px-2 py-2.5 items-center text-xs cursor-pointer hover:bg-surface-container-low/70 transition-colors border-b border-outline-variant bg-surface-container-low/40" onclick="alternarDistritoDetalleContratista('${distritoEscapado}')">
+      <div class="col-span-2 min-w-0 flex items-center gap-2">
+        <span class="material-symbols-outlined text-on-surface-variant text-sm shrink-0 transition-transform" style="${abiertoDistrito ? 'transform:rotate(90deg);' : ''}">chevron_right</span>
+        <div class="min-w-0">
+          <div class="font-gordita-bold truncate">${nombreCortoDistritoFlota(d.distrito)}</div>
+          <div class="text-[10px] text-on-surface-variant truncate">${d.cuadrillas} cuadrillas</div>
+        </div>
+      </div>
+      <div class="text-right font-gordita-bold">${Math.round(d.asistencias).toLocaleString('es-MX')}</div>
+      <div class="text-right font-gordita-bold">${Math.round(d.os).toLocaleString('es-MX')}</div>
+      <div class="text-right font-gordita-bold">${d.productividad.toFixed(1)}</div>
+      <div class="text-right font-gordita-bold">${formatoCompacto(d.pago)}</div>
+    </div>`;
+
+    if (!abiertoDistrito) return filaDistrito;
+
+    let tecnicos = Object.keys(d.tecnicos).map((ffm) => {
+      const t = d.tecnicos[ffm];
+      const productividad = t.productividades.length ? t.productividades.reduce((s, v) => s + v, 0) / t.productividades.length : 0;
+      return Object.assign({ ffm, productividad }, t);
+    });
+    tecnicos.sort((a, b) => b.pago - a.pago);
+
+    const filasTecnicos = tecnicos.map((t) => {
+      const ffmEscapado = t.ffm.replace(/'/g, "\\'");
+      const abierto = contratistaDetalleTecnicoAbierto === t.ffm;
+      const fila = `<div class="grid grid-cols-6 gap-2 pl-8 pr-2 py-2 items-center text-xs cursor-pointer hover:bg-surface-container-low/50 transition-colors border-b border-outline-variant" onclick="alternarTecnicoDetalleContratista('${ffmEscapado}')">
+        <div class="col-span-2 min-w-0 flex items-center gap-2">
+          <span class="material-symbols-outlined text-on-surface-variant text-sm shrink-0 transition-transform" style="${abierto ? 'transform:rotate(90deg);' : ''}">chevron_right</span>
+          <div class="min-w-0">
+            <div class="font-gordita-bold truncate">${t.nombre_tecnico}</div>
+            <div class="text-[10px] text-on-surface-variant truncate">FFM ${t.ffm}</div>
+          </div>
+        </div>
+        <div class="text-right">${Math.round(t.asistencias).toLocaleString('es-MX')}</div>
+        <div class="text-right">${Math.round(t.os).toLocaleString('es-MX')}</div>
+        <div class="text-right">${t.productividad.toFixed(1)}</div>
+        <div class="text-right font-gordita-bold">${formatoCompacto(t.pago)}</div>
+      </div>`;
+
+      let detalle = '';
+      if (abierto) {
+        const historico = claves6.map((clave) => cuadrillas.find((c) => c.ffm === t.ffm && c.mes.slice(0, 7) === clave));
+        const pagoSerie = historico.map((h) => (h ? h.pago_total || 0 : 0));
+        const osSerie = historico.map((h) => (h ? h.os_totales || 0 : 0));
+        const prodSerie = historico.map((h) => (h ? (h.os_totales || 0) / DIAS_PRODUCTIVIDAD_MES : null));
+        const asistenciaSerie = historico.map((h) => (h ? h.asistencias || 0 : 0));
+
+        const mesesActivos = historico.filter(Boolean).length;
+        const promedio = (serie) => (mesesActivos ? serie.reduce((s, v, i) => s + (historico[i] ? v : 0), 0) / mesesActivos : 0);
+        const asistenciaProm = promedio(asistenciaSerie);
+        const pagoProm = promedio(pagoSerie);
+        const prodValida = prodSerie.filter((v) => v !== null);
+        const productividadProm = prodValida.length ? prodValida.reduce((s, v) => s + v, 0) / prodValida.length : 0;
+
+        datosGraficaAbierta = { ffm: t.ffm, pagoSerie, osSerie, prodSerie, asistenciaSerie };
+
+        detalle = `<div class="px-10 py-4 bg-surface-container-low/40 border-b border-outline-variant">
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div class="bg-white rounded-lg px-3 py-2 border border-outline-variant">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Asistencia Prom./Mes</p>
+              <p class="text-sm font-gordita-bold text-primary">${asistenciaProm.toFixed(1)}</p>
+            </div>
+            <div class="bg-white rounded-lg px-3 py-2 border border-outline-variant">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Pago Prom./Mes</p>
+              <p class="text-sm font-gordita-bold text-primary">${formatoCompactoCorto(pagoProm)}</p>
+            </div>
+            <div class="bg-white rounded-lg px-3 py-2 border border-outline-variant">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Productividad Prom./Mes</p>
+              <p class="text-sm font-gordita-bold text-primary">${productividadProm.toFixed(1)}</p>
+            </div>
+          </div>
+          <p class="text-[10px] text-on-surface-variant mb-1">Clic en una barra para ver el desglose por tipo de folio de ese mes</p>
+          <div style="height:150px;"><canvas id="grafica-tecnico-detalle"></canvas></div>
+          <div id="drilldown-tecnico-desglose-tipo" class="mt-3"></div>
+        </div>`;
+      }
+      return fila + detalle;
+    }).join('');
+
+    return filaDistrito + filasTecnicos;
+  }).join('') || '<div class="px-2 py-8 text-center text-sm text-on-surface-variant">Sin cuadrillas para el periodo/distrito activo.</div>';
+
+  if (datosGraficaAbierta) {
+    const { ffm, pagoSerie, osSerie, prodSerie, asistenciaSerie } = datosGraficaAbierta;
+    const etiquetaLinea = (i) => ({
+      l1: (prodSerie[i] !== null ? prodSerie[i].toFixed(1) : '—') + ' prod.',
+      l2: Math.round(osSerie[i] || 0) + ' OS',
+      l3: Math.round(asistenciaSerie[i] || 0) + ' asist.',
+    });
+    const onBarClick = (i) => {
+      const clave = claves6[i];
+      const cuadrillaMes = cuadrillas.find((c) => c.ffm === ffm && c.mes.slice(0, 7) === clave);
+      const filas = contratistaDetalleDatos.osTipo
+        .filter((o) => o.ffm === ffm && o.mes.slice(0, 7) === clave)
+        .map((o) => Object.assign({ distrito: cuadrillaMes ? cuadrillaMes.distrito : null }, o));
+      renderizarDesgloseOsTipo('drilldown-tecnico-desglose-tipo', etiquetas6[i], filas);
+    };
+    renderizarGraficaComboBarraLinea('grafica-tecnico-detalle', 'graficaTecnicoDetalle', etiquetas6, pagoSerie, CONTRATISTA_COLOR_PRIMARIO, osSerie, CONTRATISTA_COLOR_SECUNDARIO, etiquetaLinea, false, onBarClick, true);
+  }
+}
+
+function alternarDistritoDetalleContratista(distrito) {
+  contratistaDetalleDistritoAbierto = contratistaDetalleDistritoAbierto === distrito ? null : distrito;
+  contratistaDetalleTecnicoAbierto = null;
+  renderizarTecnicosDetalleContratista();
+}
+
+function alternarTecnicoDetalleContratista(ffm) {
+  contratistaDetalleTecnicoAbierto = contratistaDetalleTecnicoAbierto === ffm ? null : ffm;
+  renderizarTecnicosDetalleContratista();
+}
+
+function renderizarAdicionalesDetalleContratista(adicionalesPeriodo, distritoFiltro) {
+  const { adicionales, claves6 } = contratistaDetalleDatos;
+  document.getElementById('drilldown-contratista-nota-distrito').textContent = distritoFiltro
+    ? 'Los adicionales/descuentos se capturan a nivel contratista completo (el Excel no los desglosa por distrito), por eso aquí se muestra el total de ' + contratistaDetalleActivo + ' sin filtrar por ' + distritoFiltro + '.'
+    : '';
+
+  const porConcepto = {};
+  adicionalesPeriodo.forEach((a) => { porConcepto[a.concepto] = (porConcepto[a.concepto] || 0) + (a.monto || 0); });
+  const conceptos = Object.keys(porConcepto)
+    .filter((c) => Math.round(porConcepto[c]) !== 0)
+    .sort((a, b) => Math.abs(porConcepto[b]) - Math.abs(porConcepto[a]));
+
+  document.getElementById('drilldown-contratista-adicionales').innerHTML = conceptos.map((concepto) => {
+    const monto = porConcepto[concepto];
+    const clase = monto >= 0 ? 'text-qiora-green' : 'text-error';
+    const serie = claves6.map((clave) => adicionales.filter((a) => a.concepto === concepto && a.mes.slice(0, 7) === clave).reduce((s, a) => s + (a.monto || 0), 0));
+    return `<div class="grid grid-cols-4 gap-2 px-2 py-2 items-center text-xs border-b border-outline-variant">
+      <div class="col-span-2 text-on-surface-variant truncate">${concepto}</div>
+      <div class="flex justify-end">${sparklineSvg(serie, monto >= 0 ? '#27AE60' : '#C0392B')}</div>
+      <div class="text-right font-gordita-bold ${clase}">${monto >= 0 ? '+' : ''}${formatoCompacto(monto)}</div>
+    </div>`;
+  }).join('') || '<div class="px-2 py-6 text-center text-sm text-on-surface-variant">Sin adicionales/descuentos en el periodo activo.</div>';
+}
+
+function renderizarFacturacionDetalleContratista(resumenesPeriodo, distritoFiltro) {
+  const subtotal = resumenesPeriodo.reduce((s, r) => s + (r.subtotal_facturar || 0), 0);
+  const iva = resumenesPeriodo.reduce((s, r) => s + (r.iva || 0), 0);
+  const totalFinal = resumenesPeriodo.reduce((s, r) => s + (r.total_final || 0), 0);
+  const adicionalesTotal = resumenesPeriodo.reduce((s, r) => s + (r.adicionales_total || 0), 0);
+  const nota = distritoFiltro ? ' <span class="text-[8px] normal-case font-normal">(total contratista)</span>' : '';
+
+  const tarjetas = [
+    { label: 'Subtotal a Facturar', valor: formatoCompacto(subtotal) },
+    { label: 'Adicionales/Descuentos', valor: formatoCompacto(adicionalesTotal) },
+    { label: 'IVA', valor: formatoCompacto(iva) },
+    { label: 'Total Final', valor: formatoCompacto(totalFinal) },
+  ];
+  document.getElementById('drilldown-contratista-facturacion').innerHTML = tarjetas.map((t) => `
+    <div class="bg-white p-4 border border-outline-variant rounded-xl shadow-sm">
+      <p class="font-gordita-bold text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">${t.label}${nota}</p>
+      <h2 class="font-gordita-bold text-xl text-primary">${t.valor}</h2>
+    </div>`).join('');
+}
+
+function renderizarTendenciasDetalleContratista() {
+  const { cuadrillas, resumenes, claves6, etiquetas6, distritoFiltro } = contratistaDetalleDatos;
+
+  const pagoPorMes = claves6.map((clave) => {
+    if (distritoFiltro) return cuadrillas.filter((c) => c.mes.slice(0, 7) === clave && c.distrito === distritoFiltro).reduce((s, c) => s + (c.pago_total || 0), 0);
+    const r = resumenes.find((r) => r.mes.slice(0, 7) === clave);
+    if (r) return r.pago_total || 0;
+    return cuadrillas.filter((c) => c.mes.slice(0, 7) === clave).reduce((s, c) => s + (c.pago_total || 0), 0);
+  });
+  const osPorMes = claves6.map((clave) => {
+    let filas = cuadrillas.filter((c) => c.mes.slice(0, 7) === clave);
+    if (distritoFiltro) filas = filas.filter((c) => c.distrito === distritoFiltro);
+    return filas.reduce((s, c) => s + (c.os_totales || 0), 0);
+  });
+  const hcPorMes = claves6.map((clave) => {
+    let filas = cuadrillas.filter((c) => c.mes.slice(0, 7) === clave);
+    if (distritoFiltro) filas = filas.filter((c) => c.distrito === distritoFiltro);
+    return new Set(filas.map((c) => c.ffm)).size;
+  });
+
+  const etiquetaLinea = (i) => ({ l1: Math.round(osPorMes[i]).toLocaleString('es-MX') + ' OS', l2: hcPorMes[i] + ' HC activo' });
+  const onBarClick = (i) => {
+    const clave = claves6[i];
+    const { osTipo } = contratistaDetalleDatos;
+    let ffmsMes = null;
+    if (distritoFiltro) ffmsMes = new Set(cuadrillas.filter((c) => c.mes.slice(0, 7) === clave && c.distrito === distritoFiltro).map((c) => c.ffm));
+    const distritoPorFfm = {};
+    cuadrillas.filter((c) => c.mes.slice(0, 7) === clave).forEach((c) => { distritoPorFfm[c.ffm] = c.distrito; });
+    const filas = osTipo
+      .filter((o) => o.mes.slice(0, 7) === clave && (!ffmsMes || ffmsMes.has(o.ffm)))
+      .map((o) => Object.assign({ distrito: distritoPorFfm[o.ffm] || null }, o));
+    renderizarDesgloseOsTipo('drilldown-contratista-desglose-tipo', etiquetas6[i], filas);
+  };
+  renderizarGraficaComboBarraLinea('grafica-drilldown-contratista-combo', 'graficaDrilldownCtrCombo', etiquetas6, pagoPorMes, CONTRATISTA_COLOR_PRIMARIO, osPorMes, CONTRATISTA_COLOR_SECUNDARIO, etiquetaLinea, true, onBarClick);
+}
+
+// Desglose por tipo de folio de UN mes (contratista completo o un técnico, según quién dispare el
+// clic). `filas` debe traer {tipo_os, monto, distrito} — el distrito determina el precio a destajo
+// (GDL vs. estándar; Tepic/Colima no aplican, se pagan por póliza fija) para poder inferir cuántos
+// folios de cada tipo se hicieron, además de lo que generaron en dinero.
+function renderizarDesgloseOsTipo(contenedorId, etiquetaMes, filas) {
+  const contenedor = document.getElementById(contenedorId);
+  if (!contenedor) return;
+  const porTipo = {};
+  filas.forEach((f) => {
+    porTipo[f.tipo_os] = porTipo[f.tipo_os] || { monto: 0, folios: 0, sinPrecio: false };
+    porTipo[f.tipo_os].monto += f.monto || 0;
+    const precio = precioFolioPorDistrito(f.distrito, f.tipo_os);
+    if (precio) porTipo[f.tipo_os].folios += (f.monto || 0) / precio;
+    else porTipo[f.tipo_os].sinPrecio = true;
+  });
+  const tipos = Object.keys(porTipo).filter((t) => Math.round(porTipo[t].monto) !== 0).sort((a, b) => porTipo[b].monto - porTipo[a].monto);
+  const total = tipos.reduce((s, t) => s + porTipo[t].monto, 0);
+
+  if (!tipos.length) {
+    contenedor.innerHTML = `<div class="bg-surface-container-low rounded-lg px-4 py-3 text-xs text-on-surface-variant">Sin desglose por tipo de folio capturado para ${etiquetaMes}.</div>`;
+    return;
+  }
+
+  contenedor.innerHTML = `<div class="bg-surface-container-low rounded-lg px-4 py-3">
+    <p class="text-[10px] font-gordita-bold text-primary uppercase tracking-wide mb-2">Desglose por tipo de folio — ${etiquetaMes}</p>
+    <div class="space-y-1.5">
+      ${tipos.map((t) => {
+        const d = porTipo[t];
+        const os = Math.round(d.folios);
+        const osTexto = d.sinPrecio ? (os > 0 ? '~' + os : 'sin destajo') : String(os);
+        return `<div class="grid gap-2 text-xs items-center" style="grid-template-columns: 1fr 70px 70px;">
+          <span class="text-on-surface-variant truncate">${t}</span>
+          <span class="text-on-surface-variant text-[10px] text-right">${osTexto} OS</span>
+          <span class="font-gordita-bold text-right">${formatoCompacto(d.monto)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="grid gap-2 text-xs items-center pt-2 mt-2 border-t border-outline-variant" style="grid-template-columns: 1fr 70px 70px;">
+      <span class="font-gordita-bold">Total</span>
+      <span></span>
+      <span class="font-gordita-bold text-primary text-right">${formatoCompacto(total)}</span>
+    </div>
+  </div>`;
 }
 
 const POLIZAS_OP_RANKING = [
@@ -6833,6 +7878,7 @@ function renderizarGraficaBarraHorizontalConteo(canvasId, refGrafica, etiquetas,
   });
 }
 
+// Barra horizontal con montos en pesos (formato compacto), para rankings tipo "top contratistas".
 // Doughnut con conteos enteros y texto central, para composición (activo/baja/inactivo, etc).
 function renderizarGraficaDoughnutConteo(canvasId, refGrafica, datos, textoCentral) {
   const ctx = document.getElementById(canvasId);
@@ -8209,6 +9255,7 @@ configurarDropzone('dropzone-flota', 'input-excel-flota');
 configurarDropzone('dropzone-unidades', 'input-excel-unidades');
 configurarDropzone('dropzone-poliza', 'input-excel-poliza');
 configurarDropzone('dropzone-presupuesto', 'input-excel-presupuesto');
+configurarDropzone('dropzone-contratistas', 'input-excel-contratistas');
 
 cargarSesion();
 </script>
