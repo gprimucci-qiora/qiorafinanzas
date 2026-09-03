@@ -215,7 +215,51 @@
     return ordenesAsignadas * vigenteBolsa.precio_por_orden;
   }
 
+  // El Excel "REPORTE DE INGRESOS" de Siva reutiliza el machote de columnas de gastos:
+  // la columna "GASTO" es en realidad la categoría de ingreso. Las 3 categorías POLIZA *
+  // que sí tienen equivalente en el cálculo por fórmula (folios × precio) sustituyen a ese
+  // cálculo cuando hay dato real cargado ese mes; todo lo demás (POLIZA DESTAJO, POLIZA
+  // VENTA UNIDADES, VENTA TECNICO, APOYO VIATICOS, TALLERES Y SINIESTROS, etc.) es ingreso
+  // real que la fórmula nunca capturó, y se suma aparte como "otros".
+  const CATEGORIAS_INGRESO_POLIZA = {
+    'POLIZA PLANTA INTERNA': 'plantaInterna',
+    'POLIZA RECOLECCIONES': 'recolecciones',
+    'POLIZA MULTIDISTRITO': 'multidistrito',
+  };
+
+  function clasificarIngreso(ingreso, glosarioMap) {
+    const entrada = glosarioMap[ingreso.sucursal];
+    return Object.assign({}, ingreso, {
+      monto: ingreso.subtotal,
+      bucket: CATEGORIAS_INGRESO_POLIZA[ingreso.gasto] || 'otros',
+      sucursal_secundaria: entrada ? entrada.sucursal_secundaria : null,
+    });
+  }
+
+  function agruparIngresosPorBucket(ingresosClasificados) {
+    const r = { plantaInterna: 0, recolecciones: 0, multidistrito: 0, otros: 0 };
+    ingresosClasificados.forEach((i) => { r[i.bucket] = (r[i.bucket] || 0) + (i.monto || 0); });
+    return Object.assign(r, { total: r.plantaInterna + r.recolecciones + r.multidistrito + r.otros });
+  }
+
+  // datos.ingresosRealesPorMes, si viene, es un mapa { mesISO: [ingresos clasificados] } con el
+  // ingreso real facturado (tabla "ingresos") de TODA la compañía ese mes. Cuando existe para el
+  // mes pedido se usa como fuente de verdad (reemplaza la fórmula); si no hay dato real cargado
+  // para ese mes (fuera del rango del Excel subido), se sigue calculando por fórmula como antes.
   function calcularIngresosDistrito(datos, distrito, region, mesISO) {
+    const ingresosRealesDelMes = datos.ingresosRealesPorMes && datos.ingresosRealesPorMes[mesISO];
+    if (ingresosRealesDelMes) {
+      const delDistrito = ingresosRealesDelMes.filter((i) => i.sucursal_secundaria === distrito);
+      const r = agruparIngresosPorBucket(delDistrito);
+      return {
+        plantaInterna: r.plantaInterna,
+        recolecciones: r.recolecciones,
+        multidistrito: r.multidistrito,
+        otros: r.otros,
+        total: r.total,
+        esReal: true,
+      };
+    }
     const plantaInterna = calcularIngresoPolizaDistrito(datos.polizaParametros, 'PLANTA INTERNA', distrito, mesISO);
     const recolecciones = calcularIngresoPolizaDistrito(datos.polizaParametros, 'RECOLECCIONES', distrito, mesISO);
     const multidistrito = calcularIngresoMultidistritoDistrito(
@@ -231,7 +275,47 @@
       plantaInterna,
       recolecciones,
       multidistrito,
+      otros: 0,
       total: plantaInterna + recolecciones + multidistrito,
+      esReal: false,
+    };
+  }
+
+  // Total de compañía de un mes. No se puede obtener sumando calcularIngresosDistrito() sobre
+  // todosLosDistritos cuando hay datos reales, porque algunos ingresos reales quedan en
+  // sucursales que el glosario todavía no mapea a un distrito real (p.ej. "MLT" o cuentas
+  // corporativas sin registrar) — sumarlos por distrito los perdería. Con dato real se suman
+  // TODOS los renglones de la tabla "ingresos" del mes, sin filtrar por distrito.
+  function calcularIngresosGeneralMes(datos, mesISO) {
+    const ingresosRealesDelMes = datos.ingresosRealesPorMes && datos.ingresosRealesPorMes[mesISO];
+    if (ingresosRealesDelMes) {
+      const r = agruparIngresosPorBucket(ingresosRealesDelMes);
+      return {
+        plantaInterna: r.plantaInterna,
+        recolecciones: r.recolecciones,
+        multidistrito: r.multidistrito,
+        otros: r.otros,
+        total: r.total,
+        esReal: true,
+      };
+    }
+    let plantaInterna = 0;
+    let recolecciones = 0;
+    let multidistrito = 0;
+    (datos.todosLosDistritos || []).forEach((distrito) => {
+      const region = datos.regionPorDistrito[distrito];
+      const r = calcularIngresosDistrito(datos, distrito, region, mesISO);
+      plantaInterna += r.plantaInterna;
+      recolecciones += r.recolecciones;
+      multidistrito += r.multidistrito;
+    });
+    return {
+      plantaInterna,
+      recolecciones,
+      multidistrito,
+      otros: 0,
+      total: plantaInterna + recolecciones + multidistrito,
+      esReal: false,
     };
   }
 
@@ -257,6 +341,7 @@
       ingresoPlantaInterna: ingresos.plantaInterna,
       ingresoRecolecciones: ingresos.recolecciones,
       ingresoMultidistrito: ingresos.multidistrito,
+      ingresoOtros: ingresos.otros,
       totalIngresos,
       totalCD,
       totalGO,
@@ -282,6 +367,9 @@
     obtenerCuadrillasMultidistrito,
     calcularIngresoMultidistritoDistrito,
     calcularIngresosDistrito,
+    calcularIngresosGeneralMes,
     calcularRentabilidadDistritoMes,
+    clasificarIngreso,
+    agruparIngresosPorBucket,
   };
 });

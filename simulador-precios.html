@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QiORA Conecta — Presentación Financiera</title>
+<link rel="icon" type="image/png" href="logo-qiora.png">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/gordita" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          surface: "#f9f9f9",
+          "surface-bright": "#f9f9f9",
+          "surface-container": "#eeeeee",
+          "surface-container-low": "#f3f3f3",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-high": "#e8e8e8",
+          "surface-container-highest": "#e2e2e2",
+          "on-surface": "#1b1b1b",
+          "on-surface-variant": "#4c4546",
+          outline: "#7e7576",
+          "outline-variant": "#cfc4c5",
+          primary: "#000000",
+          "on-primary": "#ffffff",
+          secondary: "#984700",
+          "secondary-container": "#fe9249",
+          "on-secondary-container": "#6c3100",
+          error: "#ba1a1a",
+          "on-error": "#ffffff",
+          "totalplay-cyan": "#00E5FF",
+          "qiora-green": "#2ECC71",
+          "qiora-blue": "#3498DB",
+          "qiora-orange": "#E67E22",
+          "brand-teal": "#2DD4BF",
+          "brand-emerald": "#10B981",
+          "op-pi": "#1B4F72",
+          "op-rec": "#2E86C1",
+          "op-md": "#85C1E9"
+        },
+        borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+        spacing: { xs: "4px", sm: "12px", base: "8px", md: "24px", gutter: "24px", lg: "48px", xl: "80px" },
+        fontFamily: { gordita: ["Gordita", "sans-serif"] }
+      }
+    }
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  body { font-family: 'Gordita', sans-serif; -webkit-font-smoothing: antialiased; background-color: #f9f9f9; }
+  .font-gordita-bold { font-weight: 700; }
+  .font-gordita-regular { font-weight: 400; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: 20px; vertical-align: middle; }
+  .sim-input-incremento { width: 68px; }
+  tr.fila-desmarcada { opacity: 0.45; }
+  tr.pronostico-celda { background-color: rgba(27, 79, 114, 0.05); font-style: italic; }
+  .tab-contenido { display: none; }
+  .tab-contenido.activa { display: block; }
+  .tab-boton.activa { border-bottom-color: #000000 !important; color: #000000 !important; }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-gordita-regular">
+
+<div id="app-shell">
+  <header class="bg-white border-b border-outline-variant px-8 py-5 flex items-center gap-3">
+    <div class="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center rounded shrink-0 p-1.5">
+      <img src="logo-qiora.png" alt="QiORA" class="w-full h-full object-contain">
+    </div>
+    <div>
+      <h1 class="font-gordita-bold text-lg text-primary leading-tight">QiORA Conecta</h1>
+      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Presentación Financiera</p>
+    </div>
+    <a href="index.html" class="ml-auto text-xs font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">← Volver al dashboard</a>
+  </header>
+
+  <nav class="bg-white border-b border-outline-variant px-8 flex gap-1 overflow-x-auto">
+    <button data-tab="simulador" onclick="cambiarTabPrincipal('simulador')" class="tab-boton px-4 py-3 text-xs font-gordita-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Simulador de Precios</button>
+    <button data-tab="tendencias" onclick="cambiarTabPrincipal('tendencias')" class="tab-boton px-4 py-3 text-xs font-gordita-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Tendencias de Pólizas</button>
+    <button data-tab="ingresos" onclick="cambiarTabPrincipal('ingresos')" class="tab-boton px-4 py-3 text-xs font-gordita-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Ingresos y Tendencia de Cierre</button>
+    <button data-tab="presupuesto" onclick="cambiarTabPrincipal('presupuesto')" class="tab-boton px-4 py-3 text-xs font-gordita-bold border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Presupuesto</button>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-8 py-8">
+
+  <div id="tab-simulador" class="tab-contenido activa">
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Póliza</h3>
+          <p class="text-xs text-on-surface-variant">Año: 2026</p>
+        </div>
+        <div class="bg-surface-container-low p-1 rounded-lg flex" id="sim-poliza-botones">
+          <button data-poliza="PLANTA INTERNA" onclick="cambiarPoliza('PLANTA INTERNA')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Planta Interna</button>
+          <button data-poliza="RECOLECCIONES" onclick="cambiarPoliza('RECOLECCIONES')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Recolecciones</button>
+          <button data-poliza="MULTIDISTRITO" onclick="cambiarPoliza('MULTIDISTRITO')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Multidistrito</button>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-outline-variant">
+        <span class="text-[10px] text-on-surface-variant uppercase tracking-wide">Marcados:</span>
+        <button onclick="marcarTodos(true)" class="px-3 py-1 text-[11px] font-gordita-bold rounded-full border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">Marcar todos</button>
+        <button onclick="marcarTodos(false)" class="px-3 py-1 text-[11px] font-gordita-bold rounded-full border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors">Desmarcar todos</button>
+        <span class="w-px h-5 bg-outline-variant mx-1"></span>
+        <span class="text-[10px] text-on-surface-variant uppercase tracking-wide">Aplicar a los marcados:</span>
+        <input id="sim-incremento-masivo" type="number" step="0.5" placeholder="$" class="sim-input-incremento px-2 py-1 border border-outline-variant rounded text-sm">
+        <button onclick="aplicarIncrementoMasivo()" class="px-3 py-1 text-[11px] font-gordita-bold rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity">Aplicar</button>
+      </div>
+    </section>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+      <button onclick="toggleMatriz()" class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-surface-container-low transition-colors">
+        <div>
+          <h3 class="font-gordita-bold text-sm text-primary">Matriz de Incremento por Distrito</h3>
+          <p class="text-[11px] text-on-surface-variant">Desmarca un distrito para excluirlo — su precio queda sin cambio en todo el pronóstico del año.</p>
+        </div>
+        <span id="matriz-chevron" class="material-symbols-outlined text-on-surface-variant" style="transition: transform 0.2s;">expand_more</span>
+      </button>
+      <div id="matriz-contenido" class="border-t border-outline-variant overflow-x-auto">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr class="bg-surface-container-low text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <th class="px-3 py-1.5"></th>
+              <th class="px-2 py-1.5">Distrito</th>
+              <th class="px-2 py-1.5 text-right">Folios (mes actual)</th>
+              <th class="px-2 py-1.5 text-right">Precio Act.</th>
+              <th class="px-2 py-1.5 text-right">Incremento</th>
+              <th class="px-2 py-1.5 text-right">Precio Final</th>
+              <th class="px-2 py-1.5 text-right">Incr. Mensual (mes actual)</th>
+            </tr>
+          </thead>
+          <tbody id="sim-tabla-matriz" class="text-[11px] divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Folios Dimensionados del Año</p>
+        <h2 id="sim-kpi-folios" class="font-gordita-bold text-2xl text-primary">-</h2>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingreso Año (ya fijado + continúa igual)</p>
+        <h2 id="sim-kpi-ingreso-actual" class="font-gordita-bold text-2xl text-primary">-</h2>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Incremento Mensual Prom. (pronóstico)</p>
+        <h2 id="sim-kpi-incremento-mensual" class="font-gordita-bold text-2xl text-qiora-green">-</h2>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Incremento Resto del Año</p>
+        <h2 id="sim-kpi-incremento-anual" class="font-gordita-bold text-2xl text-qiora-green">-</h2>
+        <p id="sim-kpi-incremento-pct" class="text-xs font-gordita-bold text-on-surface-variant mt-0.5">-</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Folios e Ingreso</h3>
+        <p class="text-xs text-on-surface-variant mb-4">
+          <span class="text-on-surface-variant font-gordita-bold">●</span> Folios Dimensionados &nbsp;
+          <span class="text-qiora-green font-gordita-bold">●</span> Ingreso Mensual &nbsp;
+          <span class="text-on-surface-variant">· sólido = ya fijado, punteado = pronóstico con el incremento de los distritos marcados</span>
+        </p>
+        <div style="height:360px;"><canvas id="sim-grafica-folios-ingreso"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <div class="flex items-center gap-4 mb-1">
+          <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Precio Promedio por Folio</h3>
+        </div>
+        <p class="text-xs text-on-surface-variant mb-4">
+          <span class="text-on-surface-variant font-gordita-bold">●</span> Ya fijado / continúa igual &nbsp;
+          <span class="text-qiora-green font-gordita-bold">●</span> Con incremento (blended, según distritos marcados)
+        </p>
+        <div style="height:220px;"><canvas id="sim-grafica-precio"></canvas></div>
+      </div>
+    </div>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+      <div class="px-6 py-4 border-b border-outline-variant">
+        <h3 class="font-gordita-bold text-lg text-primary">Detalle Mensual</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr class="bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <th class="px-6 py-3">Mes</th>
+              <th class="px-4 py-3 text-right">Folios</th>
+              <th class="px-4 py-3 text-right">Ingreso Real / Continúa Igual</th>
+              <th class="px-4 py-3 text-right">Ingreso con Incremento</th>
+              <th class="px-4 py-3 text-right">Incremento $</th>
+              <th class="px-4 py-3 text-right">Incremento %</th>
+            </tr>
+          </thead>
+          <tbody id="sim-tabla-mensual" class="text-xs divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="tab-tendencias" class="tab-contenido">
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Resumen General · Estado Actual</h3>
+      <p id="resumen-op-subtitulo" class="text-xs text-on-surface-variant mb-4">-</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter" id="resumen-op-cards"></div>
+    </section>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Las 3 Pólizas Sumadas</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Planta Interna + Recolecciones + Multidistrito. Barras = folios dimensionados · líneas = % de alcance e ingreso total facturado.</p>
+      <div style="height:280px;"><canvas id="tend-grafica-combinado"></canvas></div>
+    </section>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Póliza</h3>
+          <p class="text-xs text-on-surface-variant">Ene-26 a Jul-26 · datos reales de <code>folios_poliza</code></p>
+        </div>
+        <div class="bg-surface-container-low p-1 rounded-lg flex" id="tend-poliza-botones">
+          <button data-poliza="PLANTA INTERNA" onclick="cambiarPolizaTendencias('PLANTA INTERNA')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Planta Interna</button>
+          <button data-poliza="RECOLECCIONES" onclick="cambiarPolizaTendencias('RECOLECCIONES')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Recolecciones</button>
+          <button data-poliza="MULTIDISTRITO" onclick="cambiarPolizaTendencias('MULTIDISTRITO')" class="flex-1 px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Multidistrito</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex justify-center mb-lg">
+      <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 text-center w-full max-w-sm">
+        <p id="tend-gauge-label" class="font-gordita-bold text-[10px] uppercase tracking-wider mb-1">Alcance Planta Interna</p>
+        <div style="height:130px; width:240px;" class="mx-auto"><canvas id="tend-gauge"></canvas></div>
+        <div class="flex justify-center gap-6 text-[11px] text-on-surface-variant mt-2">
+          <span>Dimensionados<br><span id="tend-kpi-dimensionados" class="font-gordita-bold text-primary text-sm">-</span></span>
+          <span>Realizados<br><span id="tend-kpi-realizados" class="font-gordita-bold text-primary text-sm">-</span></span>
+        </div>
+      </div>
+    </div>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Folios Dimensionados vs. % Alcance — Todos los Distritos</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Barras = folios dimensionados · línea = % de alcance (realizados / dimensionados).</p>
+      <div style="height:280px;"><canvas id="tend-grafica-combo"></canvas></div>
+    </section>
+
+    <div id="tend-detalle-modal" style="display:none;" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6" onclick="if(event.target===this) cerrarDetalleTendencia()">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Detalle: <span id="tend-detalle-nombre">-</span></h3>
+            <p class="text-xs text-on-surface-variant">Ene-26 a Jul-26 · <span id="tend-detalle-poliza">-</span></p>
+          </div>
+          <button onclick="cerrarDetalleTendencia()" class="text-xs font-gordita-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+            Cerrar <span class="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Dimensionados (YTD)</p>
+            <h2 id="tend-detalle-kpi-dim" class="font-gordita-bold text-xl text-primary">-</h2>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Realizados (YTD)</p>
+            <h2 id="tend-detalle-kpi-rea" class="font-gordita-bold text-xl text-primary">-</h2>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">% Alcance (YTD)</p>
+            <h2 id="tend-detalle-kpi-alcance" class="font-gordita-bold text-xl text-primary">-</h2>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Mejor / Peor Mes</p>
+            <p id="tend-detalle-kpi-mejor" class="text-xs font-gordita-bold text-qiora-green">-</p>
+            <p id="tend-detalle-kpi-peor" class="text-xs font-gordita-bold text-error">-</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-on-surface-variant mb-4">Barras = folios dimensionados · línea = % de alcance.</p>
+        <div style="height:240px;"><canvas id="tend-grafica-detalle"></canvas></div>
+
+        <div class="overflow-x-auto mt-lg">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant" id="tend-detalle-tabla-encabezado"></tr>
+            </thead>
+            <tbody id="tend-detalle-tabla" class="text-xs divide-y divide-outline-variant"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+      <button onclick="toggleTendenciasTabla()" class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-surface-container-low transition-colors">
+        <div>
+          <h3 class="font-gordita-bold text-sm text-primary">Ranking y Detalle Completo por Distrito</h3>
+          <p class="text-[11px] text-on-surface-variant">Ordenado por % de alcance YTD, para los <span id="tend-tabla-conteo">-</span> distritos. Clic en una fila para ver su detalle mensual.</p>
+        </div>
+        <span id="tend-tabla-chevron" class="material-symbols-outlined text-on-surface-variant" style="transition: transform 0.2s; transform: rotate(180deg);">expand_more</span>
+      </button>
+      <div id="tend-tabla-contenido" style="display:block;" class="border-t border-outline-variant">
+        <div class="px-4 py-2.5 border-b border-outline-variant flex items-center justify-end gap-4">
+          <div class="bg-surface-container-low p-1 rounded-lg flex shrink-0" id="tend-modo-botones">
+            <button data-modo="dimensionados" onclick="cambiarModoTendencias('dimensionados')" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">Folios</button>
+            <button data-modo="alcance" onclick="cambiarModoTendencias('alcance')" class="px-3 py-1.5 text-[11px] font-gordita-bold rounded transition-colors">% Alcance</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr class="bg-surface-container-low text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant" id="tend-tabla-encabezado"></tr>
+            </thead>
+            <tbody id="tend-tabla-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="tab-ingresos" class="tab-contenido">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingreso 2024 (Real)</p>
+        <h2 id="ing-kpi-2024" class="font-gordita-bold text-2xl text-primary">-</h2>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingreso 2025 (Real)</p>
+        <h2 id="ing-kpi-2025" class="font-gordita-bold text-2xl text-primary">-</h2>
+        <p id="ing-kpi-2025-yoy" class="text-xs font-gordita-bold text-on-surface-variant mt-0.5">-</p>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingreso 2026 (Cierre Proyectado)</p>
+        <h2 id="ing-kpi-2026" class="font-gordita-bold text-2xl text-qiora-green">-</h2>
+        <p id="ing-kpi-2026-yoy" class="text-xs font-gordita-bold text-on-surface-variant mt-0.5">-</p>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Ingreso Real 2026 (Ene-Jul)</p>
+        <h2 id="ing-kpi-ytd" class="font-gordita-bold text-2xl text-primary">-</h2>
+      </div>
+    </div>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Ingreso Mensual — Comparativo Anual</h3>
+      <p class="text-xs text-on-surface-variant mb-4">
+        <span class="text-on-surface-variant font-gordita-bold">●</span> 2024 &nbsp;
+        <span class="text-op-rec font-gordita-bold">●</span> 2025 &nbsp;
+        <span class="text-qiora-green font-gordita-bold">●</span> 2026 &nbsp;
+        <span class="text-on-surface-variant">· 2026 sólido = ya ocurrido, punteado = folios y precio ya fijados en la póliza pero el mes todavía no pasa</span>
+      </p>
+      <div style="height:340px;"><canvas id="ing-grafica-tendencia"></canvas></div>
+      <p class="text-[11px] text-on-surface-variant mt-3">Ingreso = folios dimensionados × precio por folio (Planta Interna + Recolecciones + Multidistrito, todos los distritos), nunca folios realizados — así se factura la póliza.</p>
+    </section>
+  </div>
+
+  <div id="tab-presupuesto" class="tab-contenido">
+    <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-4 mb-lg flex items-start gap-3">
+      <span class="material-symbols-outlined text-secondary shrink-0">info</span>
+      <p class="text-xs text-on-surface-variant">Presupuesto 2026 real de QiORA Finanzas (negocio "TP Planta Interna"), comparado contra el gasto real de <code>facturas</code> y el ingreso real de folios × precio. Ene-26 a Jul-26 tienen dato real; Ago-26 a Dic-26 solo tienen presupuesto (todavía no ocurren).</p>
+    </div>
+
+    <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Año a la Fecha · Ene-Jul</h4>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso (YTD)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="ppto-kpi-ingreso-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="ppto-kpi-ingreso-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-kpi-ingreso-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Gasto (YTD)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestado</p><h2 id="ppto-kpi-gasto-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="ppto-kpi-gasto-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-kpi-gasto-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Utilidad (YTD)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Presupuestada</p><h2 id="ppto-kpi-utilidad-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Real</p><h2 id="ppto-kpi-utilidad-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-kpi-utilidad-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Cierre de Año Proyectado · Rolling Forecast (Real Ene-Jul + Presupuesto Ago-Dic)</h4>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Ingreso (Cierre RF)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ppto Anual</p><h2 id="ppto-rf-ingreso-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">RF</p><h2 id="ppto-rf-ingreso-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-rf-ingreso-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Gasto (Cierre RF)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ppto Anual</p><h2 id="ppto-rf-gasto-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">RF</p><h2 id="ppto-rf-gasto-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-rf-gasto-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+        <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-3">Utilidad (Cierre RF)</p>
+        <div class="flex items-end justify-between gap-2">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ppto Anual</p><h2 id="ppto-rf-utilidad-ppto" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">RF</p><h2 id="ppto-rf-utilidad-real" class="font-gordita-bold text-lg text-primary">-</h2></div>
+          <div class="text-right"><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Variación</p><h2 id="ppto-rf-utilidad-var" class="font-gordita-bold text-lg">-</h2></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+      <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Gasto Mensual: Real vs. Presupuesto</h3>
+      <p class="text-xs text-on-surface-variant mb-4">
+        <span class="text-op-pi font-gordita-bold">●</span> Real (ene-ago) &nbsp;
+        <span class="text-on-surface-variant font-gordita-bold">●</span> Presupuestado (los 12 meses)
+      </p>
+      <div style="height:300px;"><canvas id="ppto-grafica-tendencia"></canvas></div>
+    </section>
+
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+      <button onclick="toggleTablaMensualPresupuesto()" class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-surface-container-low transition-colors">
+        <div>
+          <h3 class="font-gordita-bold text-sm text-primary">Detalle Mensual Completo</h3>
+          <p class="text-[11px] text-on-surface-variant">Ingreso, Gasto y Utilidad — Real vs. Presupuesto, los 12 meses.</p>
+        </div>
+        <span id="ppto-tabla-mensual-chevron" class="material-symbols-outlined text-on-surface-variant" style="transition: transform 0.2s;">expand_more</span>
+      </button>
+      <div id="ppto-tabla-mensual-contenido" style="display:none;" class="border-t border-outline-variant overflow-x-auto">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
+          <thead>
+            <tr class="bg-surface-container-low text-[9px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+              <th class="px-4 py-2.5">Mes</th>
+              <th class="px-3 py-2.5 text-right">Ingreso Real</th>
+              <th class="px-3 py-2.5 text-right">Ingreso Ppto</th>
+              <th class="px-3 py-2.5 text-right">Gasto Real</th>
+              <th class="px-3 py-2.5 text-right">Gasto Ppto</th>
+              <th class="px-3 py-2.5 text-right">Utilidad Real</th>
+              <th class="px-3 py-2.5 text-right">Utilidad Ppto</th>
+              <th class="px-3 py-2.5 text-right">Var. Utilidad</th>
+            </tr>
+          </thead>
+          <tbody id="ppto-tabla-mensual-body" class="text-[11px] divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Principales Desviaciones · Familias de Gasto Clave · Nacional · YTD Ene-Jul</h4>
+    <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+      <div class="px-6 py-4 border-b border-outline-variant">
+        <p class="text-xs text-on-surface-variant">Real vs. Presupuesto a nivel nacional. Clic en una familia para ver su desglose por sucursal.</p>
+      </div>
+      <div id="ppto-familias-clave" class="divide-y divide-outline-variant"></div>
+    </section>
+
+    <h4 class="font-gordita-bold text-xs text-on-surface-variant uppercase tracking-widest mb-3">Principales Variaciones en Gasto · Todas las Categorías · Nacional · YTD Ene-Jul</h4>
+    <p class="text-[11px] text-on-surface-variant mb-3">No incluye Cuota Corporativa ni Dividendos (no son desviaciones operativas).</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-lg">
+      <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+        <p class="font-gordita-bold text-xs text-error uppercase tracking-wide mb-3">▲ Por encima de presupuesto</p>
+        <div id="ppto-ranking-sobre" class="space-y-3"></div>
+        <button id="ppto-ranking-sobre-boton" onclick="mostrarMasRanking('sobre')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+      </section>
+      <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+        <p class="font-gordita-bold text-xs text-qiora-green uppercase tracking-wide mb-3">▼ Por debajo de presupuesto</p>
+        <div id="ppto-ranking-bajo" class="space-y-3"></div>
+        <button id="ppto-ranking-bajo-boton" onclick="mostrarMasRanking('bajo')" class="mt-3 text-xs font-gordita-bold text-primary hover:underline" style="display:none;"></button>
+      </section>
+    </div>
+
+    <div id="ppto-familia-modal" style="display:none;" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6" onclick="if(event.target===this) cerrarFamiliaPresupuesto()">
+      <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <div>
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1"><span id="ppto-familia-nombre">-</span></h3>
+            <p class="text-xs text-on-surface-variant">Desglose por sucursal · YTD Ene-Jul</p>
+          </div>
+          <button onclick="cerrarFamiliaPresupuesto()" class="text-xs font-gordita-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+            Cerrar <span class="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-gutter mb-lg">
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Real</p>
+            <h2 id="ppto-familia-kpi-real" class="font-gordita-bold text-lg text-primary">-</h2>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Presupuestado</p>
+            <h2 id="ppto-familia-kpi-ppto" class="font-gordita-bold text-lg text-primary">-</h2>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-lg">
+            <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Variación</p>
+            <h2 id="ppto-familia-kpi-var" class="font-gordita-bold text-lg">-</h2>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr class="bg-surface-container-low text-[10px] text-on-surface-variant uppercase tracking-widest border-b border-outline-variant">
+                <th class="px-4 py-2.5">Sucursal</th>
+                <th class="px-3 py-2.5 text-right">Real</th>
+                <th class="px-3 py-2.5 text-right">Presupuestado</th>
+                <th class="px-3 py-2.5 text-right">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="ppto-familia-tabla" class="text-xs divide-y divide-outline-variant"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </main>
+</div>
+
+<script>
+// Datos reales de folios dimensionados y precio_por_orden vigente (poliza_parametros /
+// multidistrito_bolsas), 2026, hardcodeados para uso en presentación sin dependencia de Supabase.
+// Monterrey y Coatza Mina se excluyen (0 folios dimensionados).
+const DATOS_PLANTA_INTERNA = {
+  'CTA-TPI-INT-AGS AGUASCALIENTES': { precio: 600, folios: [3579,3579,3579,3579,3579,3579,3579,3579,3579,3579,3579,3579] },
+  'CTA-TPI-INT-CBA CORDOBA ORIZABA': { precio: 600, folios: [3001,3001,3001,3001,3001,3001,3001,3001,3001,3001,3001,3001] },
+  'CTA-TPI-INT-COL COLIMA': { precio: 600, folios: [1010,1010,1010,1231,1231,1231,1231,1021,1021,1021,1021,1021] },
+  'CTA-TPI-INT-CUN CANCUN': { precio: 600, folios: [3957,3957,3957,3957,3957,3957,3957,3957,3957,3957,3957,3957] },
+  'CTA-TPI-INT-GBA GDL BARRANCA': { precio: 700, folios: [4156,4156,4156,4156,4156,4156,4156,4156,4156,4156,4156,4156] },
+  'CTA-TPI-INT-GES GDL ESTADIO': { precio: 700, folios: [4299,4299,4299,4299,4176,4176,4176,4176,4176,4176,4176,4176] },
+  'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': { precio: 700, folios: [3987,3987,3987,3987,3987,3987,3987,3987,3987,3987,3987,3987] },
+  'CTA-TPI-INT-GPR GDL PRIMAVERA': { precio: 700, folios: [4392,4392,4392,4392,4515,4515,4515,4515,4515,4515,4515,4515] },
+  'CTA-TPI-INT-IRA IRAPUATO': { precio: 600, folios: [4140,4140,4140,4050,4050,4050,3735,4050,4050,4050,4050,4050] },
+  'CTA-TPI-INT-LON LEON': { precio: 600, folios: [10650,10650,10650,10230,10230,10020,10230,10230,10230,10230,10230,10230] },
+  'CTA-TPI-INT-MER MERIDA': { precio: 600, folios: [2225,2225,2225,2225,2225,2015,2015,2015,2015,2015,2015,2015] },
+  'CTA-TPI-INT-MOR MORELIA': { precio: 650, folios: [2588,2588,2588,2588,2810,2810,2810,2810,2810,2810,2810,2810] },
+  'CTA-TPI-INT-PUE PUEBLA': { precio: 600, folios: [3556,3556,3556,3556,3556,3556,4291,3766,3766,3766,3766,3766] },
+  'CTA-TPI-INT-TEP TEPIC': { precio: 600, folios: [1316,1316,1316,1526,1850,1850,1850,1850,1850,1850,1850,1850] },
+  'CTA-TPI-INT-TUX TUXTLA': { precio: 600, folios: [2848,2848,2848,2848,2848,2848,3368,3368,3368,3368,3368,3368] },
+  'CTA-TPI-INT-VRZ VERACRUZ': { precio: 600, folios: [6533,6533,6533,6533,6533,6533,6533,6533,6533,6533,6533,6533] },
+  'CTA-TPI-INT-XAL XALAPA': { precio: 600, folios: [2286,2286,2286,2286,2286,2286,2286,2286,2286,2286,2286,2286] },
+};
+
+const DATOS_RECOLECCIONES = {
+  'CTA-TPI-INT-AGS AGUASCALIENTES': { precio: 250, folios: Array(12).fill(578) },
+  'CTA-TPI-INT-CBA CORDOBA ORIZABA': { precio: 250, folios: Array(12).fill(415) },
+  'CTA-TPI-INT-COL COLIMA': { precio: 250, folios: Array(12).fill(98) },
+  'CTA-TPI-INT-CUN CANCUN': { precio: 250, folios: Array(12).fill(511) },
+  'CTA-TPI-INT-GBA GDL BARRANCA': { precio: 250, folios: Array(12).fill(419) },
+  'CTA-TPI-INT-GES GDL ESTADIO': { precio: 250, folios: Array(12).fill(556) },
+  'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': { precio: 250, folios: Array(12).fill(418) },
+  'CTA-TPI-INT-GPR GDL PRIMAVERA': { precio: 250, folios: Array(12).fill(531) },
+  'CTA-TPI-INT-IRA IRAPUATO': { precio: 250, folios: Array(12).fill(402) },
+  'CTA-TPI-INT-LON LEON': { precio: 250, folios: Array(12).fill(1203) },
+  'CTA-TPI-INT-MER MERIDA': { precio: 250, folios: Array(12).fill(177) },
+  'CTA-TPI-INT-MOR MORELIA': { precio: 250, folios: Array(12).fill(374) },
+  'CTA-TPI-INT-PUE PUEBLA': { precio: 250, folios: Array(12).fill(528) },
+  'CTA-TPI-INT-TEP TEPIC': { precio: 250, folios: Array(12).fill(129) },
+  'CTA-TPI-INT-TUX TUXTLA': { precio: 250, folios: Array(12).fill(250) },
+  'CTA-TPI-INT-VRZ VERACRUZ': { precio: 250, folios: Array(12).fill(693) },
+  'CTA-TPI-INT-XAL XALAPA': { precio: 250, folios: Array(12).fill(312) },
+};
+
+// Multidistrito se factura por bolsa regional (no por distrito individual): 4 regiones, cada una
+// con su propio precio_por_orden y ordenes_dimensionadas mensuales, desde multidistrito_bolsas.
+const DATOS_MULTIDISTRITO = {
+  'BAJIO': { precio: 613, folios: [2107,2107,2107,2107,2312,2312,2312,2312,2312,2312,2312,2312] },
+  'OCCIDENTE': { precio: 713, folios: [3052,3052,3052,3052,2842,2842,2842,2842,2842,2842,2842,2842] },
+  'ORIENTE': { precio: 613, folios: [1934,1934,1934,1934,1934,1934,1934,1934,1934,1934,1934,1934] },
+  'SURESTE': { precio: 663, folios: [337,337,337,337,337,337,337,337,337,337,337,337] },
+};
+
+const DATOS_POR_POLIZA = {
+  'PLANTA INTERNA': DATOS_PLANTA_INTERNA,
+  'RECOLECCIONES': DATOS_RECOLECCIONES,
+  'MULTIDISTRITO': DATOS_MULTIDISTRITO,
+};
+const NOMBRES_POLIZA = {
+  'PLANTA INTERNA': 'Planta Interna',
+  'RECOLECCIONES': 'Recolecciones',
+  'MULTIDISTRITO': 'Multidistrito (bolsa regional)',
+};
+
+const ANIO_SIMULADOR = 2026;
+const MESES_ABREV = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+// Fijo en julio (índice 6) — la presentación es Ene-Jul 2026, no depende de la fecha real en la
+// que se abra el archivo.
+const MES_ACTUAL_INDEX = 6;
+
+function formatoMoneda(v) { return '$' + Math.round(v || 0).toLocaleString('es-MX'); }
+function formatoCompacto(v) {
+  const signo = v < 0 ? '-' : '';
+  const abs = Math.abs(v || 0);
+  if (abs >= 1e9) return signo + '$' + (abs / 1e9).toFixed(1) + 'B';
+  if (abs >= 1e6) return signo + '$' + (abs / 1e6).toFixed(1) + 'M';
+  if (abs >= 1e3) return signo + '$' + (abs / 1e3).toFixed(0) + 'K';
+  return signo + '$' + Math.round(abs).toLocaleString('es-MX');
+}
+function nombreCortoDistrito(distrito) {
+  // folios_poliza trae "CANCUN 1" (con un "1" de más) en vez de "CANCUN" — se limpia solo para
+  // mostrar, sin tocar la clave real usada para indexar los datos.
+  return (distrito || '').replace(/^CTA-TPI-(INT|MLT)-[A-Z0-9]+\s/, '').replace(/\s+1$/, '');
+}
+
+// Datos reales de folios_poliza (todos los distritos, ene-26 a ago-26) para la pestaña de
+// Tendencias de Pólizas: folios dimensionados, realizados y % de alcance ya calculado en la BD.
+const TENDENCIAS_MESES = ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01"];
+const TENDENCIAS_DATOS = {
+  'MULTIDISTRITO': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': { dimensionados: [0,0,0,0,0,0,0], realizados: [null,null,null,null,null,null,41], alcance: [null,null,null,null,null,null,0] },
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': { dimensionados: [597,597,597,597,597,597,597], realizados: [487,399,743,710,694,550,605], alcance: [81.6,66.8,124.5,118.9,116.2,92.1,101.3] },
+    'CTA-TPI-INT-COL COLIMA': { dimensionados: [0,0,0,0,0,0,0], realizados: [null,68,null,39,18,25,97], alcance: [null,0,null,0,0,0,0] },
+    'CTA-TPI-INT-CUN CANCUN 1': { dimensionados: [0,0,0,0,0,0,0], realizados: [null,null,null,null,null,null,null], alcance: [null,null,null,null,null,null,null] },
+    'CTA-TPI-INT-GBA GDL BARRANCA': { dimensionados: [710,710,710,710,710,632,632], realizados: [477.75,400.5,515,579.5,508.75,504.75,551.25], alcance: [67.29,56.41,72.54,81.62,71.65,79.87,87.22] },
+    'CTA-TPI-INT-GES GDL ESTADIO': { dimensionados: [710,710,710,710,710,632,632], realizados: [477.75,400.5,515,579.5,508.75,504.75,551.25], alcance: [67.29,56.41,72.54,81.62,71.65,79.87,87.22] },
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': { dimensionados: [710,710,710,710,710,632,632], realizados: [477.75,400.5,515,579.5,508.75,504.75,551.25], alcance: [67.29,56.41,72.54,81.62,71.65,79.87,87.22] },
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': { dimensionados: [710,710,710,710,710,632,632], realizados: [477.75,400.5,515,579.5,508.75,504.75,551.25], alcance: [67.29,56.41,72.54,81.62,71.65,79.87,87.22] },
+    'CTA-TPI-INT-IRA IRAPUATO': { dimensionados: [455,455,455,455,455,455,455], realizados: [437,413,525,484,484,343,658], alcance: [96,90.8,115.4,106.4,106.4,75.4,96] },
+    'CTA-TPI-INT-LON LEON': { dimensionados: [1857,1857,1857,1857,1857,2067,1857], realizados: [1519,1351,1494,1751,1861,1757,1923], alcance: [81.8,72.8,80.5,94.3,100.2,85,103.6] },
+    'CTA-TPI-INT-MER MERIDA': { dimensionados: [337,337,337,337,337,337,337], realizados: [224,251,283,340,336,275,257], alcance: [66.5,74.5,84,100.9,99.7,81.6,76.3] },
+    'CTA-TPI-INT-MOR MORELIA': { dimensionados: [0,0,0,0,0,0,0], realizados: [null,null,null,null,null,null,null], alcance: [null,null,null,null,null,null,null] },
+    'CTA-TPI-INT-PUE PUEBLA': { dimensionados: [389,389,389,389,389,389,704], realizados: [332,519,415,370,423,402,475], alcance: [85.3,133.4,106.7,95.1,108.7,103.3,67.5] },
+    'CTA-TPI-INT-TEP TEPIC': { dimensionados: [0,0,0,0,0,0,0], realizados: [75,83,null,23,60,18,null], alcance: [0,0,null,0,0,0,null] },
+    'CTA-TPI-INT-TUX TUXTLA': { dimensionados: [0,0,0,0,0,0,0], realizados: [null,null,null,null,null,null,null], alcance: [null,null,null,null,null,null,null] },
+    'CTA-TPI-INT-VRZ VERACRUZ': { dimensionados: [648,648,648,648,648,648,648], realizados: [479,653,675,658,603,660,667], alcance: [73.9,100.8,104.2,101.5,93.1,101.9,102.9] },
+    'CTA-TPI-INT-XAL XALAPA': { dimensionados: [300,300,300,300,300,300,300], realizados: [262,325,411,402,406,380,317], alcance: [87.3,108.3,137,134,135.3,126.7,105.7] },
+  },
+  'PLANTA INTERNA': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': { dimensionados: [3579,3579,3579,3579,3579,3579,3579], realizados: [3424,3172,3644,3492,3678,3799,3413], alcance: [95.7,88.6,101.8,97.6,102.8,106.1,95.4] },
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': { dimensionados: [3001,3001,3001,3001,3001,3001,3001], realizados: [2793,2983,3025,2848,2848,2816,2878], alcance: [93.1,99.4,100.8,94.9,94.9,93.8,95.9] },
+    'CTA-TPI-INT-COL COLIMA': { dimensionados: [1231,1231,1231,1231,1231,1231,1231], realizados: [1005,906,982,989,1048,945,969], alcance: [81.6,73.6,79.8,80.3,85.1,76.8,78.7] },
+    'CTA-TPI-INT-CUN CANCUN 1': { dimensionados: [3957,3957,3957,3957,3957,3957,3957], realizados: [3615,3514,4016,3705,3813,3669,3603], alcance: [91.4,88.8,101.5,93.6,96.4,92.7,91.1] },
+    'CTA-TPI-INT-GBA GDL BARRANCA': { dimensionados: [4156,4156,4156,4156,4156,4156,4156], realizados: [3927,3582,4019,3881,4288,4488,5040], alcance: [94.5,86.2,96.7,93.4,103.2,108,121.3] },
+    'CTA-TPI-INT-GES GDL ESTADIO': { dimensionados: [4176,4176,4176,4176,4176,4176,4176], realizados: [4125,3676,4449,4288,4227,4171,4207], alcance: [98.8,88,106.5,102.7,101.2,99.9,100.7] },
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': { dimensionados: [3987,3987,3987,3987,3987,3987,3987], realizados: [3653,3088,3486,3178,3577,3670,3699], alcance: [91.6,77.5,87.4,79.7,89.7,92,92.8] },
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': { dimensionados: [4515,4515,4515,4515,4515,4515,4515], realizados: [4109,3766,4665,4872,4247,4413,4985], alcance: [91,83.4,103.3,107.9,94.1,97.7,110.4] },
+    'CTA-TPI-INT-IRA IRAPUATO': { dimensionados: [4050,4050,4050,4050,4050,4050,3735], realizados: [3406,3190,3423,3472,3505,3583,3557], alcance: [84.1,78.8,84.5,85.7,86.5,88.5,95.2] },
+    'CTA-TPI-INT-LON LEON': { dimensionados: [10230,10230,10230,10230,10230,10020,10230], realizados: [8069,7115,8975,8778,8707,9415,9585], alcance: [78.9,69.6,87.7,85.8,85.1,94,93.7] },
+    'CTA-TPI-INT-MER MERIDA': { dimensionados: [2225,2225,2225,2225,2225,2015,2015], realizados: [1819,2009,2073,1704,1719,1681,1672], alcance: [81.8,90.3,93.2,76.6,77.3,83.4,83] },
+    'CTA-TPI-INT-MOR MORELIA': { dimensionados: [2810,2810,2810,2810,2810,2810,2810], realizados: [2425,2211,2511,2483,2608,2642,2821], alcance: [86.3,78.7,89.4,88.4,92.8,94,100.4] },
+    'CTA-TPI-INT-PUE PUEBLA': { dimensionados: [3556,3556,3556,3556,3556,3556,4291], realizados: [3282,2997,3348,3356,3877,3830,3755], alcance: [92.3,84.3,94.2,94.4,109,107.7,87.5] },
+    'CTA-TPI-INT-TEP TEPIC': { dimensionados: [1850,1850,1850,1850,1850,1850,1850], realizados: [1083,1132,1442,1398,1428,1736,1847], alcance: [58.5,61.2,77.9,75.6,77.2,93.8,99.8] },
+    'CTA-TPI-INT-TUX TUXTLA': { dimensionados: [2848,2848,2848,2848,2848,2848,3368], realizados: [2792,2681,2977,2872,2770,2941,3180], alcance: [98,94.1,104.5,100.8,97.3,103.3,94.4] },
+    'CTA-TPI-INT-VRZ VERACRUZ': { dimensionados: [6533,6533,6533,6533,6533,6533,6533], realizados: [6004,5111,5835,5831,6007,6021,6620], alcance: [91.9,78.2,89.3,89.3,91.9,92.2,101.3] },
+    'CTA-TPI-INT-XAL XALAPA': { dimensionados: [2286,2286,2286,2286,2286,2286,2286], realizados: [2368,2109,2401,2293,2382,2390,2326], alcance: [103.6,92.3,105,100.3,104.2,104.5,101.7] },
+  },
+  'RECOLECCIONES': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': { dimensionados: [578,578,578,578,578,578,578], realizados: [407,336,338,299,321,299,321], alcance: [70.42,58.13,58.48,51.73,55.54,51.73,55.54] },
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': { dimensionados: [415,415,415,415,415,415,415], realizados: [314,287,304,304,280,238,248], alcance: [75.66,69.16,73.25,73.25,67.47,57.35,59.76] },
+    'CTA-TPI-INT-COL COLIMA': { dimensionados: [98,98,98,98,98,98,98], realizados: [68,78,75,56,39,26,53], alcance: [69.39,79.59,76.53,57.14,39.8,26.53,54.08] },
+    'CTA-TPI-INT-CUN CANCUN 1': { dimensionados: [511,511,511,511,511,511,511], realizados: [291,262,286,256,265,220,275], alcance: [56.95,51.27,55.97,50.1,51.86,43.05,53.82] },
+    'CTA-TPI-INT-GBA GDL BARRANCA': { dimensionados: [419,419,419,419,419,419,419], realizados: [307,247,292,247,259,147,215], alcance: [73.27,58.95,69.69,58.95,61.81,35.08,51.31] },
+    'CTA-TPI-INT-GES GDL ESTADIO': { dimensionados: [556,556,556,556,556,556,556], realizados: [433,354,373,359,329,159,366], alcance: [77.88,63.67,67.09,64.57,59.17,28.6,65.83] },
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': { dimensionados: [418,418,418,418,418,418,418], realizados: [305,397,447,341,318,328,393], alcance: [72.97,94.98,106.94,81.58,76.08,78.47,94.02] },
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': { dimensionados: [531,531,531,531,531,531,531], realizados: [504,402,396,425,328,266,366], alcance: [94.92,75.71,74.58,80.04,61.77,50.09,68.93] },
+    'CTA-TPI-INT-IRA IRAPUATO': { dimensionados: [402,402,402,402,402,402,402], realizados: [288,255,344,273,223,228,286], alcance: [71.64,63.43,85.57,67.91,55.47,56.72,71.14] },
+    'CTA-TPI-INT-LON LEON': { dimensionados: [1203,1203,1203,1203,1203,1203,1203], realizados: [774,775,780,742,733,776,820], alcance: [64.34,64.42,64.84,61.68,60.93,64.51,68.16] },
+    'CTA-TPI-INT-MER MERIDA': { dimensionados: [177,177,177,177,177,177,177], realizados: [187,177,202,232,227,149,92], alcance: [105.65,100,114.12,131.07,128.25,84.18,51.98] },
+    'CTA-TPI-INT-MOR MORELIA': { dimensionados: [374,374,374,374,374,374,374], realizados: [290,247,283,267,256,225,263], alcance: [77.54,66.04,75.67,71.39,68.45,60.16,70.32] },
+    'CTA-TPI-INT-PUE PUEBLA': { dimensionados: [528,528,528,528,528,528,528], realizados: [343,285,302,285,281,322,327], alcance: [64.96,53.98,57.2,53.98,53.22,60.98,61.93] },
+    'CTA-TPI-INT-TEP TEPIC': { dimensionados: [129,129,129,129,129,129,129], realizados: [99,111,99,103,96,28,47], alcance: [76.74,86.05,76.74,79.84,74.42,21.71,36.43] },
+    'CTA-TPI-INT-TUX TUXTLA': { dimensionados: [250,250,250,250,250,250,250], realizados: [195,189,201,196,191,173,197], alcance: [78,75.6,80.4,78.4,76.4,69.2,78.8] },
+    'CTA-TPI-INT-VRZ VERACRUZ': { dimensionados: [693,693,693,693,693,693,693], realizados: [458,430,436,443,454,389,354], alcance: [66.09,62.05,62.91,63.92,65.51,56.13,51.08] },
+    'CTA-TPI-INT-XAL XALAPA': { dimensionados: [312,312,312,312,312,312,312], realizados: [289,213,229,200,186,180,139], alcance: [92.63,68.27,73.4,64.1,59.62,57.69,44.55] },
+  },
+};
+
+const HC_FIRMADO_DATOS = {
+  'MULTIDISTRITO': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': [4,5,7,7,6,5,6],
+    'CTA-TPI-INT-COL COLIMA': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-CUN CANCUN 1': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-GBA GDL BARRANCA': [6,5,6,7,6,6,6],
+    'CTA-TPI-INT-GES GDL ESTADIO': [6,5,6,7,6,6,6],
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': [6,5,6,7,6,6,6],
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': [6,5,6,7,6,6,6],
+    'CTA-TPI-INT-IRA IRAPUATO': [4,4,4,4,4,4,4],
+    'CTA-TPI-INT-LON LEON': [14,15,14,17,18,18,19],
+    'CTA-TPI-INT-MER MERIDA': [2,3,3,3,3,3,3],
+    'CTA-TPI-INT-MOR MORELIA': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-PUE PUEBLA': [3,6,4,3,4,3,4],
+    'CTA-TPI-INT-TEP TEPIC': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-TUX TUXTLA': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-VRZ VERACRUZ': [5,6,5,5,5,6,6],
+    'CTA-TPI-INT-XAL XALAPA': [2,3,3,4,3,3,2],
+  },
+  'PLANTA INTERNA': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': [32,34,35,34,34,35,31],
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': [27,32,32,29,30,30,29],
+    'CTA-TPI-INT-COL COLIMA': [10,10,10,10,11,11,11],
+    'CTA-TPI-INT-CUN CANCUN 1': [34,36,38,37,38,37,35],
+    'CTA-TPI-INT-GBA GDL BARRANCA': [36,38,36,35,38,39,42],
+    'CTA-TPI-INT-GES GDL ESTADIO': [36,37,40,42,41,39,37],
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': [34,33,32,31,36,37,35],
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': [38,39,41,44,39,39,41],
+    'CTA-TPI-INT-IRA IRAPUATO': [35,37,37,38,36,37,37],
+    'CTA-TPI-INT-LON LEON': [84,84,101,96,93,96,99],
+    'CTA-TPI-INT-MER MERIDA': [19,22,21,20,19,20,18],
+    'CTA-TPI-INT-MOR MORELIA': [26,26,27,26,27,28,28],
+    'CTA-TPI-INT-PUE PUEBLA': [33,32,32,31,32,31,33],
+    'CTA-TPI-INT-TEP TEPIC': [11,13,13,14,14,17,17],
+    'CTA-TPI-INT-TUX TUXTLA': [28,29,29,29,27,29,30],
+    'CTA-TPI-INT-VRZ VERACRUZ': [59,57,56,58,56,58,60],
+    'CTA-TPI-INT-XAL XALAPA': [21,21,22,21,22,22,21],
+  },
+  'RECOLECCIONES': {
+    'CTA-TPI-INT-AGS AGUASCALIENTES': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-CBA CORDOBA ORIZABA': [1,1,1,2,1,1,2],
+    'CTA-TPI-INT-COL COLIMA': [0,0,0,0,0,0,0],
+    'CTA-TPI-INT-CUN CANCUN 1': [2,1,1,1,1,1,1],
+    'CTA-TPI-INT-GBA GDL BARRANCA': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-GES GDL ESTADIO': [2,1,1,1,0,1,1],
+    'CTA-TPI-INT-GLM GDL LOPEZ MATEOS': [2,2,2,2,2,2,2],
+    'CTA-TPI-INT-GPR GDL PRIMAVERA': [3,2,2,2,2,2,2],
+    'CTA-TPI-INT-IRA IRAPUATO': [2,2,2,2,1,1,2],
+    'CTA-TPI-INT-LON LEON': [5,5,4,4,4,4,4],
+    'CTA-TPI-INT-MER MERIDA': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-MOR MORELIA': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-PUE PUEBLA': [1,1,1,2,2,2,2],
+    'CTA-TPI-INT-TEP TEPIC': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-TUX TUXTLA': [1,1,1,1,1,1,1],
+    'CTA-TPI-INT-VRZ VERACRUZ': [2,3,3,3,2,2,2],
+    'CTA-TPI-INT-XAL XALAPA': [2,2,1,2,2,2,1],
+  },
+};
+
+// Snapshot "as of today" (julio 2026, último mes del periodo Ene-Jul) por póliza —
+// precio efectivo = ingreso por fórmula del mes / folios dimensionados del mes (no se usa el
+// ingreso real porque Siva no siempre desglosa las 3 pólizas por separado, ver nota arriba).
+const RESUMEN_POLIZAS = {
+  'PLANTA INTERNA': { dimensionados: 65720.0, realizados: 64157.0, alcance: 97.62, precioEfectivo: 627.75, ingreso: 41255900.0, hcFirmado: 604.0, deltaFoliosPct: 1.78, deltaIngresoPct: 1.7, deltaHc: -1.0 },
+  'RECOLECCIONES': { dimensionados: 7594.0, realizados: 4762.0, alcance: 62.71, precioEfectivo: 250.0, ingreso: 1898500.0, hcFirmado: 25.0, deltaFoliosPct: 0.0, deltaIngresoPct: 0.0, deltaHc: 1.0 },
+  'MULTIDISTRITO': { dimensionados: 7426.0, realizados: 7245.0, alcance: 97.56, precioEfectivo: 653.46, ingreso: 4852575.0, hcFirmado: 68.0, deltaFoliosPct: 1.43, deltaIngresoPct: 0.0, deltaHc: 2.0 },
+};
+
+// Precio real por folio de Planta Interna, por tipo de distrito (parámetro real de
+// poliza_parametros, vigente todo 2026) — a propósito NO se promedia: Guadalajara paga
+// distinto a Morelia y al resto, y promediarlos ocultaría esa diferencia real.
+const PRECIO_PI_POR_TIPO = [
+  { id: 'tipoA', label: 'Tipo A (Guadalajara)', precio: 700.0 },
+  { id: 'tipoB', label: 'Tipo B (Resto)', precio: 600.0 },
+  { id: 'morelia', label: 'Morelia', precio: 650.0 },
+];
+
+// Las 3 pólizas sumadas mes a mes — folios/alcance de folios_poliza (dato real operativo),
+// ingreso = INGRESO_POR_ANIO 2026 (total real facturado, no hay problema de desglose porque
+// aquí ya se suman las 3 pólizas), HC = suma nacional de HC_FIRMADO_DATOS de las 3 pólizas.
+const COMBINADO_POLIZAS = {
+  dimensionados: [80007.0,80007.0,80007.0,80007.0,80007.0,79485.0,80740.0],
+  realizados: [69177.0,63951.0,73264.0,71563.0,72435.0,72792.0,76164.0],
+  alcance: [86.46,79.93,91.57,89.45,90.54,91.58,94.33],
+  ingreso: [47847106.25,48273613.17,47407182.06,48771900.07,48374351.92,48078041.26,50955436.08],
+  hcFirmado: [649.0,668.0,690.0,693.0,683.0,695.0,697.0],
+};
+
+// Ingreso mensual de toda la empresa. 2024 y 2025 son folios dimensionados x precio_por_orden
+// (ya ocurrieron, no hay factura histórica cargada). 2026 ene-ago ya es ingreso REAL facturado
+// (tabla "ingresos", suma total del mes sin desglosar por póliza — Siva a veces factura Planta
+// Interna/Recolecciones/Multidistrito juntas bajo una sola categoría, así que el desglose por
+// póliza no es confiable mes a mes, pero el total sí cuadra al centavo contra el Excel). Sep-dic
+// 2026 sigue en fórmula porque todavía no hay factura de esos meses.
+const INGRESO_POR_ANIO = {
+  '2024': [50252130.0,53110050.0,52654600.0,50176650.0,49692900.0,48669150.0,48059000.0,46794550.0,46406950.0,46406950.0,45588775.0,45715600.0],
+  '2025': [45240975.0,45240975.0,43582815.0,44758552.0,43582815.0,44057440.0,44057440.0,44057440.0,44057440.0,44057440.0,48914815.0,47301740.0],
+  '2026': [47847106.25,48273613.17,47407182.06,48771900.07,48374351.92,48078041.26,50955436.08,47754975.0,47754975.0,47754975.0,47754975.0,47754975.0],
+};
+
+// Presupuesto 2026 real de QiORA Finanzas (tabla presupuesto, negocio "TP PLANTA INTERNA"),
+// comparado contra gasto real de facturas e ingreso real de folios x precio (mismo cálculo que
+// INGRESO_POR_ANIO). PPTO_MESES_REALES = cuántos de los 12 meses ya tienen dato real (ene-jul,
+// la presentación corta en julio aunque ya haya facturas de agosto cargadas en Supabase).
+const PPTO_MESES_REALES = 7;
+const PPTO_INGRESO_MENSUAL = INGRESO_POR_ANIO['2026']; // mismo ingreso ya usado en la otra pestaña
+const PPTO_INGRESO_PPTO_MENSUAL = Array(12).fill(47920490.34);
+const PPTO_GASTO_REAL_MENSUAL = [40892420.35,37874230.9,41942744.74,41910857.77,43923072.66,37559790.19,47069653.75,0,0,0,0,0];
+const PPTO_GASTO_PPTO_MENSUAL = [44593209,38071648,42219853,43489037,42085418,39289115,44812554,35884816,43609412,38947192,43561109,38354452];
+// Familias de gasto clave (mismas 9 del widget de Financieros: Módulo Nóminas, Módulo IMSS,
+// Módulo Tiendas y Cuadrillas, Comisiones Distribuidores, Gasolina, Arrendamiento Vehicular,
+// Talleres y Refacciones, Módulo Bonos Productividad, PTU), a nivel nacional YTD ene-jul, con
+// desglose por sucursal para el drill-down.
+const FAMILIAS_CLAVE_PRESUPUESTO = [
+  { id: 'nominas', label: 'Módulo Nóminas', real: 78679093.26, ppto: 82175900.36, diff: -3496807.1, porDistrito: [
+    { nombre: 'PUEBLA', real: 4544866.62, ppto: 4465420.54, diff: 79446.08 },
+    { nombre: 'GDL PRIMAVERA', real: 4331199.85, ppto: 4277986.02, diff: 53213.83 },
+    { nombre: 'COLIMA', real: 82996.73, ppto: 84000.0, diff: -1003.27 },
+    { nombre: 'AGUASCALIENTES', real: 4096909.53, ppto: 4201065.47, diff: -104155.94 },
+    { nombre: 'LEON', real: 12136613.04, ppto: 12294086.49, diff: -157473.45 },
+    { nombre: 'CORDOBA ORIZABA', real: 3276338.3, ppto: 3530151.31, diff: -253813.01 },
+    { nombre: 'TUXTLA', real: 3641882.87, ppto: 3937107.37, diff: -295224.5 },
+    { nombre: 'XALAPA', real: 2843765.84, ppto: 3142495.86, diff: -298730.02 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 4322529.39, ppto: 4653831.0, diff: -331301.61 },
+    { nombre: 'MORELIA', real: 3232988.13, ppto: 3623304.02, diff: -390315.89 },
+    { nombre: 'MERIDA', real: 2776930.8, ppto: 3232346.25, diff: -455415.45 },
+    { nombre: 'CANCUN', real: 4250808.85, ppto: 4726944.53, diff: -476135.68 },
+    { nombre: 'VERACRUZ', real: 7324398.29, ppto: 7866080.11, diff: -541681.82 },
+    { nombre: 'GDL BARRANCA', real: 4053909.86, ppto: 4612642.16, diff: -558732.3 },
+    { nombre: 'GDL ESTADIO', real: 3649047.02, ppto: 4248380.29, diff: -599333.27 },
+    { nombre: 'IRAPUATO', real: 4847072.43, ppto: 5482226.26, diff: -635153.83 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 9266835.71, ppto: 7797832.68, diff: 1469003.03 },
+  ]},
+  { id: 'imss', label: 'Módulo IMSS', real: 35725874.84, ppto: 36560952.12, diff: -835077.28, porDistrito: [
+    { nombre: 'GDL PRIMAVERA', real: 2197233.98, ppto: 2067527.06, diff: 129706.92 },
+    { nombre: 'MERIDA', real: 1509924.99, ppto: 1451101.63, diff: 58823.36 },
+    { nombre: 'COLIMA', real: 20491.7, ppto: 19813.13, diff: 678.57 },
+    { nombre: 'PUEBLA', real: 1806417.0, ppto: 1811040.36, diff: -4623.36 },
+    { nombre: 'CORDOBA ORIZABA', real: 1444172.36, ppto: 1458366.75, diff: -14194.39 },
+    { nombre: 'IRAPUATO', real: 2246226.73, ppto: 2260907.89, diff: -14681.16 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 2433471.58, ppto: 2452167.52, diff: -18695.94 },
+    { nombre: 'XALAPA', real: 1356318.44, ppto: 1377693.15, diff: -21374.71 },
+    { nombre: 'CANCUN', real: 2345428.2, ppto: 2368293.45, diff: -22865.25 },
+    { nombre: 'GDL BARRANCA', real: 2026010.37, ppto: 2052071.62, diff: -26061.25 },
+    { nombre: 'TUXTLA', real: 1832274.05, ppto: 1915800.59, diff: -83526.54 },
+    { nombre: 'MORELIA', real: 1710909.62, ppto: 1799464.18, diff: -88554.56 },
+    { nombre: 'AGUASCALIENTES', real: 1921234.6, ppto: 2065655.18, diff: -144420.58 },
+    { nombre: 'GDL ESTADIO', real: 1847830.48, ppto: 2111548.67, diff: -263718.19 },
+    { nombre: 'LEON', real: 6043058.72, ppto: 6328538.36, diff: -285479.64 },
+    { nombre: 'VERACRUZ', real: 3565953.69, ppto: 3855294.78, diff: -289341.09 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 1418918.33, ppto: 1165667.82, diff: 253250.51 },
+  ]},
+  { id: 'tiendascuadrillas', label: 'Módulo Tiendas y Cuadrillas', real: 33459437.05, ppto: 28590500.0, diff: 4868937.05, porDistrito: [
+    { nombre: 'GDL BARRANCA', real: 2635814.37, ppto: 2007500.0, diff: 628314.37 },
+    { nombre: 'AGUASCALIENTES', real: 1933956.74, ppto: 1385000.0, diff: 548956.74 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 2773773.92, ppto: 2249000.0, diff: 524773.92 },
+    { nombre: 'VERACRUZ', real: 3079358.58, ppto: 2568000.0, diff: 511358.58 },
+    { nombre: 'GDL ESTADIO', real: 2421012.94, ppto: 2004000.0, diff: 417012.94 },
+    { nombre: 'GDL PRIMAVERA', real: 2362348.78, ppto: 1969000.0, diff: 393348.78 },
+    { nombre: 'PUEBLA', real: 1857819.53, ppto: 1470500.0, diff: 387319.53 },
+    { nombre: 'LEON', real: 4315788.04, ppto: 4015000.0, diff: 300788.04 },
+    { nombre: 'XALAPA', real: 1568122.01, ppto: 1385000.0, diff: 183122.01 },
+    { nombre: 'MORELIA', real: 1542049.29, ppto: 1361000.0, diff: 181049.29 },
+    { nombre: 'TUXTLA', real: 1834487.06, ppto: 1654000.0, diff: 180487.06 },
+    { nombre: 'IRAPUATO', real: 1921457.31, ppto: 1851000.0, diff: 70457.31 },
+    { nombre: 'CORDOBA ORIZABA', real: 1362062.86, ppto: 1343000.0, diff: 19062.86 },
+    { nombre: 'MERIDA', real: 990767.89, ppto: 981000.0, diff: 9767.89 },
+    { nombre: 'CANCUN', real: 2344594.69, ppto: 2347500.0, diff: -2905.31 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 516023.04, ppto: 0.0, diff: 516023.04 },
+  ]},
+  { id: 'comisiones', label: 'Comisiones Distribuidores', real: 31519578.32, ppto: 31183250.0, diff: 336328.32, porDistrito: [
+    { nombre: 'LEON', real: 3282057.07, ppto: 2824500.0, diff: 457557.07 },
+    { nombre: 'TEPIC', real: 4799028.82, ppto: 4406500.0, diff: 392528.82 },
+    { nombre: 'GDL PRIMAVERA', real: 3834552.56, ppto: 3532900.0, diff: 301652.56 },
+    { nombre: 'COLIMA', real: 3908934.21, ppto: 3643500.0, diff: 265434.21 },
+    { nombre: 'GDL BARRANCA', real: 4906137.86, ppto: 4791150.0, diff: 114987.86 },
+    { nombre: 'CORDOBA ORIZABA', real: 2385698.55, ppto: 2331000.0, diff: 54698.55 },
+    { nombre: 'IRAPUATO', real: 313922.0, ppto: 316050.0, diff: -2128.0 },
+    { nombre: 'PUEBLA', real: 1363631.0, ppto: 1411900.0, diff: -48269.0 },
+    { nombre: 'GDL ESTADIO', real: 3814373.63, ppto: 3911600.0, diff: -97226.37 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 1124023.41, ppto: 1410500.0, diff: -286476.59 },
+    { nombre: 'MERIDA', real: 174859.0, ppto: 491750.0, diff: -316891.0 },
+    { nombre: 'VERACRUZ', real: 1612360.21, ppto: 2111900.0, diff: -499539.79 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 0.0, ppto: 0.0, diff: 0.0 },
+  ]},
+  { id: 'gasolina', label: 'Gasolina', real: 18888573.07, ppto: 18411401.83, diff: 477171.24, porDistrito: [
+    { nombre: 'LEON', real: 3586403.95, ppto: 3388566.42, diff: 197837.53 },
+    { nombre: 'IRAPUATO', real: 1374470.34, ppto: 1280043.24, diff: 94427.1 },
+    { nombre: 'GDL BARRANCA', real: 970096.2, ppto: 904340.03, diff: 65756.18 },
+    { nombre: 'CANCUN', real: 1126672.41, ppto: 1098442.26, diff: 28230.16 },
+    { nombre: 'MORELIA', real: 846291.89, ppto: 828540.64, diff: 17751.26 },
+    { nombre: 'PUEBLA', real: 961718.1, ppto: 946528.44, diff: 15189.66 },
+    { nombre: 'GDL PRIMAVERA', real: 1216217.75, ppto: 1205265.35, diff: 10952.4 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 1510784.99, ppto: 1505771.96, diff: 5013.04 },
+    { nombre: 'AGUASCALIENTES', real: 1050465.17, ppto: 1054246.43, diff: -3781.26 },
+    { nombre: 'CORDOBA ORIZABA', real: 710252.59, ppto: 719635.15, diff: -9382.56 },
+    { nombre: 'TUXTLA', real: 876259.48, ppto: 908100.04, diff: -31840.56 },
+    { nombre: 'VERACRUZ', real: 1670104.31, ppto: 1702684.76, diff: -32580.45 },
+    { nombre: 'GDL ESTADIO', real: 1020914.31, ppto: 1054296.59, diff: -33382.28 },
+    { nombre: 'XALAPA', real: 720016.38, ppto: 756684.51, diff: -36668.13 },
+    { nombre: 'MERIDA', real: 845332.76, ppto: 908083.44, diff: -62750.68 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 402572.42, ppto: 150172.58, diff: 252399.84 },
+  ]},
+  { id: 'arrendamiento', label: 'Arrendamiento Vehicular', real: 16404851.51, ppto: 16583965.42, diff: -179113.91, porDistrito: [
+    { nombre: 'PUEBLA', real: 1491865.31, ppto: 1419285.29, diff: 72580.02 },
+    { nombre: 'MERIDA', real: 764655.16, ppto: 732883.61, diff: 31771.55 },
+    { nombre: 'CANCUN', real: 1785738.13, ppto: 1759261.89, diff: 26476.24 },
+    { nombre: 'AGUASCALIENTES', real: 762011.35, ppto: 751420.85, diff: 10590.51 },
+    { nombre: 'GDL BARRANCA', real: 516321.85, ppto: 516321.75, diff: 0.1 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 707304.6, ppto: 707304.49, diff: 0.1 },
+    { nombre: 'GDL PRIMAVERA', real: 769312.54, ppto: 769312.44, diff: 0.1 },
+    { nombre: 'GDL ESTADIO', real: 390631.61, ppto: 390631.56, diff: 0.05 },
+    { nombre: 'MORELIA', real: 419161.58, ppto: 419161.56, diff: 0.02 },
+    { nombre: 'COLIMA', real: 40591.0, ppto: 40590.99, diff: 0.01 },
+    { nombre: 'IRAPUATO', real: 411889.39, ppto: 411889.39, diff: 0.0 },
+    { nombre: 'TEPIC', real: 53571.4, ppto: 53571.41, diff: -0.01 },
+    { nombre: 'XALAPA', real: 913000.85, ppto: 930591.39, diff: -17590.54 },
+    { nombre: 'CORDOBA ORIZABA', real: 1107288.74, ppto: 1149503.74, diff: -42215.0 },
+    { nombre: 'LEON', real: 2038570.95, ppto: 2081396.95, diff: -42826.01 },
+    { nombre: 'VERACRUZ', real: 2409941.38, ppto: 2465544.12, diff: -55602.74 },
+    { nombre: 'TUXTLA', real: 961809.63, ppto: 1029853.72, diff: -68044.09 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 861186.03, ppto: 955440.25, diff: -94254.22 },
+  ]},
+  { id: 'talleres', label: 'Talleres y Refacciones', real: 9731026.52, ppto: 9418550.0, diff: 312476.52, porDistrito: [
+    { nombre: 'LEON', real: 1921320.79, ppto: 1473500.0, diff: 447820.79 },
+    { nombre: 'VERACRUZ', real: 988527.02, ppto: 691250.0, diff: 297277.02 },
+    { nombre: 'IRAPUATO', real: 955875.76, ppto: 669200.0, diff: 286675.76 },
+    { nombre: 'XALAPA', real: 373413.18, ppto: 248500.0, diff: 124913.18 },
+    { nombre: 'PUEBLA', real: 555219.72, ppto: 462000.0, diff: 93219.72 },
+    { nombre: 'MERIDA', real: 475215.65, ppto: 392000.0, diff: 83215.65 },
+    { nombre: 'AGUASCALIENTES', real: 490843.15, ppto: 465500.0, diff: 25343.15 },
+    { nombre: 'MORELIA', real: 375482.65, ppto: 353500.0, diff: 21982.65 },
+    { nombre: 'TUXTLA', real: 400061.86, ppto: 392000.0, diff: 8061.86 },
+    { nombre: 'CORDOBA ORIZABA', real: 295047.09, ppto: 309750.0, diff: -14702.91 },
+    { nombre: 'CANCUN', real: 329785.88, ppto: 371000.0, diff: -41214.12 },
+    { nombre: 'GDL PRIMAVERA', real: 640883.21, ppto: 757400.0, diff: -116516.79 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 694593.22, ppto: 838250.0, diff: -143656.78 },
+    { nombre: 'GDL ESTADIO', real: 487302.93, ppto: 742700.0, diff: -255397.07 },
+    { nombre: 'GDL BARRANCA', real: 624478.52, ppto: 910000.0, diff: -285521.48 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 122975.89, ppto: 342000.0, diff: -219024.11 },
+  ]},
+  { id: 'bonosprod', label: 'Módulo Bonos Productividad', real: 7577055.72, ppto: 7997552.58, diff: -420496.86, porDistrito: [
+    { nombre: 'GDL LOPEZ MATEOS', real: 326414.21, ppto: 253287.03, diff: 73127.18 },
+    { nombre: 'GDL BARRANCA', real: 382137.73, ppto: 336183.74, diff: 45953.99 },
+    { nombre: 'TUXTLA', real: 369247.36, ppto: 329553.77, diff: 39693.59 },
+    { nombre: 'LEON', real: 740683.64, ppto: 704934.23, diff: 35749.41 },
+    { nombre: 'VERACRUZ', real: 734436.78, ppto: 700000.0, diff: 34436.78 },
+    { nombre: 'AGUASCALIENTES', real: 362154.66, ppto: 343271.19, diff: 18883.47 },
+    { nombre: 'COLIMA', real: 30104.75, ppto: 26368.49, diff: 3736.26 },
+    { nombre: 'MORELIA', real: 362252.04, ppto: 384460.9, diff: -22208.86 },
+    { nombre: 'IRAPUATO', real: 290617.42, ppto: 332849.53, diff: -42232.11 },
+    { nombre: 'CORDOBA ORIZABA', real: 280228.42, ppto: 324084.18, diff: -43855.76 },
+    { nombre: 'CANCUN', real: 293820.64, ppto: 340861.67, diff: -47041.03 },
+    { nombre: 'XALAPA', real: 248422.16, ppto: 305077.5, diff: -56655.34 },
+    { nombre: 'GDL ESTADIO', real: 266533.94, ppto: 328443.87, diff: -61909.93 },
+    { nombre: 'MERIDA', real: 249005.28, ppto: 367925.43, diff: -118920.15 },
+    { nombre: 'PUEBLA', real: 422136.07, ppto: 548465.05, diff: -126328.98 },
+    { nombre: 'GDL PRIMAVERA', real: 374359.3, ppto: 527067.96, diff: -152708.66 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 1844501.32, ppto: 1844718.04, diff: -216.72 },
+  ]},
+  { id: 'ptu', label: 'PTU', real: 526219.35, ppto: 580766.22, diff: -54546.87, porDistrito: [
+    { nombre: 'TUXTLA', real: 23162.79, ppto: 19037.12, diff: 4125.67 },
+    { nombre: 'VERACRUZ', real: 43149.86, ppto: 41282.99, diff: 1866.87 },
+    { nombre: 'CORDOBA ORIZABA', real: 23493.86, ppto: 22372.26, diff: 1121.6 },
+    { nombre: 'XALAPA', real: 21753.06, ppto: 20964.26, diff: 788.8 },
+    { nombre: 'PUEBLA', real: 22682.8, ppto: 23445.8, diff: -763.0 },
+    { nombre: 'AGUASCALIENTES', real: 34183.2, ppto: 35805.6, diff: -1622.4 },
+    { nombre: 'IRAPUATO', real: 32807.4, ppto: 34992.4, diff: -2185.0 },
+    { nombre: 'COLIMA', real: 1341.0, ppto: 4025.0, diff: -2684.0 },
+    { nombre: 'CANCUN', real: 25411.54, ppto: 28097.79, diff: -2686.25 },
+    { nombre: 'GDL BARRANCA', real: 25765.8, ppto: 28809.8, diff: -3044.0 },
+    { nombre: 'GDL PRIMAVERA', real: 30635.0, ppto: 34223.0, diff: -3588.0 },
+    { nombre: 'GDL LOPEZ MATEOS', real: 26216.6, ppto: 30225.0, diff: -4008.4 },
+    { nombre: 'MERIDA', real: 11155.24, ppto: 15794.4, diff: -4639.16 },
+    { nombre: 'TEPIC', real: 0.0, ppto: 4843.2, diff: -4843.2 },
+    { nombre: 'MORELIA', real: 28322.6, ppto: 34996.0, diff: -6673.4 },
+    { nombre: 'GDL ESTADIO', real: 21585.8, ppto: 31796.8, diff: -10211.0 },
+    { nombre: 'LEON', real: 63769.2, ppto: 78938.2, diff: -15169.0 },
+    { nombre: 'OTROS CENTROS DE COSTO', real: 90783.6, ppto: 91116.6, diff: -333.0 },
+  ]},
+];
+
+// Ranking nacional de TODAS las categorías (excluye Cuota Corporativa y Dividendos, que no son
+// desviaciones operativas) — YTD ene-jul, ya ordenado de mayor a menor variación.
+const PPTO_RANKING_SOBRE = [
+  { categoria: 'Módulo Tiendas y Cuadrillas', real: 33459437.05, ppto: 28590500.0, diff: 4868937.05 },
+  { categoria: 'Nóminas y Salarios', real: 4541682.66, ppto: 3554052.47, diff: 987630.19 },
+  { categoria: 'Flota Vehicular', real: 11852929.28, ppto: 11062010.0, diff: 790919.28 },
+  { categoria: 'Viáticos', real: 1909371.35, ppto: 1414000.0, diff: 495371.35 },
+  { categoria: 'Gasolina', real: 18888573.07, ppto: 18411401.83, diff: 477171.24 },
+  { categoria: 'Comisiones Distribuidores', real: 31519578.32, ppto: 31183250.0, diff: 336328.32 },
+  { categoria: 'Rentas', real: 5666044.09, ppto: 5501310.26, diff: 164733.82 },
+  { categoria: 'Recursos Humanos', real: 1493691.15, ppto: 1345689.66, diff: 148001.49 },
+  { categoria: 'Telefonía Móvil', real: 1850868.71, ppto: 1732788.17, diff: 118080.54 },
+  { categoria: 'Uniformes', real: 0.0, ppto: -34300.0, diff: 34300.0 },
+  { categoria: 'Software y Sistemas', real: 57547.07, ppto: 42350.0, diff: 15197.07 },
+  { categoria: 'Equipo de Cómputo', real: 392694.97, ppto: 385000.0, diff: 7694.97 },
+  { categoria: 'Despachos y Asesorías', real: 20450.0, ppto: 20000.0, diff: 450.0 },
+];
+const PPTO_RANKING_BAJO = [
+  { categoria: 'Gobierno e Impuestos', real: 6070092.26, ppto: 10671816.74, diff: -4601724.48 },
+  { categoria: 'Seguros y Primas', real: 8294799.49, ppto: 9487637.74, diff: -1192838.25 },
+  { categoria: 'Módulo Nóminas', real: 122883992.05, ppto: 123715076.69, diff: -831084.64 },
+  { categoria: 'Finiquitos Laborales', real: 4375440.04, ppto: 4900000.0, diff: -524559.96 },
+  { categoria: 'Gastos de Oficina', real: 1724046.25, ppto: 2067415.47, diff: -343369.22 },
+  { categoria: 'Arrendamiento Vehicular', real: 16404851.51, ppto: 16583965.42, diff: -179113.91 },
+  { categoria: 'Equipo de Trabajo', real: 5447166.16, ppto: 5585300.0, diff: -138133.84 },
+  { categoria: 'Fraudes y Penalizaciones', real: 29400.48, ppto: 49000.0, diff: -19599.52 },
+  { categoria: 'Servicios', real: 290114.39, ppto: 292569.39, diff: -2455.0 },
+];
+
+// Detalle mensual completo (Ingreso/Gasto/Utilidad, Real y Presupuestado) — sep-26 a dic-26 no
+// tienen dato real todavía (null), solo presupuesto.
+const PPTO_TABLA_MENSUAL = [
+  { ingR: 47847106.25, ingP: 47920490.34, gasR: 40892420.29, gasP: 44593209, utilR: 6954685.96, utilP: 3327281.34 },
+  { ingR: 48273613.17, ingP: 47920490.34, gasR: 37874230.88, gasP: 38071648, utilR: 10399382.29, utilP: 9848842.34 },
+  { ingR: 47407182.06, ingP: 47920490.34, gasR: 41942744.79, gasP: 42219853, utilR: 5464437.27, utilP: 5700637.34 },
+  { ingR: 48771900.07, ingP: 47920490.34, gasR: 41910858.35, gasP: 43489037, utilR: 6861041.72, utilP: 4431453.34 },
+  { ingR: 48374351.92, ingP: 47920490.34, gasR: 43923073.21, gasP: 42085418, utilR: 4451278.71, utilP: 5835072.34 },
+  { ingR: 48078041.26, ingP: 47920490.34, gasR: 37559789.94, gasP: 39289115, utilR: 10518251.32, utilP: 8631375.34 },
+  { ingR: 50955436.08, ingP: 47920490.34, gasR: 47069654.06, gasP: 44812554, utilR: 3885782.02, utilP: 3107936.34 },
+  { ingR: null, ingP: 47920490.34, gasR: null, gasP: 35884816, utilR: null, utilP: 12035674.34 },
+  { ingR: null, ingP: 47920490.34, gasR: null, gasP: 43609412, utilR: null, utilP: 4311078.34 },
+  { ingR: null, ingP: 47920490.34, gasR: null, gasP: 38947192, utilR: null, utilP: 8973298.34 },
+  { ingR: null, ingP: 47920490.34, gasR: null, gasP: 43561109, utilR: null, utilP: 4359381.34 },
+  { ingR: null, ingP: 47920490.34, gasR: null, gasP: 38354452, utilR: null, utilP: 9566038.34 },
+];
+
+let poliza = 'PLANTA INTERNA';
+let filasEstado = {}; // { [distrito]: { checked: bool, incremento: number } } — incremento en $/folio
+
+function distritosDisponibles() {
+  return Object.keys(DATOS_POR_POLIZA[poliza]).sort();
+}
+
+function inicializarFilas() {
+  filasEstado = {};
+  distritosDisponibles().forEach((d) => { filasEstado[d] = { checked: true, incremento: 0 }; });
+}
+
+function cambiarPoliza(nuevaPoliza) {
+  poliza = nuevaPoliza;
+  document.querySelectorAll('#sim-poliza-botones button').forEach((btn) => {
+    const activo = btn.dataset.poliza === poliza;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  inicializarFilas();
+  recalcularEscenario();
+}
+
+function marcarTodos(valor) {
+  Object.keys(filasEstado).forEach((d) => { filasEstado[d].checked = valor; });
+  recalcularEscenario();
+}
+
+function aplicarIncrementoMasivo() {
+  const valor = Number(document.getElementById('sim-incremento-masivo').value) || 0;
+  Object.keys(filasEstado).forEach((d) => {
+    if (filasEstado[d].checked) filasEstado[d].incremento = valor;
+  });
+  recalcularEscenario();
+}
+
+function toggleFila(distrito, checked) {
+  filasEstado[distrito].checked = checked;
+  recalcularEscenario();
+}
+
+function actualizarIncremento(distrito, valor) {
+  filasEstado[distrito].incremento = Number(valor) || 0;
+  recalcularEscenario();
+}
+
+function renderizarTablaMatriz() {
+  const datos = DATOS_POR_POLIZA[poliza];
+  const distritos = distritosDisponibles();
+
+  document.getElementById('sim-tabla-matriz').innerHTML = distritos.map((d) => {
+    const estado = filasEstado[d];
+    const foliosMesActual = datos[d].folios[MES_ACTUAL_INDEX];
+    const precioActual = datos[d].precio;
+    const incremento = estado.checked ? estado.incremento : 0;
+    const precioFinal = precioActual + incremento;
+    const incrementoMensual = foliosMesActual * incremento;
+    return `<tr class="${estado.checked ? '' : 'fila-desmarcada'}">
+      <td class="px-3 py-1"><input type="checkbox" ${estado.checked ? 'checked' : ''} onchange="toggleFila('${d}', this.checked)" class="w-3.5 h-3.5 accent-primary"></td>
+      <td class="px-2 py-1 font-gordita-bold">${nombreCortoDistrito(d)}</td>
+      <td class="px-2 py-1 text-right">${Math.round(foliosMesActual).toLocaleString('es-MX')}</td>
+      <td class="px-2 py-1 text-right">${formatoMoneda(precioActual)}</td>
+      <td class="px-2 py-1 text-right">
+        <input type="number" step="0.5" value="${estado.incremento}" ${estado.checked ? '' : 'disabled'} oninput="actualizarIncremento('${d}', this.value)" class="sim-input-incremento px-1.5 py-0.5 border border-outline-variant rounded text-[11px] text-right">
+      </td>
+      <td class="px-2 py-1 text-right font-gordita-bold">${formatoMoneda(precioFinal)}</td>
+      <td class="px-2 py-1 text-right font-gordita-bold ${incrementoMensual > 0 ? 'text-qiora-green' : ''}">${incrementoMensual !== 0 ? '+' + formatoMoneda(incrementoMensual) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// --- Cálculo del escenario (histórico del año completo) ---
+// El ingreso siempre es folios dimensionados x precio (nunca folios realizados). Hasta el mes en
+// curso: una sola línea (ya está fijado, no se puede ajustar en retroactivo). De ahí en adelante,
+// el pronóstico aplica el incremento SOLO de los distritos marcados, cada uno con su propio $/folio
+// — los distritos desmarcados continúan al precio actual sin cambio.
+
+function calcularAnclaIndexPorFecha(anio) {
+  // Ancla fija en julio (índice 6, mes 7 = Jul-26) — la presentación es Ene-Jul 2026, así que no
+  // debe moverse según la fecha real en la que alguien abra este archivo.
+  if (anio < 2026) return 11;
+  if (anio > 2026) return -1;
+  return 6;
+}
+
+function calcularProyeccion() {
+  const datos = DATOS_POR_POLIZA[poliza];
+  const distritos = distritosDisponibles();
+
+  const meses = [];
+  for (let m = 0; m < 12; m++) meses.push({ etiqueta: MESES_ABREV[m] + '-' + String(ANIO_SIMULADOR).slice(2) });
+
+  const dimensionadoPorMes = meses.map((_, i) => distritos.reduce((s, d) => s + datos[d].folios[i], 0));
+  const ingresoPlanPorMes = meses.map((_, i) => distritos.reduce((s, d) => s + datos[d].folios[i] * datos[d].precio, 0));
+  const anclaIndex = calcularAnclaIndexPorFecha(ANIO_SIMULADOR);
+
+  const incrementoAgregadoPorMes = meses.map((_, i) => {
+    if (i <= anclaIndex) return 0;
+    return distritos.reduce((s, d) => {
+      const estado = filasEstado[d];
+      if (!estado || !estado.checked || !estado.incremento) return s;
+      return s + datos[d].folios[i] * estado.incremento;
+    }, 0);
+  });
+
+  const serieFolios = dimensionadoPorMes;
+  const serieContinuacion = ingresoPlanPorMes;
+  const serieConAumento = meses.map((_, i) => {
+    if (i < anclaIndex) return null;
+    if (i === anclaIndex) return serieContinuacion[i];
+    return ingresoPlanPorMes[i] + incrementoAgregadoPorMes[i];
+  });
+
+  return {
+    meses, anclaIndex,
+    serieFolios, serieContinuacion, serieConAumento, incrementoAgregadoPorMes,
+    dimensionadoPorMes, ingresoPlanPorMes,
+  };
+}
+
+function recalcularEscenario() {
+  renderizarTablaMatriz();
+  const resultado = calcularProyeccion();
+  renderizarResultado(resultado);
+}
+
+// Gráfica combinada: Folios (gris, eje propio oculto) + Ingreso (verde, eje propio oculto), ambas
+// sólidas hasta anclaIndex y punteadas después. La etiqueta grande en la zona de pronóstico muestra
+// el incremento mensual PROMEDIO en monto total a la póliza (no un $/folio), sumando el impacto de
+// todos los distritos marcados.
+function renderizarGraficaFoliosIngreso(canvasId, refGrafica, etiquetas, serieFolios, serieIngreso, serieIngresoReferencia, anclaIndex, incrementoPromedioMensual) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const colorFolios = '#7e7576';
+  const colorIngreso = '#1B5E20';
+  const colorReferencia = '#9aa5a0';
+
+  const serieReferenciaPronostico = serieIngresoReferencia.map((v, i) => (i >= anclaIndex ? v : null));
+
+  const foliosValidos = serieFolios.filter((v) => v !== null && v !== undefined);
+  const ingresoValidos = serieIngreso.concat(serieReferenciaPronostico).filter((v) => v !== null && v !== undefined);
+  const minFolios = Math.min(...foliosValidos), maxFolios = Math.max(...foliosValidos);
+  const minIngreso = Math.min(...ingresoValidos), maxIngreso = Math.max(...ingresoValidos);
+  const rangoFolios = (maxFolios - minFolios) || Math.abs(maxFolios) || 1;
+  const rangoIngreso = (maxIngreso - minIngreso) || Math.abs(maxIngreso) || 1;
+  const y1Min = minFolios - rangoFolios * 0.2;
+  const y1Max = maxFolios + rangoFolios * 3.2;
+  const yMin = minIngreso - rangoIngreso * 3.2;
+  const yMax = maxIngreso + rangoIngreso * 0.2;
+
+  const dibujarEtiquetas = (chart) => {
+    const ctxDibujo = chart.ctx;
+    const metaFolios = chart.getDatasetMeta(0);
+    const metaIngreso = chart.getDatasetMeta(1);
+    metaFolios.data.forEach((punto, i) => {
+      const valor = serieFolios[i];
+      if (valor === null || valor === undefined) return;
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+      ctxDibujo.fillStyle = colorFolios;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText(Math.round(valor).toLocaleString('es-MX'), punto.x, punto.y - 14);
+      ctxDibujo.restore();
+    });
+    metaIngreso.data.forEach((punto, i) => {
+      const valor = serieIngreso[i];
+      if (valor === null || valor === undefined) return;
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+      ctxDibujo.fillStyle = colorIngreso;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText(formatoCompacto(valor), punto.x, punto.y - 30);
+      ctxDibujo.restore();
+    });
+
+    if (anclaIndex >= 0 && anclaIndex < etiquetas.length - 1 && incrementoPromedioMensual) {
+      const xIni = metaIngreso.data[anclaIndex + 1].x;
+      const xFin = metaIngreso.data[etiquetas.length - 1].x;
+      const xCentro = (xIni + xFin) / 2;
+      const yTexto = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) * 0.3;
+      const texto = (incrementoPromedioMensual >= 0 ? '+' : '') + formatoCompacto(incrementoPromedioMensual) + '/mes a la póliza';
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 22px 'Gordita', sans-serif";
+      const anchoTexto = ctxDibujo.measureText(texto).width;
+      ctxDibujo.fillStyle = 'rgba(46, 204, 113, 0.16)';
+      ctxDibujo.fillRect(xCentro - anchoTexto / 2 - 14, yTexto - 26, anchoTexto + 28, 36);
+      ctxDibujo.fillStyle = colorIngreso;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText(texto, xCentro, yTexto);
+      ctxDibujo.restore();
+    }
+  };
+
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        {
+          label: 'Folios Dimensionados', data: serieFolios, borderColor: colorFolios, backgroundColor: colorFolios + '1a',
+          fill: false, tension: 0.3, borderWidth: 2, spanGaps: true, yAxisID: 'y1',
+          pointRadius: 3, pointBackgroundColor: colorFolios, pointBorderColor: '#ffffff', pointBorderWidth: 2,
+          segment: { borderDash: (segCtx) => (segCtx.p1DataIndex > anclaIndex ? [6, 4] : undefined) },
+        },
+        {
+          label: 'Ingreso Mensual', data: serieIngreso, borderColor: colorIngreso, backgroundColor: 'rgba(46, 204, 113, 0.28)',
+          fill: 2, tension: 0.3, borderWidth: 3, spanGaps: true, yAxisID: 'y',
+          pointRadius: 4, pointBackgroundColor: colorIngreso, pointBorderColor: '#ffffff', pointBorderWidth: 2,
+          segment: { borderDash: (segCtx) => (segCtx.p1DataIndex > anclaIndex ? [6, 4] : undefined) },
+        },
+        {
+          label: 'Ingreso sin incremento (referencia)', data: serieReferenciaPronostico, borderColor: colorReferencia, backgroundColor: 'transparent',
+          fill: false, tension: 0.3, borderWidth: 1.5, borderDash: [3, 3], spanGaps: true, yAxisID: 'y',
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 50 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: "'Gordita', sans-serif", weight: 'bold' }, bodyFont: { family: "'Gordita', sans-serif" },
+          callbacks: {
+            label: (c) => c.dataset.yAxisID === 'y' ? c.dataset.label + ': ' + formatoMoneda(c.parsed.y) : c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString('es-MX'),
+          },
+        },
+      },
+      scales: {
+        y: { display: false, min: yMin, max: yMax },
+        y1: { display: false, min: y1Min, max: y1Max },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" } } },
+      },
+    },
+    plugins: [{ id: 'etiquetasFoliosIngreso', afterDatasetsDraw: dibujarEtiquetas }],
+  });
+}
+
+function renderizarGraficaFork(canvasId, refGrafica, etiquetas, serieContinuacion, serieConAumento, anclaIndex, formato, colorBase, colorAumento) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  const formatear = formato === 'entero' ? (v) => Math.round(v).toLocaleString('es-MX') : (v) => formatoCompacto(v);
+
+  const dibujarEtiquetas = (chart) => {
+    const ctxDibujo = chart.ctx;
+    const metaBase = chart.getDatasetMeta(0);
+    const metaAumento = chart.getDatasetMeta(1);
+    metaBase.data.forEach((punto, i) => {
+      if (i > anclaIndex) return;
+      const valor = serieContinuacion[i];
+      if (valor === null || valor === undefined) return;
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+      ctxDibujo.fillStyle = colorBase;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText(formatear(valor), punto.x, punto.y - 14);
+      ctxDibujo.restore();
+    });
+    metaAumento.data.forEach((punto, i) => {
+      if (i <= anclaIndex) return;
+      const valor = serieConAumento[i];
+      if (valor === null || valor === undefined) return;
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 10px 'Gordita', sans-serif";
+      ctxDibujo.fillStyle = colorAumento;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText(formatear(valor), punto.x, punto.y - 14);
+      ctxDibujo.restore();
+
+      const spread = valor - serieContinuacion[i];
+      ctxDibujo.save();
+      ctxDibujo.font = "bold 9px 'Gordita', sans-serif";
+      ctxDibujo.fillStyle = colorAumento;
+      ctxDibujo.textAlign = 'center';
+      ctxDibujo.fillText('spread +' + formatear(spread), punto.x, punto.y - 30);
+      ctxDibujo.restore();
+    });
+  };
+
+  window[refGrafica] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        {
+          label: 'Real / Continuación', data: serieContinuacion, borderColor: colorBase, backgroundColor: colorBase + '1a',
+          fill: false, tension: 0.35, borderWidth: 2, spanGaps: true,
+          pointRadius: 3, pointBackgroundColor: colorBase, pointBorderColor: '#ffffff', pointBorderWidth: 2,
+          segment: { borderDash: (segCtx) => (segCtx.p1DataIndex > anclaIndex ? [6, 4] : undefined) },
+        },
+        {
+          label: 'Con Incremento', data: serieConAumento, borderColor: colorAumento, backgroundColor: colorAumento + '1a',
+          fill: false, tension: 0.35, borderWidth: 2, borderDash: [6, 4], spanGaps: true,
+          pointRadius: 3, pointBackgroundColor: colorAumento, pointBorderColor: '#ffffff', pointBorderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 46 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: "'Gordita', sans-serif", weight: 'bold' }, bodyFont: { family: "'Gordita', sans-serif" },
+          callbacks: { label: (c) => c.dataset.label + ': ' + formatear(c.parsed.y) },
+        },
+      },
+      scales: {
+        y: { display: false },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" } } },
+      },
+    },
+    plugins: [{ id: 'etiquetasFork', afterDatasetsDraw: dibujarEtiquetas }],
+  });
+}
+
+function renderizarResultado(resultado) {
+  const { meses, anclaIndex, serieFolios, serieContinuacion, serieConAumento, incrementoAgregadoPorMes } = resultado;
+  const etiquetas = meses.map((m) => m.etiqueta);
+
+  const folioTotalAnio = serieFolios.reduce((s, v) => s + (v || 0), 0);
+  const ingresoContinuacionAnio = serieContinuacion.reduce((s, v) => s + (v || 0), 0);
+  const mesesPronostico = meses.length - anclaIndex - 1;
+  let incrementoAnio = 0, ingresoContinuacionPronostico = 0;
+  for (let i = anclaIndex + 1; i < meses.length; i++) {
+    incrementoAnio += (serieConAumento[i] || 0) - (serieContinuacion[i] || 0);
+    ingresoContinuacionPronostico += serieContinuacion[i] || 0;
+  }
+  const incrementoMensualProm = mesesPronostico > 0 ? incrementoAnio / mesesPronostico : 0;
+  const pctIncremento = ingresoContinuacionPronostico > 0 ? (incrementoAnio / ingresoContinuacionPronostico) * 100 : 0;
+
+  document.getElementById('sim-kpi-folios').textContent = Math.round(folioTotalAnio).toLocaleString('es-MX');
+  document.getElementById('sim-kpi-ingreso-actual').textContent = formatoCompacto(ingresoContinuacionAnio);
+  document.getElementById('sim-kpi-incremento-mensual').textContent = formatoCompacto(incrementoMensualProm);
+  document.getElementById('sim-kpi-incremento-anual').textContent = formatoCompacto(incrementoAnio);
+  document.getElementById('sim-kpi-incremento-pct').textContent = mesesPronostico > 0
+    ? '+' + pctIncremento.toFixed(1) + '% vs. continuar igual, restante del año'
+    : 'sin meses ajustables restantes en ' + ANIO_SIMULADOR;
+
+  const serieIngresoConSalto = meses.map((m, i) => (i <= anclaIndex ? serieContinuacion[i] : serieConAumento[i]));
+  renderizarGraficaFoliosIngreso('sim-grafica-folios-ingreso', 'graficaSimFoliosIngreso', etiquetas, serieFolios, serieIngresoConSalto, serieContinuacion, anclaIndex, incrementoMensualProm);
+
+  const precioContinuacion = serieFolios.map((folios, i) => (folios > 0 ? serieContinuacion[i] / folios : null));
+  const precioConAumento = precioContinuacion.map((v, i) => {
+    if (i < anclaIndex || v === null) return null;
+    if (i === anclaIndex) return v;
+    return serieFolios[i] > 0 ? serieConAumento[i] / serieFolios[i] : v;
+  });
+  renderizarGraficaFork('sim-grafica-precio', 'graficaSimPrecio', etiquetas, precioContinuacion, precioConAumento, anclaIndex, 'moneda', '#7e7576', '#2ECC71');
+
+  document.getElementById('sim-tabla-mensual').innerHTML = meses.map((m, i) => {
+    const yaFijado = i <= anclaIndex;
+    const ingresoBase = serieContinuacion[i];
+    const ingresoAumento = i >= anclaIndex ? serieConAumento[i] : null;
+    const incremento = i > anclaIndex ? (ingresoAumento || 0) - (ingresoBase || 0) : null;
+    const pct = incremento !== null && ingresoBase > 0 ? (incremento / ingresoBase) * 100 : null;
+    return `<tr>
+      <td class="px-6 py-3 font-gordita-bold">${m.etiqueta} <span class="text-[9px] font-normal text-on-surface-variant">${yaFijado ? '· ya fijado' : '· ajustable'}</span></td>
+      <td class="px-4 py-3 text-right">${serieFolios[i] !== null ? Math.round(serieFolios[i]).toLocaleString('es-MX') : '—'}</td>
+      <td class="px-4 py-3 text-right">${ingresoBase !== null ? formatoMoneda(ingresoBase) : '—'}</td>
+      <td class="px-4 py-3 text-right">${ingresoAumento !== null ? formatoMoneda(ingresoAumento) : '—'}</td>
+      <td class="px-4 py-3 text-right font-gordita-bold ${incremento ? 'text-qiora-green' : ''}">${incremento !== null ? '+' + formatoMoneda(incremento) : '—'}</td>
+      <td class="px-4 py-3 text-right text-on-surface-variant">${pct !== null ? '+' + pct.toFixed(1) + '%' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================================
+// Tendencias de Pólizas — folios dimensionados/realizados/% alcance reales,
+// todos los distritos, ene-26 a ago-26 (tabla folios_poliza). Formato inspirado
+// en el pilar de Operaciones de QiORA Finanzas: gauge de alcance, ranking por
+// distrito clicable, y gráfica de barras (folios) + línea (% alcance).
+// ============================================================================
+
+const COLOR_POLIZA = { 'PLANTA INTERNA': '#1B4F72', 'RECOLECCIONES': '#2E86C1', 'MULTIDISTRITO': '#85C1E9' };
+const NOMBRE_POLIZA_CORTO = { 'PLANTA INTERNA': 'Planta Interna', 'RECOLECCIONES': 'Recolecciones', 'MULTIDISTRITO': 'Multidistrito' };
+
+let tendPoliza = 'PLANTA INTERNA';
+let tendModo = 'dimensionados';
+let tendDistritoSeleccionado = null;
+
+function cambiarPolizaTendencias(p) {
+  tendPoliza = p;
+  tendDistritoSeleccionado = null;
+  document.querySelectorAll('#tend-poliza-botones button').forEach((btn) => {
+    const activo = btn.dataset.poliza === p;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  renderizarTendencias();
+}
+
+function cambiarModoTendencias(modo) {
+  tendModo = modo;
+  document.querySelectorAll('#tend-modo-botones button').forEach((btn) => {
+    const activo = btn.dataset.modo === modo;
+    btn.classList.toggle('bg-primary', activo);
+    btn.classList.toggle('text-on-primary', activo);
+    btn.classList.toggle('text-on-surface-variant', !activo);
+  });
+  renderizarTendenciasTabla();
+}
+
+function toggleTendenciasTabla() {
+  const contenido = document.getElementById('tend-tabla-contenido');
+  const chevron = document.getElementById('tend-tabla-chevron');
+  const abierto = contenido.style.display !== 'none';
+  contenido.style.display = abierto ? 'none' : 'block';
+  chevron.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function renderizarTendenciasTabla() {
+  const datos = TENDENCIAS_DATOS[tendPoliza];
+  const distritos = Object.keys(datos);
+  document.getElementById('tend-tabla-conteo').textContent = distritos.length;
+
+  // Ranking por % de alcance YTD (dimensionados/realizados sumados los 7 meses) — los distritos
+  // sin datos de alcance van al final, en orden alfabético.
+  const distritosOrdenados = distritos.slice().sort((a, b) => {
+    const alcanceYtd = (d) => {
+      const dim = datos[d].dimensionados.reduce((s, v) => s + (v || 0), 0);
+      const rea = datos[d].realizados.reduce((s, v) => s + (v || 0), 0);
+      return dim > 0 ? (rea / dim) * 100 : null;
+    };
+    const alcanceA = alcanceYtd(a), alcanceB = alcanceYtd(b);
+    if (alcanceA === null && alcanceB === null) return a.localeCompare(b);
+    if (alcanceA === null) return 1;
+    if (alcanceB === null) return -1;
+    return alcanceB - alcanceA;
+  });
+
+  document.getElementById('tend-tabla-encabezado').innerHTML = '<th class="px-3 py-2.5">#</th><th class="px-4 py-2.5">Distrito</th>' +
+    TENDENCIAS_MESES.map((m) => `<th class="px-2 py-2.5 text-right">${m.slice(5, 7)}-${m.slice(2, 4)}</th>`).join('');
+
+  document.getElementById('tend-tabla-body').innerHTML = distritosOrdenados.map((d, i) => {
+    const serie = tendModo === 'dimensionados' ? datos[d].dimensionados : datos[d].alcance;
+    const celdas = serie.map((v) => {
+      if (v === null || v === undefined) return `<td class="px-2 py-1 text-right text-on-surface-variant">—</td>`;
+      if (tendModo === 'alcance') {
+        const clase = v >= 95 ? 'text-qiora-green' : v >= 80 ? '' : 'text-error';
+        return `<td class="px-2 py-1 text-right font-gordita-bold ${clase}">${v.toFixed(0)}%</td>`;
+      }
+      return `<td class="px-2 py-1 text-right">${Math.round(v).toLocaleString('es-MX')}</td>`;
+    }).join('');
+    const escapado = d.replace(/'/g, "\\'");
+    return `<tr class="cursor-pointer hover:bg-surface-container-low transition-colors" onclick="seleccionarDistritoTendencia('${escapado}')">
+      <td class="px-3 py-1"><span class="w-5 h-5 rounded-full bg-primary/10 text-primary font-gordita-bold text-[10px] inline-flex items-center justify-center">${i + 1}</span></td>
+      <td class="px-4 py-1 font-gordita-bold">${nombreCortoDistrito(d)}</td>${celdas}
+    </tr>`;
+  }).join('');
+}
+
+// Gauge de media dona (igual al de Operaciones en QiORA Finanzas): % grande al centro, resto del
+// círculo en gris claro.
+function renderizarGraficaGaugeAlcance(canvasId, refGrafica, pct, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+  const valor = pct === null ? 0 : Math.min(Math.max(pct, 0), 100);
+  window[refGrafica] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [valor, 100 - valor], backgroundColor: [color, '#eeeeee'], borderWidth: 0 }] },
+    options: {
+      maintainAspectRatio: false, rotation: -90, circumference: 180, cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    },
+    plugins: [{
+      id: 'textoGaugeAlcance' + canvasId,
+      afterDraw(chart) {
+        const arc = chart.getDatasetMeta(0).data[0];
+        if (!arc) return;
+        const c = chart.ctx;
+        c.save();
+        c.fillStyle = '#1b1b1b';
+        c.font = "bold 22px 'Gordita', sans-serif";
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(pct === null ? '—' : pct.toFixed(1) + '%', arc.x, arc.y - 4);
+        c.restore();
+      },
+    }],
+  });
+}
+
+// Gráfica combinada: barras = folios dimensionados, línea = % alcance, con etiquetas flotantes en
+// cada punto (igual estilo que "Folios por Póliza" en el Overview de QiORA Finanzas).
+let graficaTendCombo = null;
+function renderizarGraficaComboTendencias(canvasId, refGrafica, etiquetas, dimensionados, realizados, alcance, color, extra) {
+  const ingresoSerie = extra && extra.ingreso;
+  const hcSerie = extra && extra.hc;
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (window[refGrafica]) window[refGrafica].destroy();
+
+  // Barras (dimensionados) y línea (% alcance) tienden a acercarse ambas al techo de su propio eje,
+  // lo que encima sus etiquetas. Se fuerza a las barras a ocupar solo la banda baja del área y a la
+  // línea la banda alta, dejando espacio de sobra entre ambas (misma técnica que en Folios e Ingreso).
+  //
+  // Además, un sobre/redimensionamiento real de la póliza suele ser una variación chica en % (unos
+  // cientos de folios sobre un total de ~65,000) — con un eje que arranca en 0 esa variación es
+  // invisible a simple vista. Se hace zoom al eje de barras alrededor del rango real de valores para
+  // que el cambio mes a mes sí se note, y se agrega una flecha con el delta vs. el mes anterior en
+  // cada barra para que quede inequívoco (verde = aumento, rojo = reducción).
+  const dimValidos = dimensionados.filter((v) => v !== null && v !== undefined);
+  const alcanceValidos = alcance.filter((v) => v !== null && v !== undefined);
+  const minDim = Math.min(...dimValidos, 0);
+  const maxDim = Math.max(...dimValidos, 1);
+  const rangoDim = (maxDim - minDim) || (minDim * 0.05) || 1;
+  const maxAlc = Math.max(...alcanceValidos, 1);
+  const minAlc = Math.min(...alcanceValidos, 0);
+  const rangoAlc = (maxAlc - minAlc) || 1;
+
+  // Barras: banda baja del área — minDim cae en ~8% de altura, maxDim en ~38%.
+  const spanDim = rangoDim / 0.30;
+  const yMinBarras = minDim - spanDim * 0.08;
+  const yMaxBarras = yMinBarras + spanDim;
+  // Línea: banda alta del área — minAlc en ~65%, maxAlc en ~95%.
+  const spanAlc = rangoAlc / 0.30;
+  const y1Min = minAlc - spanAlc * 0.65;
+  const y1Max = y1Min + spanAlc;
+
+  const COLOR_AUMENTO = '#1E8449';
+  const COLOR_REDUCCION = '#ba1a1a';
+
+  const dibujarEtiquetas = (chart) => {
+    const c = chart.ctx;
+    const metaBarras = chart.getDatasetMeta(0);
+    const metaLinea = chart.getDatasetMeta(1);
+    metaBarras.data.forEach((barra, i) => {
+      const valor = dimensionados[i];
+      if (!valor) return;
+      c.save();
+      c.font = "bold 9px 'Gordita', sans-serif";
+      c.fillStyle = color;
+      c.textAlign = 'center';
+      c.fillText(Math.round(valor).toLocaleString('es-MX'), barra.x, barra.y - 6);
+      c.restore();
+
+      const anterior = i > 0 ? dimensionados[i - 1] : null;
+      if (anterior !== null && anterior !== undefined && anterior !== 0 && valor !== anterior) {
+        const delta = valor - anterior;
+        const sube = delta > 0;
+        c.save();
+        c.font = "bold 9px 'Gordita', sans-serif";
+        c.fillStyle = sube ? COLOR_AUMENTO : COLOR_REDUCCION;
+        c.textAlign = 'center';
+        c.fillText((sube ? '▲ +' : '▼ ') + Math.round(delta).toLocaleString('es-MX'), barra.x, barra.y - 18);
+        c.restore();
+      }
+    });
+    metaLinea.data.forEach((punto, i) => {
+      const pct = alcance[i];
+      if (pct === null || pct === undefined) return;
+      const texto1 = pct.toFixed(1) + '%';
+      const texto2 = '(' + Math.round(realizados[i]).toLocaleString('es-MX') + ')';
+      const yCaja = punto.y - 34;
+      c.save();
+      c.font = "bold 9px 'Gordita', sans-serif";
+      const ancho = Math.max(c.measureText(texto1).width, c.measureText(texto2).width);
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      c.fillRect(punto.x - ancho / 2 - 3, yCaja, ancho + 6, 22);
+      c.fillStyle = color;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(texto1, punto.x, yCaja + 7);
+      c.font = "8px 'Gordita', sans-serif";
+      c.fillText(texto2, punto.x, yCaja + 16);
+      c.restore();
+    });
+  };
+
+  window[refGrafica] = new Chart(ctx, {
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { type: 'bar', label: 'Dimensionados', data: dimensionados, backgroundColor: color, yAxisID: 'y', maxBarThickness: 44, categoryPercentage: 0.6, barPercentage: 0.9 },
+        { type: 'line', label: '% Alcance', data: alcance, borderColor: color, backgroundColor: color, yAxisID: 'y1', tension: 0.3, borderWidth: 2, pointRadius: 3, pointBackgroundColor: color, spanGaps: true },
+        ...(ingresoSerie ? [{ type: 'line', label: 'Ingreso', data: ingresoSerie, borderColor: '#1E8449', backgroundColor: '#1E8449', yAxisID: 'y2', tension: 0.3, borderWidth: 2, borderDash: [5, 3], pointRadius: 3, pointBackgroundColor: '#1E8449', spanGaps: true }] : []),
+        ...(hcSerie ? [{ type: 'line', label: 'HC Firmadas Promedio', data: hcSerie, borderColor: '#984700', backgroundColor: '#984700', yAxisID: 'y3', tension: 0.3, borderWidth: 2, borderDash: [2, 2], pointRadius: 3, pointBackgroundColor: '#984700', spanGaps: true }] : []),
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 48 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: "'Gordita', sans-serif" }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: "'Gordita', sans-serif", weight: 'bold' }, bodyFont: { family: "'Gordita', sans-serif" },
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.yAxisID === 'y1') return c.dataset.label + ': ' + (c.parsed.y === null ? '—' : c.parsed.y.toFixed(1) + '%');
+              if (c.dataset.yAxisID === 'y2') return c.dataset.label + ': ' + (c.parsed.y === null ? '—' : formatoMoneda(c.parsed.y));
+              if (c.dataset.yAxisID === 'y3') return c.dataset.label + ': ' + (c.parsed.y === null ? '—' : c.parsed.y.toFixed(0));
+              const realizado = realizados[c.dataIndex];
+              return [c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString('es-MX'), 'Realizados: ' + (realizado === null || realizado === undefined ? '—' : Math.round(realizado).toLocaleString('es-MX'))];
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" } } },
+        y: { display: false, min: yMinBarras, max: yMaxBarras },
+        y1: { display: false, min: y1Min, max: y1Max },
+        y2: { display: false, beginAtZero: true },
+        y3: { display: false, beginAtZero: true },
+      },
+    },
+    plugins: [{ id: 'etiquetasComboTendencias' + canvasId, afterDatasetsDraw: dibujarEtiquetas }],
+  });
+}
+
+function etiquetasMeses() {
+  return TENDENCIAS_MESES.map((m) => MESES_ABREV[Number(m.slice(5, 7)) - 1] + '-' + m.slice(2, 4));
+}
+
+function seleccionarDistritoTendencia(distrito) {
+  tendDistritoSeleccionado = distrito;
+  const datos = TENDENCIAS_DATOS[tendPoliza][distrito];
+  const color = COLOR_POLIZA[tendPoliza];
+  const etiquetas = etiquetasMeses();
+
+  document.getElementById('tend-detalle-modal').style.display = 'flex';
+  document.getElementById('tend-detalle-nombre').textContent = nombreCortoDistrito(distrito);
+  document.getElementById('tend-detalle-poliza').textContent = NOMBRE_POLIZA_CORTO[tendPoliza];
+
+  const sumaDim = datos.dimensionados.reduce((s, v) => s + (v || 0), 0);
+  const sumaRea = datos.realizados.reduce((s, v) => s + (v || 0), 0);
+  document.getElementById('tend-detalle-kpi-dim').textContent = Math.round(sumaDim).toLocaleString('es-MX');
+  document.getElementById('tend-detalle-kpi-rea').textContent = Math.round(sumaRea).toLocaleString('es-MX');
+  document.getElementById('tend-detalle-kpi-alcance').textContent = sumaDim > 0 ? ((sumaRea / sumaDim) * 100).toFixed(1) + '%' : '—';
+
+  const alcancePorMesValido = datos.alcance.map((v, i) => ({ v, i })).filter((x) => x.v !== null && x.v !== undefined);
+  if (alcancePorMesValido.length) {
+    const mejor = alcancePorMesValido.reduce((a, b) => (b.v > a.v ? b : a));
+    const peor = alcancePorMesValido.reduce((a, b) => (b.v < a.v ? b : a));
+    document.getElementById('tend-detalle-kpi-mejor').textContent = etiquetas[mejor.i] + ': ' + mejor.v.toFixed(0) + '%';
+    document.getElementById('tend-detalle-kpi-peor').textContent = etiquetas[peor.i] + ': ' + peor.v.toFixed(0) + '%';
+  } else {
+    document.getElementById('tend-detalle-kpi-mejor').textContent = '—';
+    document.getElementById('tend-detalle-kpi-peor').textContent = '—';
+  }
+
+  const hcDistrito = (HC_FIRMADO_DATOS[tendPoliza] || {})[distrito];
+  const hayHc = hcDistrito && hcDistrito.some((v) => v !== null);
+  renderizarGraficaComboTendencias('tend-grafica-detalle', 'graficaTendDetalle', etiquetas, datos.dimensionados, datos.realizados, datos.alcance, color, hayHc ? { hc: hcDistrito } : undefined);
+
+  // Meses en columnas, concepto en filas — mismo criterio que la tabla de ranking general.
+  document.getElementById('tend-detalle-tabla-encabezado').innerHTML = '<th class="px-4 py-2.5">Concepto</th>' +
+    etiquetas.map((etiqueta) => `<th class="px-3 py-2.5 text-right">${etiqueta}</th>`).join('');
+
+  const filaDimensionados = `<tr>
+    <td class="px-4 py-2 font-gordita-bold">Folios Dimensionados</td>
+    ${datos.dimensionados.map((v) => `<td class="px-3 py-2 text-right">${Math.round(v || 0).toLocaleString('es-MX')}</td>`).join('')}
+  </tr>`;
+  const filaRealizados = `<tr>
+    <td class="px-4 py-2 font-gordita-bold">Folios Realizados</td>
+    ${datos.realizados.map((v) => `<td class="px-3 py-2 text-right">${v === null || v === undefined ? '—' : Math.round(v).toLocaleString('es-MX')}</td>`).join('')}
+  </tr>`;
+  const filaAlcance = `<tr>
+    <td class="px-4 py-2 font-gordita-bold">% Alcance</td>
+    ${datos.alcance.map((v) => {
+      const clase = v === null || v === undefined ? '' : v >= 95 ? 'text-qiora-green' : v >= 80 ? '' : 'text-error';
+      return `<td class="px-3 py-2 text-right font-gordita-bold ${clase}">${v === null || v === undefined ? '—' : v.toFixed(1) + '%'}</td>`;
+    }).join('')}
+  </tr>`;
+
+  document.getElementById('tend-detalle-tabla').innerHTML = filaDimensionados + filaRealizados + filaAlcance;
+}
+
+function cerrarDetalleTendencia() {
+  document.getElementById('tend-detalle-modal').style.display = 'none';
+  tendDistritoSeleccionado = null;
+}
+
+function renderizarTendencias() {
+  const datos = TENDENCIAS_DATOS[tendPoliza];
+  const distritos = Object.keys(datos);
+  const color = COLOR_POLIZA[tendPoliza];
+
+  let sumaDimensionados = 0, sumaRealizados = 0;
+  const dimensionadosPorMes = TENDENCIAS_MESES.map(() => 0);
+  const realizadosPorMes = TENDENCIAS_MESES.map(() => 0);
+  const alcancePorMes = TENDENCIAS_MESES.map((_, i) => {
+    let dim = 0, rea = 0;
+    distritos.forEach((d) => {
+      const vd = datos[d].dimensionados[i], vr = datos[d].realizados[i];
+      if (vd) { dim += vd; if (vr !== null && vr !== undefined) rea += vr; }
+    });
+    dimensionadosPorMes[i] = dim;
+    realizadosPorMes[i] = rea;
+    return dim > 0 ? (rea / dim) * 100 : null;
+  });
+  distritos.forEach((d) => {
+    datos[d].dimensionados.forEach((v) => { sumaDimensionados += v || 0; });
+    datos[d].realizados.forEach((v) => { if (v !== null && v !== undefined) sumaRealizados += v; });
+  });
+
+  document.getElementById('tend-gauge-label').textContent = 'Alcance ' + NOMBRE_POLIZA_CORTO[tendPoliza];
+  document.getElementById('tend-gauge-label').style.color = color;
+  document.getElementById('tend-kpi-dimensionados').textContent = Math.round(sumaDimensionados).toLocaleString('es-MX');
+  document.getElementById('tend-kpi-realizados').textContent = Math.round(sumaRealizados).toLocaleString('es-MX');
+  renderizarGraficaGaugeAlcance('tend-gauge', 'graficaTendGauge', sumaDimensionados > 0 ? (sumaRealizados / sumaDimensionados) * 100 : null, color);
+
+  const hcPorMesPoliza = TENDENCIAS_MESES.map((_, i) => Object.keys(HC_FIRMADO_DATOS[tendPoliza] || {}).reduce((s, d) => s + (HC_FIRMADO_DATOS[tendPoliza][d][i] || 0), 0));
+  renderizarGraficaComboTendencias('tend-grafica-combo', 'graficaTendCombo', etiquetasMeses(), dimensionadosPorMes, realizadosPorMes, alcancePorMes, color, { hc: hcPorMesPoliza });
+
+  if (tendDistritoSeleccionado && datos[tendDistritoSeleccionado]) {
+    seleccionarDistritoTendencia(tendDistritoSeleccionado);
+  } else {
+    document.getElementById('tend-detalle-modal').style.display = 'none';
+  }
+
+  renderizarTendenciasTabla();
+}
+
+// Resumen "as of today" de las 3 pólizas juntas — pensado para alguien que abre el archivo por
+// primera vez y quiere entender en 5 segundos cómo va cada póliza en precio/folios/ingreso, sin
+// tener que interpretar las gráficas de detalle de abajo.
+function renderizarResumenOperaciones() {
+  const etiquetas = etiquetasMeses();
+  const ultimo = etiquetas.length - 1;
+  document.getElementById('resumen-op-subtitulo').textContent =
+    etiquetas[ultimo] + ' 2026 (último mes con folios realizados) vs. ' + etiquetas[ultimo - 1] + ', comparando las 3 pólizas.';
+
+  const flechaPct = (v) => {
+    if (v === null || v === undefined || v === 0) return '<span class="text-on-surface-variant">Sin cambio</span>';
+    return v > 0
+      ? '<span class="text-qiora-green">▲ +' + v.toFixed(1) + '%</span>'
+      : '<span class="text-error">▼ ' + v.toFixed(1) + '%</span>';
+  };
+  const flechaAbs = (v) => {
+    if (v === null || v === undefined || v === 0) return '<span class="text-on-surface-variant">Sin cambio</span>';
+    return v > 0
+      ? '<span class="text-qiora-green">▲ +' + Math.round(v) + '</span>'
+      : '<span class="text-error">▼ ' + Math.round(v) + '</span>';
+  };
+
+  // Planta Interna NO tiene un precio único: Guadalajara, Morelia y el resto pagan tarifas reales
+  // distintas (parámetro real de poliza_parametros, no un promedio) — promediarlas escondería esa
+  // diferencia, así que su tarjeta muestra los 3 montos reales en vez de una sola "Precio Efectivo".
+  const bloquePrecioPI = `<div class="grid grid-cols-3 gap-2 mb-3 text-center">
+    ${PRECIO_PI_POR_TIPO.map((t) => `<div class="bg-surface-container-low rounded-lg py-2">
+      <p class="text-[8px] text-on-surface-variant uppercase tracking-wide leading-tight">${t.label}</p>
+      <p class="font-gordita-bold text-sm">${formatoMoneda(t.precio)}</p>
+    </div>`).join('')}
+  </div>`;
+
+  document.getElementById('resumen-op-cards').innerHTML = ['PLANTA INTERNA', 'RECOLECCIONES', 'MULTIDISTRITO'].map((p) => {
+    const r = RESUMEN_POLIZAS[p];
+    const color = COLOR_POLIZA[p];
+    const esPI = p === 'PLANTA INTERNA';
+    const bloqueMetricas = esPI
+      ? `<div class="grid grid-cols-3 gap-y-3 gap-x-2 text-center">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Folios Dim.</p><p class="font-gordita-bold text-sm">${Math.round(r.dimensionados).toLocaleString('es-MX')}</p><p class="text-[10px]">${flechaPct(r.deltaFoliosPct)}</p></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">% Alcance</p><p class="font-gordita-bold text-sm">${r.alcance === null || r.alcance === undefined ? '—' : r.alcance.toFixed(1) + '%'}</p></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ingreso (fórmula)</p><p class="font-gordita-bold text-sm">${formatoCompactoSimple(r.ingreso)}</p><p class="text-[10px]">${flechaPct(r.deltaIngresoPct)}</p></div>
+        </div>`
+      : `<div class="grid grid-cols-2 gap-y-3 gap-x-2 text-center">
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Precio Efectivo</p><p class="font-gordita-bold text-sm">${formatoMoneda(r.precioEfectivo)}</p></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Folios Dim.</p><p class="font-gordita-bold text-sm">${Math.round(r.dimensionados).toLocaleString('es-MX')}</p><p class="text-[10px]">${flechaPct(r.deltaFoliosPct)}</p></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">% Alcance</p><p class="font-gordita-bold text-sm">${r.alcance === null || r.alcance === undefined ? '—' : r.alcance.toFixed(1) + '%'}</p></div>
+          <div><p class="text-[9px] text-on-surface-variant uppercase tracking-wide">Ingreso (fórmula)</p><p class="font-gordita-bold text-sm">${formatoCompactoSimple(r.ingreso)}</p><p class="text-[10px]">${flechaPct(r.deltaIngresoPct)}</p></div>
+        </div>`;
+    return `<div class="border border-outline-variant rounded-lg p-4">
+      <p class="font-gordita-bold text-xs uppercase tracking-wide mb-3" style="color:${color};">${NOMBRE_POLIZA_CORTO[p]}</p>
+      ${esPI ? bloquePrecioPI : ''}
+      ${bloqueMetricas}
+      <div class="border-t border-outline-variant mt-3 pt-2 text-center">
+        <p class="text-[9px] text-on-surface-variant uppercase tracking-wide">HC Firmadas Promedio</p>
+        <p class="font-gordita-bold text-sm">${Math.round(r.hcFirmado).toLocaleString('es-MX')} <span class="text-[10px] font-gordita-regular">${flechaAbs(r.deltaHc)}</span></p>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderizarGraficaComboTendencias(
+    'tend-grafica-combinado', 'graficaTendCombinado', etiquetas,
+    COMBINADO_POLIZAS.dimensionados, COMBINADO_POLIZAS.realizados, COMBINADO_POLIZAS.alcance,
+    '#1B4F72', { ingreso: COMBINADO_POLIZAS.ingreso },
+  );
+}
+
+// ============================================================================
+// Ingresos y Tendencia de Cierre — ingreso mensual real 2024/2025/2026 (folios
+// dimensionados x precio, toda la empresa), desde poliza_parametros y
+// multidistrito_bolsas.
+// ============================================================================
+
+function formatoCompactoSimple(v) { return formatoCompacto(v); }
+
+let graficaIngresoTendencia = null;
+function renderizarIngresos() {
+  // Ancla fija en julio (índice 6) — igual que calcularAnclaIndexPorFecha, no depende de la fecha
+  // real en la que se abra el archivo.
+  const anclaIndex2026 = 6;
+
+  const total2024 = INGRESO_POR_ANIO['2024'].reduce((s, v) => s + v, 0);
+  const total2025 = INGRESO_POR_ANIO['2025'].reduce((s, v) => s + v, 0);
+  const total2026 = INGRESO_POR_ANIO['2026'].reduce((s, v) => s + v, 0);
+  const ytd2026 = INGRESO_POR_ANIO['2026'].slice(0, anclaIndex2026 + 1).reduce((s, v) => s + v, 0);
+
+  document.getElementById('ing-kpi-2024').textContent = formatoCompactoSimple(total2024);
+  document.getElementById('ing-kpi-2025').textContent = formatoCompactoSimple(total2025);
+  document.getElementById('ing-kpi-2025-yoy').textContent = ((total2025 / total2024 - 1) * 100).toFixed(1) + '% vs. 2024';
+  document.getElementById('ing-kpi-2026').textContent = formatoCompactoSimple(total2026);
+  document.getElementById('ing-kpi-2026-yoy').textContent = ((total2026 / total2025 - 1) >= 0 ? '+' : '') + ((total2026 / total2025 - 1) * 100).toFixed(1) + '% vs. 2025';
+  document.getElementById('ing-kpi-ytd').textContent = formatoCompactoSimple(ytd2026);
+
+  const serie2026Real = INGRESO_POR_ANIO['2026'].map((v, i) => (i <= anclaIndex2026 ? v : null));
+  const serie2026Pendiente = INGRESO_POR_ANIO['2026'].map((v, i) => (i >= anclaIndex2026 ? v : null));
+
+  const ctx = document.getElementById('ing-grafica-tendencia');
+  if (graficaIngresoTendencia) graficaIngresoTendencia.destroy();
+  graficaIngresoTendencia = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES_ABREV.map((m) => m),
+      datasets: [
+        { label: '2024', data: INGRESO_POR_ANIO['2024'], borderColor: '#7e7576', backgroundColor: 'transparent', fill: false, tension: 0.3, borderWidth: 2, pointRadius: 2 },
+        { label: '2025', data: INGRESO_POR_ANIO['2025'], borderColor: '#2E86C1', backgroundColor: 'transparent', fill: false, tension: 0.3, borderWidth: 2, pointRadius: 2 },
+        { label: '2026 (real)', data: serie2026Real, borderColor: '#1E8449', backgroundColor: 'transparent', fill: false, tension: 0.3, borderWidth: 3, spanGaps: true, pointRadius: 3, pointBackgroundColor: '#1E8449', pointBorderColor: '#ffffff', pointBorderWidth: 2 },
+        { label: '2026 (ya fijado)', data: serie2026Pendiente, borderColor: '#1E8449', backgroundColor: 'transparent', fill: false, tension: 0.3, borderWidth: 3, borderDash: [6, 4], spanGaps: true, pointRadius: 3, pointBackgroundColor: '#1E8449', pointBorderColor: '#ffffff', pointBorderWidth: 2 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { family: "'Gordita', sans-serif" }, boxWidth: 10 } },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: "'Gordita', sans-serif", weight: 'bold' }, bodyFont: { family: "'Gordita', sans-serif" },
+          callbacks: { label: (c) => c.dataset.label + ': ' + formatoMoneda(c.parsed.y) },
+        },
+      },
+      scales: {
+        y: { grid: { color: '#f3f3f3' }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" }, callback: (v) => formatoCompactoSimple(v) } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" } } },
+      },
+    },
+  });
+}
+
+function celdaVariacionPresupuesto(nombre, diff, colorClase) {
+  return `<div class="flex items-center justify-between text-xs">
+    <span class="font-gordita-bold truncate">${nombre}</span>
+    <span class="font-gordita-bold ${colorClase} shrink-0 ml-2">${diff >= 0 ? '+' : ''}${formatoCompactoSimple(diff)}</span>
+  </div>`;
+}
+
+function celdaRankingCompleta(v, colorClase) {
+  return `<div>
+    <div class="flex items-center justify-between text-xs mb-0.5">
+      <span class="font-gordita-bold truncate">${v.categoria}</span>
+      <span class="font-gordita-bold ${colorClase} shrink-0 ml-2">${v.diff >= 0 ? '+' : ''}${formatoCompactoSimple(v.diff)}</span>
+    </div>
+    <p class="text-[10px] text-on-surface-variant">Real ${formatoCompactoSimple(v.real)} · Ppto ${formatoCompactoSimple(v.ppto)}</p>
+  </div>`;
+}
+
+const PPTO_RANKING_LIMITE = 8;
+let pptoRankingExpandido = { sobre: false, bajo: false };
+
+function mostrarMasRanking(lado) {
+  pptoRankingExpandido[lado] = true;
+  renderizarRankingPresupuesto();
+}
+
+function renderizarRankingPresupuesto() {
+  const render = (lado, datos, colorClase) => {
+    const expandido = pptoRankingExpandido[lado];
+    const visibles = expandido ? datos : datos.slice(0, PPTO_RANKING_LIMITE);
+    document.getElementById('ppto-ranking-' + lado).innerHTML = visibles.map((v) => celdaRankingCompleta(v, colorClase)).join('');
+    const boton = document.getElementById('ppto-ranking-' + lado + '-boton');
+    const restantes = datos.length - PPTO_RANKING_LIMITE;
+    if (!expandido && restantes > 0) {
+      boton.style.display = 'block';
+      boton.textContent = '▼ Ver ' + restantes + ' más';
+    } else {
+      boton.style.display = 'none';
+    }
+  };
+  render('sobre', PPTO_RANKING_SOBRE, 'text-error');
+  render('bajo', PPTO_RANKING_BAJO, 'text-qiora-green');
+}
+
+function toggleTablaMensualPresupuesto() {
+  const contenido = document.getElementById('ppto-tabla-mensual-contenido');
+  const chevron = document.getElementById('ppto-tabla-mensual-chevron');
+  const abierto = contenido.style.display !== 'none';
+  contenido.style.display = abierto ? 'none' : 'block';
+  chevron.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function seleccionarFamiliaPresupuesto(id) {
+  const f = FAMILIAS_CLAVE_PRESUPUESTO.find((x) => x.id === id);
+  if (!f) return;
+  document.getElementById('ppto-familia-nombre').textContent = f.label;
+  document.getElementById('ppto-familia-kpi-real').textContent = formatoCompactoSimple(f.real);
+  document.getElementById('ppto-familia-kpi-ppto').textContent = formatoCompactoSimple(f.ppto);
+  const elVar = document.getElementById('ppto-familia-kpi-var');
+  elVar.textContent = (f.diff >= 0 ? '+' : '') + formatoCompactoSimple(f.diff);
+  elVar.classList.toggle('text-error', f.diff > 0);
+  elVar.classList.toggle('text-qiora-green', f.diff <= 0);
+
+  document.getElementById('ppto-familia-tabla').innerHTML = f.porDistrito.map((d) => {
+    const clase = d.diff > 0 ? 'text-error' : d.diff < 0 ? 'text-qiora-green' : '';
+    return `<tr>
+      <td class="px-4 py-2 font-gordita-bold">${d.nombre}</td>
+      <td class="px-3 py-2 text-right">${formatoCompactoSimple(d.real)}</td>
+      <td class="px-3 py-2 text-right">${formatoCompactoSimple(d.ppto)}</td>
+      <td class="px-3 py-2 text-right font-gordita-bold ${clase}">${d.diff >= 0 ? '+' : ''}${formatoCompactoSimple(d.diff)}</td>
+    </tr>`;
+  }).join('') || '<tr><td class="px-4 py-2 text-on-surface-variant" colspan="4">Sin desglose por sucursal disponible.</td></tr>';
+
+  document.getElementById('ppto-familia-modal').style.display = 'flex';
+}
+
+function cerrarFamiliaPresupuesto() {
+  document.getElementById('ppto-familia-modal').style.display = 'none';
+}
+
+let graficaPresupuestoTendencia = null;
+function renderizarPresupuesto() {
+  const ingresoRealYtd = PPTO_INGRESO_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const ingresoPptoYtd = PPTO_INGRESO_PPTO_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const gastoRealYtd = PPTO_GASTO_REAL_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const gastoPptoYtd = PPTO_GASTO_PPTO_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const utilidadRealYtd = ingresoRealYtd - gastoRealYtd;
+  const utilidadPptoYtd = ingresoPptoYtd - gastoPptoYtd;
+
+  const pintarKpi = (prefijo, real, ppto, positivoEsBueno) => {
+    document.getElementById(prefijo + '-ppto').textContent = formatoCompactoSimple(ppto);
+    document.getElementById(prefijo + '-real').textContent = formatoCompactoSimple(real);
+    const varPct = ppto !== 0 ? ((real / ppto) - 1) * 100 : 0;
+    const elVar = document.getElementById(prefijo + '-var');
+    elVar.textContent = (varPct >= 0 ? '+' : '') + varPct.toFixed(1) + '%';
+    const esBueno = positivoEsBueno ? varPct >= 0 : varPct <= 0;
+    elVar.classList.toggle('text-qiora-green', esBueno);
+    elVar.classList.toggle('text-error', !esBueno);
+  };
+  pintarKpi('ppto-kpi-ingreso', ingresoRealYtd, ingresoPptoYtd, true);
+  pintarKpi('ppto-kpi-gasto', gastoRealYtd, gastoPptoYtd, false);
+  pintarKpi('ppto-kpi-utilidad', utilidadRealYtd, utilidadPptoYtd, true);
+
+  // Rolling Forecast: real donde ya hay dato (ene-ago) + presupuesto en los meses que faltan.
+  const ingresoRfAnual = PPTO_INGRESO_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0)
+    + PPTO_INGRESO_PPTO_MENSUAL.slice(PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const gastoRfAnual = PPTO_GASTO_REAL_MENSUAL.slice(0, PPTO_MESES_REALES).reduce((s, v) => s + v, 0)
+    + PPTO_GASTO_PPTO_MENSUAL.slice(PPTO_MESES_REALES).reduce((s, v) => s + v, 0);
+  const utilidadRfAnual = ingresoRfAnual - gastoRfAnual;
+  const ingresoPptoAnual = PPTO_INGRESO_PPTO_MENSUAL.reduce((s, v) => s + v, 0);
+  const gastoPptoAnual = PPTO_GASTO_PPTO_MENSUAL.reduce((s, v) => s + v, 0);
+  const utilidadPptoAnual = ingresoPptoAnual - gastoPptoAnual;
+  pintarKpi('ppto-rf-ingreso', ingresoRfAnual, ingresoPptoAnual, true);
+  pintarKpi('ppto-rf-gasto', gastoRfAnual, gastoPptoAnual, false);
+  pintarKpi('ppto-rf-utilidad', utilidadRfAnual, utilidadPptoAnual, true);
+
+  const serieGastoReal = PPTO_GASTO_REAL_MENSUAL.map((v, i) => (i < PPTO_MESES_REALES ? v : null));
+
+  const ctx = document.getElementById('ppto-grafica-tendencia');
+  if (graficaPresupuestoTendencia) graficaPresupuestoTendencia.destroy();
+  graficaPresupuestoTendencia = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: MESES_ABREV,
+      datasets: [
+        { type: 'line', label: 'Real', data: serieGastoReal, borderColor: '#1B4F72', backgroundColor: 'transparent', fill: false, tension: 0.3, borderWidth: 3, spanGaps: false, pointRadius: 4, pointBackgroundColor: '#1B4F72', pointBorderColor: '#ffffff', pointBorderWidth: 2, order: 1 },
+        { type: 'bar', label: 'Presupuestado', data: PPTO_GASTO_PPTO_MENSUAL, backgroundColor: '#cfc4c5', maxBarThickness: 36, order: 2 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { family: "'Gordita', sans-serif" }, boxWidth: 10 } },
+        tooltip: {
+          backgroundColor: '#1b1b1b', padding: 10,
+          titleFont: { family: "'Gordita', sans-serif", weight: 'bold' }, bodyFont: { family: "'Gordita', sans-serif" },
+          callbacks: { label: (c) => c.dataset.label + ': ' + (c.parsed.y === null ? '—' : formatoMoneda(c.parsed.y)) },
+        },
+      },
+      scales: {
+        y: { grid: { color: '#f3f3f3' }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" }, callback: (v) => formatoCompactoSimple(v) } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Gordita', sans-serif" } } },
+      },
+    },
+  });
+
+  // Tabla mensual completa (12 meses)
+  document.getElementById('ppto-tabla-mensual-body').innerHTML = PPTO_TABLA_MENSUAL.map((m, i) => {
+    const varUtil = m.utilR !== null ? m.utilR - m.utilP : null;
+    const claseVar = varUtil === null ? '' : varUtil >= 0 ? 'text-qiora-green' : 'text-error';
+    const claseFila = m.ingR === null ? 'pronostico-celda' : '';
+    return `<tr class="${claseFila}">
+      <td class="px-4 py-2 font-gordita-bold">${MESES_ABREV[i]}-26</td>
+      <td class="px-3 py-2 text-right">${m.ingR === null ? '—' : formatoCompactoSimple(m.ingR)}</td>
+      <td class="px-3 py-2 text-right">${formatoCompactoSimple(m.ingP)}</td>
+      <td class="px-3 py-2 text-right">${m.gasR === null ? '—' : formatoCompactoSimple(m.gasR)}</td>
+      <td class="px-3 py-2 text-right">${formatoCompactoSimple(m.gasP)}</td>
+      <td class="px-3 py-2 text-right">${m.utilR === null ? '—' : formatoCompactoSimple(m.utilR)}</td>
+      <td class="px-3 py-2 text-right">${formatoCompactoSimple(m.utilP)}</td>
+      <td class="px-3 py-2 text-right font-gordita-bold ${claseVar}">${varUtil === null ? '—' : (varUtil >= 0 ? '+' : '') + formatoCompactoSimple(varUtil)}</td>
+    </tr>`;
+  }).join('');
+
+  // Familias de gasto clave — nacional, cada una clicable para ver su desglose por sucursal.
+  document.getElementById('ppto-familias-clave').innerHTML = FAMILIAS_CLAVE_PRESUPUESTO.map((f) => {
+    const clase = f.diff > 0 ? 'text-error' : f.diff < 0 ? 'text-qiora-green' : 'text-on-surface-variant';
+    return `<button onclick="seleccionarFamiliaPresupuesto('${f.id}')" class="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-surface-container-low transition-colors">
+      <span class="text-sm font-gordita-bold">${f.label}</span>
+      <span class="flex items-center gap-4 text-xs text-on-surface-variant shrink-0">
+        <span>Real <span class="font-gordita-bold text-on-surface">${formatoCompactoSimple(f.real)}</span></span>
+        <span>Ppto <span class="font-gordita-bold text-on-surface">${formatoCompactoSimple(f.ppto)}</span></span>
+        <span class="font-gordita-bold ${clase} w-24 text-right">${f.diff >= 0 ? '+' : ''}${formatoCompactoSimple(f.diff)}</span>
+        <span class="material-symbols-outlined text-on-surface-variant/50">chevron_right</span>
+      </span>
+    </button>`;
+  }).join('');
+
+  renderizarRankingPresupuesto();
+}
+
+function cambiarTabPrincipal(tab) {
+  document.querySelectorAll('.tab-contenido').forEach((el) => {
+    el.classList.toggle('activa', el.id === 'tab-' + tab);
+  });
+  document.querySelectorAll('.tab-boton').forEach((btn) => {
+    btn.classList.toggle('activa', btn.dataset.tab === tab);
+  });
+}
+
+function toggleMatriz() {
+  const contenido = document.getElementById('matriz-contenido');
+  const chevron = document.getElementById('matriz-chevron');
+  const abierto = contenido.style.display !== 'none';
+  contenido.style.display = abierto ? 'none' : 'block';
+  chevron.style.transform = abierto ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
+// Chart.js dibuja de inmediato al cargar la página; si la fuente Gordita (cargada por @font-face)
+// todavía no terminó de descargar, el canvas rasteriza el texto con la fuente de reemplazo del
+// navegador y no se vuelve a redibujar solo cuando la fuente llega — por eso las etiquetas de la
+// gráfica se veían con otra tipografía aunque el resto de la página sí usa Gordita. Se espera a
+// document.fonts.ready antes de la primera renderización para evitar la condición de carrera.
+cambiarTabPrincipal('simulador');
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    cambiarPoliza(poliza);
+    renderizarResumenOperaciones();
+    cambiarPolizaTendencias(tendPoliza);
+    cambiarModoTendencias(tendModo);
+    renderizarIngresos();
+    renderizarPresupuesto();
+  });
+} else {
+  cambiarPoliza(poliza);
+  renderizarResumenOperaciones();
+  cambiarPolizaTendencias(tendPoliza);
+  cambiarModoTendencias(tendModo);
+  renderizarIngresos();
+  renderizarPresupuesto();
+}
+</script>
+</body>
+</html>

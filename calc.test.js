@@ -409,6 +409,64 @@ test('calcularIngresosDistrito suma las 3 polizas en un solo objeto', () => {
   assert.strictEqual(resultado.total, 475 * 4245 + 250 * 100 + 1500 * 613);
 });
 
+test('clasificarIngreso asigna bucket POLIZA * y deja "otros" para el resto de categorías', () => {
+  const glosarioMap = { 'CTA-TPI-INT-LON LEON': { sucursal_secundaria: 'CTA-TPI-INT-LON LEON' } };
+  const poliza = Calc.clasificarIngreso({ sucursal: 'CTA-TPI-INT-LON LEON', gasto: 'POLIZA PLANTA INTERNA', subtotal: 100 }, glosarioMap);
+  assert.strictEqual(poliza.bucket, 'plantaInterna');
+  assert.strictEqual(poliza.sucursal_secundaria, 'CTA-TPI-INT-LON LEON');
+
+  const otro = Calc.clasificarIngreso({ sucursal: 'CTA-TPI-INT-LON LEON', gasto: 'VENTA TECNICO', subtotal: 50 }, glosarioMap);
+  assert.strictEqual(otro.bucket, 'otros');
+
+  const sinGlosario = Calc.clasificarIngreso({ sucursal: 'CTA-TPI-MLT-LON MLT LEON', gasto: 'POLIZA MULTIDISTRITO', subtotal: 20 }, glosarioMap);
+  assert.strictEqual(sinGlosario.sucursal_secundaria, null);
+});
+
+test('calcularIngresosDistrito usa el ingreso real del mes cuando existe, en vez de la fórmula', () => {
+  const datos = {
+    polizaParametros: [
+      { poliza: 'PLANTA INTERNA', distrito: 'CTA-TPI-INT-LON LEON', precio_por_orden: 475, ordenes_dimensionadas: 4245, vigente_desde: '2026-01-01' },
+    ],
+    multidistritoBolsas: [],
+    hcAutorizado: [],
+    todosLosDistritos: ['CTA-TPI-INT-LON LEON'],
+    regionPorDistrito: { 'CTA-TPI-INT-LON LEON': 'BAJIO' },
+    ingresosRealesPorMes: {
+      '2026-03-01': [
+        { sucursal_secundaria: 'CTA-TPI-INT-LON LEON', bucket: 'plantaInterna', monto: 999 },
+        { sucursal_secundaria: 'CTA-TPI-INT-LON LEON', bucket: 'otros', monto: 50 },
+        { sucursal_secundaria: null, bucket: 'otros', monto: 777 }, // sucursal sin glosario, no cuenta para este distrito
+      ],
+    },
+  };
+  const resultado = Calc.calcularIngresosDistrito(datos, 'CTA-TPI-INT-LON LEON', 'BAJIO', '2026-03-01');
+  assert.strictEqual(resultado.esReal, true);
+  assert.strictEqual(resultado.plantaInterna, 999);
+  assert.strictEqual(resultado.otros, 50);
+  assert.strictEqual(resultado.total, 1049);
+
+  // Un mes sin dato real cargado (pero con parámetro vigente) sigue usando la fórmula de siempre.
+  const resultadoFormula = Calc.calcularIngresosDistrito(datos, 'CTA-TPI-INT-LON LEON', 'BAJIO', '2026-04-01');
+  assert.strictEqual(resultadoFormula.esReal, false);
+  assert.strictEqual(resultadoFormula.plantaInterna, 475 * 4245);
+});
+
+test('calcularIngresosGeneralMes no pierde ingreso real de sucursales sin distrito mapeado (a diferencia de sumar por distrito)', () => {
+  const datos = {
+    todosLosDistritos: ['CTA-TPI-INT-LON LEON'],
+    regionPorDistrito: { 'CTA-TPI-INT-LON LEON': 'BAJIO' },
+    ingresosRealesPorMes: {
+      '2026-03-01': [
+        { sucursal_secundaria: 'CTA-TPI-INT-LON LEON', bucket: 'plantaInterna', monto: 999 },
+        { sucursal_secundaria: null, bucket: 'otros', monto: 777 }, // ej. sucursal "MLT" aún sin registrar en el glosario
+      ],
+    },
+  };
+  const resultado = Calc.calcularIngresosGeneralMes(datos, '2026-03-01');
+  assert.strictEqual(resultado.total, 999 + 777);
+  assert.strictEqual(resultado.otros, 777);
+});
+
 test('calcularRentabilidadDistritoMes calcula utilidad bruta y de operación restando costo directo y gasto operativo asignado', () => {
   const glosarioMap = {
     'DIST-A': { region: 'BAJIO', sucursal_secundaria: 'DIST-A', tipo_gasto: 'COSTOS DIRECTOS' },
