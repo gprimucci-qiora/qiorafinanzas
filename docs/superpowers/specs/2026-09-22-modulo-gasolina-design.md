@@ -9,14 +9,14 @@ QiORA controla el consumo de combustible de su flota vehicular con tarjetas Eden
 
 Edenred cambió su formato de descarga — el nuevo trae varias columnas que antes había que calcular a mano (Sucursal, Capacidad de Tanque, Desviación de Rendimiento %/$ ya vienen calculadas por Edenred).
 
-Este módulo lleva ese análisis a la app: se sube la descarga cruda de Edenred, la app cruza automáticamente contra `flota_vehicular` (que ya vive en el pilar Flota Vehicular) para Modelo/Año/Negocio, y expone un pilar nuevo con drill-down completo.
+Este módulo lleva ese análisis a la app: se sube la descarga cruda de Edenred, la app cruza automáticamente contra `flota_vehicular` (que ya vive en el pilar Flota Vehicular) para Modelo/Año, deriva el Tipo de Sucursal directo de la transacción, y expone un pilar nuevo con drill-down completo.
 
 ## 2. Alcance v1
 
 **Incluye:**
 - Ingesta de la hoja `Report` de la descarga Edenred (formato nuevo), reemplazando solo el rango de fechas que trae el archivo.
-- Cruce automático por Placa contra `flota_vehicular` para Modelo, Año y Negocio (`tipo_poliza`) — ya no se mantiene a mano.
-- Pilar nuevo "Gasolina" con drill-down **Nacional → Negocio → Sucursal → Placa**.
+- Cruce automático por Placa contra `flota_vehicular` para Modelo y Año — ya no se mantiene a mano. El Tipo de Sucursal se deriva del prefijo de la propia transacción (ver §5), no de `flota_vehicular`.
+- Pilar nuevo "Gasolina" con drill-down **Nacional → Tipo de Sucursal → Sucursal → Placa**.
 - Gráfica de consumo semanal con ventana fija (8/14/30 semanas, no crece con el tiempo) y **Excedente** contra dos referencias intercambiables: promedio móvil de las últimas N semanas, o presupuesto por distrito (tabla `presupuesto`, familia "Gasolina", ya existente).
 - Heatmap de patrón por hora × día de la semana (detección de cargas fuera de horario).
 - Detección de frecuencia anómala de cargas por placa.
@@ -90,25 +90,34 @@ Las filas `ANULACIÓN DE CONSUMO` (241 de 9,940 en el archivo de agosto, ~2.4%) 
 
 **Llave de cruce:** se usa `Placas` (nunca viene vacía en el archivo de agosto), no `No. Unico` (solo viene lleno en 49% de las filas).
 
-## 5. Cruce con `flota_vehicular`
+## 5. Clasificación de Sucursal y cruce con `flota_vehicular`
 
-Nueva función en `calc.js`, `clasificarGasolina(transaccion, flotaMap)` (mismo patrón que `clasificarFactura`/`clasificarIngreso`): busca la placa de la transacción en un mapa `{placa: fila de flota_vehicular}` y devuelve `modelo`, `anio`, y `negocio` (= `tipo_poliza` de flota_vehicular). Si la placa no tiene match, `modelo`/`anio`/`negocio` quedan `null` y la transacción se reporta bajo "Sin Match" en vez de perderse silenciosamente.
+**Modelo/Año** — nueva función en `calc.js`, `clasificarGasolina(transaccion, flotaMap)` (mismo patrón que `clasificarFactura`/`clasificarIngreso`): busca la placa de la transacción en un mapa `{placa: fila de flota_vehicular}` y devuelve `modelo`/`anio`. Si la placa no tiene match, quedan `null` y la transacción se reporta bajo "Sin Match" en vez de perderse silenciosamente.
 
-`tipo_poliza` real en `flota_vehicular` (muestra de 1,000 filas): `PLANTA INTERNA` (44%), `MULTIDISTRITO` (4%), `STAFF`, `PLANTA EXTERNA`, `RED JALISCO`, `CONSTRUCCION`, y **45% sin dato**. El nivel "Negocio" del drill-down usa estos valores tal cual (no se fuerzan a Planta Interna/Recolecciones/Multidistrito) — los vehículos sin `tipo_poliza` se agrupan en "Sin Clasificar".
+**Tipo de Sucursal** (nivel 2 del drill-down, ver §6) — se deriva del prefijo de la columna `Sucursal` que ya trae la transacción de Edenred, **no** de `flota_vehicular.tipo_poliza` (que tiene 45% de nulos):
+
+| Prefijo | Tipo de Sucursal |
+|---|---|
+| `CTA-...` | Se busca la `sucursal` completa en `glosario_sucursales` y se usa su `tipo_sucursal` tal cual (`DISTRITO`, `ACTIVOS`, `OPERACIONES`, etc. — mismo catálogo que ya usa Facturas/Ingresos). Confirmado contra datos reales: las 17 `CTA-TPI-INT-*` y las `CTA-TPI-MLT-*` (multidistrito) mapean a `DISTRITO`; `ALMACENES`/`FLOTILLAS` a `ACTIVOS`; `OPERACIONES POLIZA 2` a `OPERACIONES`. |
+| `IFR-...` | `Infraestructura / Planta Externa` (bucket único, sin distinguir `IFR-TPX-*` de `IFR-TPC-*`). |
+| `QRA-...` | `Seguridad`. |
+| Cualquier otro | `Otros / Sin Clasificar` — no bloquea la carga; da margen si aparece un prefijo nuevo que no conocemos hoy. |
+
+Dentro de `DISTRITO`, el nivel 3 (por Sucursal) usa `sucursal_secundaria` del glosario para agrupar las `CTA-TPI-MLT-*` (multidistrito) junto con su distrito real correspondiente — mismo criterio que ya usa el resto de la app.
 
 ## 6. Navegación
 
 Pilar nuevo **"Gasolina"** en el sidebar (junto a Operaciones, Financieros, Capital Humano, Flota Vehicular). El Overview del pilar es el nivel 1 (Nacional) del drill-down validado en el mockup:
 
-1. **Nacional** — KPIs (litros, gasto, precio prom./litro, rendimiento prom.), gráfica de tendencia, heatmap de horario, ranking por Negocio.
-2. Clic en Negocio → **por Sucursal** dentro de ese negocio.
+1. **Nacional** — KPIs (litros, gasto, precio prom./litro, rendimiento prom.), gráfica de tendencia, heatmap de horario, ranking por Tipo de Sucursal (Distrito / Activos / Operaciones / Infraestructura-Planta Externa / Seguridad / Otros, ver §5).
+2. Clic en un Tipo de Sucursal → **por Sucursal** dentro de ese tipo.
 3. Clic en Sucursal → **por Placa** dentro de esa sucursal, ordenado por desviación de rendimiento (mayor a menor, sin necesidad de definir un umbral fijo en v1 — el orden ya resalta los peores casos).
-4. Clic en Placa → **detalle del vehículo**: tarjeta con modelo/año/sucursal/negocio, gráfica semanal, tabla de transacciones (fila resaltada en rojo si `desviacion_rendimiento_pct` de esa transacción es negativa, es decir rindió menos de lo esperado).
+4. Clic en Placa → **detalle del vehículo**: tarjeta con modelo/año/sucursal/tipo, gráfica semanal, tabla de transacciones (fila resaltada en rojo si `desviacion_rendimiento_pct` de esa transacción es negativa, es decir rindió menos de lo esperado).
 
 ## 7. Gráficas
 
 - **Consumo semanal "Todo"** (combo): barras = litros consumidos, con el **Excedente** (rojo/verde, formato con paréntesis en negativo) arriba de cada barra, línea punteada = precio ponderado $/L. Toggle de ventana (8/14/30 semanas) y **altura fija** (la tarjeta no crece verticalmente sin importar cuántas semanas o series se agreguen). Con más de 20 semanas visibles, las etiquetas de valor se ocultan solas (se amontonarían) — el detalle exacto sigue disponible en el tooltip.
-- **Toggle de referencia del Excedente:** "vs. Promedio" ↔ "vs. Presupuesto". "Vs. Promedio" compara cada semana contra el promedio móvil de la misma ventana visible en ese momento (si el toggle de ventana está en 14 semanas, la meta es el promedio de esas 14; si cambia a 30, la meta se recalcula sobre 30) — es el default porque siempre hay dato disponible. "Vs. Presupuesto" usa la tabla `presupuesto` (familia que contiene "GASOLINA", por distrito), prorrateado de mensual a semanal, y solo aplica a nivel Sucursal/Negocio/Nacional (el presupuesto no se compara por placa individual).
+- **Toggle de referencia del Excedente:** "vs. Promedio" ↔ "vs. Presupuesto". "Vs. Promedio" compara cada semana contra el promedio móvil de la misma ventana visible en ese momento (si el toggle de ventana está en 14 semanas, la meta es el promedio de esas 14; si cambia a 30, la meta se recalcula sobre 30) — es el default porque siempre hay dato disponible. "Vs. Presupuesto" usa la tabla `presupuesto` (familia que contiene "GASOLINA", por distrito), prorrateado de mensual a semanal, y solo aplica a nivel Sucursal/Tipo de Sucursal/Nacional (el presupuesto no se compara por placa individual).
 - **Heatmap Hora × Día de la Semana** — mismo insight que la hoja `TD` del Excel, agregando el eje de día que hoy no tiene, para cachar patrones tipo "domingo de madrugada".
 - **Frecuencia de cargas por placa** (mini-heatmap semanal) — mismo insight que la hoja `Por placa`, para detectar vehículos que cargan anormalmente seguido.
 - **Ranking de gasolineras por precio ponderado** — de dónde compran más caro los conductores, con volumen.
