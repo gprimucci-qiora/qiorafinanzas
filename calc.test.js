@@ -510,3 +510,140 @@ test('calcularRentabilidadDistritoMes regresa margenes null cuando no hay ingres
   assert.strictEqual(resultado.margenBruto, null);
   assert.strictEqual(resultado.margenOperacion, null);
 });
+
+// --- Gasolina ---
+
+test('tipoSucursalGasolina usa glosario para prefijo CTA-', () => {
+  const glosarioMap = { 'CTA-TPI-INT-XAL XALAPA': { tipo_sucursal: 'DISTRITO' } };
+  assert.strictEqual(Calc.tipoSucursalGasolina('CTA-TPI-INT-XAL XALAPA', glosarioMap), 'DISTRITO');
+});
+
+test('tipoSucursalGasolina cae en "Otros / Sin Clasificar" si CTA- no está en glosario', () => {
+  assert.strictEqual(Calc.tipoSucursalGasolina('CTA-NUEVA-SUCURSAL', {}), 'Otros / Sin Clasificar');
+});
+
+test('tipoSucursalGasolina mapea IFR- a Infraestructura / Planta Externa', () => {
+  assert.strictEqual(Calc.tipoSucursalGasolina('IFR-TPX-01', {}), 'Infraestructura / Planta Externa');
+});
+
+test('tipoSucursalGasolina mapea QRA- a Seguridad', () => {
+  assert.strictEqual(Calc.tipoSucursalGasolina('QRA-QRA-COR-SEG SEGURIDAD', {}), 'Seguridad');
+});
+
+test('tipoSucursalGasolina cae en "Otros / Sin Clasificar" para prefijo desconocido o sucursal vacía', () => {
+  assert.strictEqual(Calc.tipoSucursalGasolina('XYZ-ALGO', {}), 'Otros / Sin Clasificar');
+  assert.strictEqual(Calc.tipoSucursalGasolina(null, {}), 'Otros / Sin Clasificar');
+});
+
+test('clasificarGasolina agrega modelo/anio desde flotaMap y tipoSucursal', () => {
+  const flotaMap = { 'ABC123': { modelo: 'NP300', anio: 2022 } };
+  const glosarioMap = { 'CTA-TPI-INT-XAL XALAPA': { tipo_sucursal: 'DISTRITO' } };
+  const transaccion = { placa: 'ABC123', sucursal: 'CTA-TPI-INT-XAL XALAPA', litros: 40 };
+  const resultado = Calc.clasificarGasolina(transaccion, flotaMap, glosarioMap);
+  assert.strictEqual(resultado.modelo, 'NP300');
+  assert.strictEqual(resultado.anio, 2022);
+  assert.strictEqual(resultado.tipoSucursal, 'DISTRITO');
+  assert.strictEqual(resultado.litros, 40);
+});
+
+test('clasificarGasolina deja modelo/anio en null si la placa no tiene match en flota', () => {
+  const resultado = Calc.clasificarGasolina({ placa: 'ZZZ999', sucursal: 'IFR-TPX-01' }, {}, {});
+  assert.strictEqual(resultado.modelo, null);
+  assert.strictEqual(resultado.anio, null);
+  assert.strictEqual(resultado.tipoSucursal, 'Infraestructura / Planta Externa');
+});
+
+test('agruparGasolinaPorSemana agrupa por lunes de la semana y calcula precio ponderado', () => {
+  const transacciones = [
+    { fecha: '2026-01-05', litros: 40, monto: 800 }, // lunes
+    { fecha: '2026-01-07', litros: 10, monto: 210 }, // miercoles, misma semana
+    { fecha: '2026-01-12', litros: 20, monto: 440 }, // lunes siguiente
+  ];
+  const resultado = Calc.agruparGasolinaPorSemana(transacciones);
+  assert.strictEqual(resultado.length, 2);
+  assert.strictEqual(resultado[0].semana, '2026-01-05');
+  assert.strictEqual(resultado[0].litros, 50);
+  assert.strictEqual(resultado[0].monto, 1010);
+  assert.strictEqual(resultado[0].transacciones, 2);
+  assert.strictEqual(resultado[0].precioPonderado, 1010 / 50);
+  assert.strictEqual(resultado[1].semana, '2026-01-12');
+});
+
+test('calcularExcedenteVsPromedio usa el promedio de litros de la ventana como meta', () => {
+  const semanas = [{ litros: 100 }, { litros: 200 }, { litros: 300 }];
+  const resultado = Calc.calcularExcedenteVsPromedio(semanas);
+  assert.strictEqual(resultado.meta, 200);
+  assert.strictEqual(resultado.semanas[0].excedente, -100);
+  assert.strictEqual(resultado.semanas[2].excedente, 100);
+});
+
+test('calcularExcedenteVsPresupuesto prorratea el presupuesto mensual a semanal y compara contra monto', () => {
+  const semanas = [{ monto: 1000 }];
+  const resultado = Calc.calcularExcedenteVsPresupuesto(semanas, 4348); // ~1000/semana
+  assert.ok(Math.abs(resultado.meta - 1000) < 1);
+  assert.ok(Math.abs(resultado.semanas[0].excedente) < 1);
+});
+
+test('agruparGasolinaPorGrupo agrupa por tipoSucursal y cuenta placas únicas', () => {
+  const transacciones = [
+    { tipoSucursal: 'DISTRITO', placa: 'A1', litros: 10, monto: 200 },
+    { tipoSucursal: 'DISTRITO', placa: 'A1', litros: 5, monto: 100 },
+    { tipoSucursal: 'DISTRITO', placa: 'A2', litros: 20, monto: 400 },
+    { tipoSucursal: 'Seguridad', placa: 'B1', litros: 8, monto: 160 },
+  ];
+  const resultado = Calc.agruparGasolinaPorGrupo(transacciones, 'tipoSucursal');
+  const distrito = resultado.find((r) => r.clave === 'DISTRITO');
+  assert.strictEqual(distrito.litros, 35);
+  assert.strictEqual(distrito.monto, 700);
+  assert.strictEqual(distrito.unidades, 2);
+  assert.strictEqual(distrito.transacciones, 3);
+});
+
+test('agruparGasolinaPorPlaca ordena por desviacion de rendimiento promedio, peor primero', () => {
+  const transacciones = [
+    { placa: 'A1', litros: 10, monto: 200, desviacion_rendimiento_pct: -5 },
+    { placa: 'A1', litros: 10, monto: 200, desviacion_rendimiento_pct: -15 },
+    { placa: 'A2', litros: 10, monto: 200, desviacion_rendimiento_pct: 5 },
+    { placa: 'A3', litros: 10, monto: 200 }, // sin desviación -> va al final
+  ];
+  const resultado = Calc.agruparGasolinaPorPlaca(transacciones);
+  assert.strictEqual(resultado[0].placa, 'A1');
+  assert.strictEqual(resultado[0].desviacionPromedioPct, -10);
+  assert.strictEqual(resultado[1].placa, 'A2');
+  assert.strictEqual(resultado[2].placa, 'A3');
+  assert.strictEqual(resultado[2].desviacionPromedioPct, null);
+});
+
+test('agruparGasolinaPorHoraDia arma una matriz 7x24 con conteo de transacciones', () => {
+  const transacciones = [
+    { fecha: '2026-01-05', hora: '08:15:00' }, // lunes
+    { fecha: '2026-01-05', hora: '08:45:00' }, // lunes, misma hora
+    { fecha: '2026-01-11', hora: '02:00:00' }, // domingo
+  ];
+  const matriz = Calc.agruparGasolinaPorHoraDia(transacciones);
+  assert.strictEqual(matriz.length, 7);
+  assert.strictEqual(matriz[0][8], 2); // lunes=0, hora 8
+  assert.strictEqual(matriz[6][2], 1); // domingo=6, hora 2
+});
+
+test('agruparGasolinaFrecuenciaPorPlaca cuenta cargas por placa y semana', () => {
+  const transacciones = [
+    { fecha: '2026-01-05', placa: 'A1' },
+    { fecha: '2026-01-06', placa: 'A1' },
+    { fecha: '2026-01-12', placa: 'A1' },
+  ];
+  const resultado = Calc.agruparGasolinaFrecuenciaPorPlaca(transacciones);
+  assert.strictEqual(resultado['A1']['2026-01-05'], 2);
+  assert.strictEqual(resultado['A1']['2026-01-12'], 1);
+});
+
+test('rankingGasolinerasGasolina calcula precio ponderado y variación vs promedio de flota', () => {
+  const transacciones = [
+    { gasolinera: 'OXXO A', litros: 10, monto: 220 }, // $22/L
+    { gasolinera: 'PEMEX B', litros: 10, monto: 180 }, // $18/L
+  ];
+  const resultado = Calc.rankingGasolinerasGasolina(transacciones);
+  const oxxo = resultado.find((r) => r.gasolinera === 'OXXO A');
+  assert.strictEqual(oxxo.precioPonderado, 22);
+  assert.ok(oxxo.vsPromedioFlotaPct > 0); // 22 > promedio de 20
+});

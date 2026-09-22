@@ -352,6 +352,179 @@
     };
   }
 
+  // --- Gasolina (transacciones Edenred) ---
+
+  // Tipo de Sucursal se deriva del prefijo de la Sucursal que ya trae la transacción de
+  // Edenred, NO de flota_vehicular.tipo_poliza (45% nulo). Ver spec §5.
+  const PREFIJOS_TIPO_SUCURSAL_GASOLINA = [
+    { prefijo: 'IFR-', tipo: 'Infraestructura / Planta Externa' },
+    { prefijo: 'QRA-', tipo: 'Seguridad' },
+  ];
+
+  function tipoSucursalGasolina(sucursal, glosarioMap) {
+    if (!sucursal) return 'Otros / Sin Clasificar';
+    if (sucursal.indexOf('CTA-') === 0) {
+      const entrada = glosarioMap[sucursal];
+      return entrada && entrada.tipo_sucursal ? entrada.tipo_sucursal : 'Otros / Sin Clasificar';
+    }
+    const match = PREFIJOS_TIPO_SUCURSAL_GASOLINA.find((p) => sucursal.indexOf(p.prefijo) === 0);
+    return match ? match.tipo : 'Otros / Sin Clasificar';
+  }
+
+  // Modelo/Año vienen de flota_vehicular (cruce por Placa); si la placa no tiene match,
+  // quedan null y la transacción se reporta bajo "Sin Match" en vez de perderse silenciosamente.
+  function clasificarGasolina(transaccion, flotaMap, glosarioMap) {
+    const vehiculo = flotaMap[transaccion.placa];
+    return Object.assign({}, transaccion, {
+      modelo: vehiculo ? vehiculo.modelo : null,
+      anio: vehiculo ? vehiculo.anio : null,
+      tipoSucursal: tipoSucursalGasolina(transaccion.sucursal, glosarioMap),
+    });
+  }
+
+  function inicioSemanaGasolina(fechaISO) {
+    const d = new Date(fechaISO + 'T00:00:00');
+    const diaJs = d.getDay(); // 0=domingo..6=sábado
+    const diff = diaJs === 0 ? -6 : 1 - diaJs;
+    d.setDate(d.getDate() + diff);
+    return toISODate(d);
+  }
+
+  function agruparGasolinaPorSemana(transacciones) {
+    const porSemana = {};
+    transacciones.forEach((t) => {
+      if (!t.fecha) return;
+      const semana = inicioSemanaGasolina(t.fecha);
+      porSemana[semana] = porSemana[semana] || { semana, litros: 0, monto: 0, transacciones: 0 };
+      porSemana[semana].litros += t.litros || 0;
+      porSemana[semana].monto += t.monto || 0;
+      porSemana[semana].transacciones += 1;
+    });
+    return Object.values(porSemana)
+      .map((s) => Object.assign({}, s, { precioPonderado: s.litros > 0 ? s.monto / s.litros : 0 }))
+      .sort((a, b) => (a.semana < b.semana ? -1 : a.semana > b.semana ? 1 : 0));
+  }
+
+  // Meta = promedio móvil de litros sobre la ventana visible (recalcula si cambia la ventana).
+  function calcularExcedenteVsPromedio(semanas) {
+    if (!semanas.length) return { meta: 0, semanas: [] };
+    const meta = semanas.reduce((s, w) => s + w.litros, 0) / semanas.length;
+    return { meta, semanas: semanas.map((w) => Object.assign({}, w, { excedente: w.litros - meta })) };
+  }
+
+  // Prorrateo mensual->semanal del presupuesto (familia "GASOLINA"). Compara contra el gasto
+  // ($ monto) de la semana, no litros, porque el presupuesto está en dinero.
+  const SEMANAS_POR_MES_GASOLINA = 30.4368 / 7; // ~4.348, mismo criterio que otros prorrateos mensuales de la app
+
+  function calcularExcedenteVsPresupuesto(semanas, presupuestoMensual) {
+    const meta = (presupuestoMensual || 0) / SEMANAS_POR_MES_GASOLINA;
+    return { meta, semanas: semanas.map((w) => Object.assign({}, w, { excedente: w.monto - meta })) };
+  }
+
+  // Agrupa transacciones ya clasificadas (con tipoSucursal) por un campo dado (tipoSucursal o
+  // sucursal), para los niveles 2 y 3 del drill-down.
+  function agruparGasolinaPorGrupo(transaccionesClasificadas, campo) {
+    const grupos = {};
+    transaccionesClasificadas.forEach((t) => {
+      const clave = t[campo] || 'Sin Clasificar';
+      grupos[clave] = grupos[clave] || { clave, litros: 0, monto: 0, transacciones: 0, placas: new Set() };
+      grupos[clave].litros += t.litros || 0;
+      grupos[clave].monto += t.monto || 0;
+      grupos[clave].transacciones += 1;
+      if (t.placa) grupos[clave].placas.add(t.placa);
+    });
+    return Object.values(grupos)
+      .map((g) => ({
+        clave: g.clave,
+        litros: g.litros,
+        monto: g.monto,
+        transacciones: g.transacciones,
+        unidades: g.placas.size,
+        precioPonderado: g.litros > 0 ? g.monto / g.litros : 0,
+      }))
+      .sort((a, b) => b.monto - a.monto);
+  }
+
+  // Nivel 4: por Placa, ordenado por desviación de rendimiento promedio (más negativa/peor
+  // primero) — sin necesidad de definir un umbral fijo, el orden ya resalta los peores casos.
+  function agruparGasolinaPorPlaca(transaccionesClasificadas) {
+    const porPlaca = {};
+    transaccionesClasificadas.forEach((t) => {
+      porPlaca[t.placa] = porPlaca[t.placa] || {
+        placa: t.placa, modelo: t.modelo, anio: t.anio, sucursal: t.sucursal,
+        litros: 0, monto: 0, transacciones: 0, sumaDesviacionPct: 0, conteoDesviacion: 0,
+      };
+      const p = porPlaca[t.placa];
+      p.litros += t.litros || 0;
+      p.monto += t.monto || 0;
+      p.transacciones += 1;
+      if (typeof t.desviacion_rendimiento_pct === 'number') {
+        p.sumaDesviacionPct += t.desviacion_rendimiento_pct;
+        p.conteoDesviacion += 1;
+      }
+    });
+    return Object.values(porPlaca)
+      .map((p) => Object.assign({}, p, {
+        desviacionPromedioPct: p.conteoDesviacion > 0 ? p.sumaDesviacionPct / p.conteoDesviacion : null,
+      }))
+      .sort((a, b) => {
+        if (a.desviacionPromedioPct === null) return 1;
+        if (b.desviacionPromedioPct === null) return -1;
+        return a.desviacionPromedioPct - b.desviacionPromedioPct;
+      });
+  }
+
+  // Matriz [día 0=lunes..6=domingo][hora 0-23] = # de transacciones, para el heatmap de patrón.
+  function agruparGasolinaPorHoraDia(transacciones) {
+    const matriz = Array.from({ length: 7 }, () => Array(24).fill(0));
+    transacciones.forEach((t) => {
+      if (!t.fecha || !t.hora) return;
+      const diaJs = new Date(t.fecha + 'T00:00:00').getDay();
+      const dia = diaJs === 0 ? 6 : diaJs - 1;
+      const hora = parseInt(String(t.hora).split(':')[0], 10);
+      if (Number.isNaN(hora) || hora < 0 || hora > 23) return;
+      matriz[dia][hora] += 1;
+    });
+    return matriz;
+  }
+
+  // { placa: { semanaISO: conteo } } — para el mini-heatmap de frecuencia de cargas por placa.
+  function agruparGasolinaFrecuenciaPorPlaca(transacciones) {
+    const porPlacaSemana = {};
+    transacciones.forEach((t) => {
+      if (!t.fecha || !t.placa) return;
+      const semana = inicioSemanaGasolina(t.fecha);
+      porPlacaSemana[t.placa] = porPlacaSemana[t.placa] || {};
+      porPlacaSemana[t.placa][semana] = (porPlacaSemana[t.placa][semana] || 0) + 1;
+    });
+    return porPlacaSemana;
+  }
+
+  function rankingGasolinerasGasolina(transacciones) {
+    const porGasolinera = {};
+    let litrosTotales = 0;
+    let montoTotal = 0;
+    transacciones.forEach((t) => {
+      if (!t.gasolinera) return;
+      porGasolinera[t.gasolinera] = porGasolinera[t.gasolinera] || { gasolinera: t.gasolinera, litros: 0, monto: 0, transacciones: 0 };
+      porGasolinera[t.gasolinera].litros += t.litros || 0;
+      porGasolinera[t.gasolinera].monto += t.monto || 0;
+      porGasolinera[t.gasolinera].transacciones += 1;
+      litrosTotales += t.litros || 0;
+      montoTotal += t.monto || 0;
+    });
+    const precioPromedioFlota = litrosTotales > 0 ? montoTotal / litrosTotales : 0;
+    return Object.values(porGasolinera)
+      .map((g) => {
+        const precioPonderado = g.litros > 0 ? g.monto / g.litros : 0;
+        return Object.assign({}, g, {
+          precioPonderado,
+          vsPromedioFlotaPct: precioPromedioFlota > 0 ? ((precioPonderado - precioPromedioFlota) / precioPromedioFlota) * 100 : null,
+        });
+      })
+      .sort((a, b) => b.transacciones - a.transacciones);
+  }
+
   return {
     computeVentana,
     clasificarFactura,
@@ -371,5 +544,15 @@
     calcularRentabilidadDistritoMes,
     clasificarIngreso,
     agruparIngresosPorBucket,
+    tipoSucursalGasolina,
+    clasificarGasolina,
+    agruparGasolinaPorSemana,
+    calcularExcedenteVsPromedio,
+    calcularExcedenteVsPresupuesto,
+    agruparGasolinaPorGrupo,
+    agruparGasolinaPorPlaca,
+    agruparGasolinaPorHoraDia,
+    agruparGasolinaFrecuenciaPorPlaca,
+    rankingGasolinerasGasolina,
   };
 });
