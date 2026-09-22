@@ -608,11 +608,35 @@
               </table>
             </div>
           </div>
-          <div class="mb-6 flex justify-end">
+          <div class="mb-6 flex justify-end gap-3">
+            <button id="btn-cargar-glosario" onclick="mostrarCargaGlosario()" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-gordita-bold text-xs uppercase tracking-widest rounded hover:bg-surface-container-low transition-colors flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">upload</span> Cargar Excel
+            </button>
+            <button onclick="descargarGlosario()" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-gordita-bold text-xs uppercase tracking-widest rounded hover:bg-surface-container-low transition-colors flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">download</span> Descargar
+            </button>
             <button id="btn-agregar-glosario" onclick="mostrarFormularioGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity flex items-center gap-2">
               <span class="material-symbols-outlined text-sm">add</span> Agregar sucursal
             </button>
           </div>
+
+          <div id="carga-glosario-wrap" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6" style="display:none;">
+            <p class="text-sm text-on-surface-variant mb-4">Sube un Excel con columnas <strong>SUCURSAL, TIPO DE SUCURSAL, REGIÓN, SUCURSAL SECUNDARIA, TIPO DE GASTO</strong> (las mismas que trae "Descargar" — bájalo, edítalo y vuelve a subirlo). Cada sucursal del archivo se agrega o actualiza; las que no vengan en el archivo no se tocan.</p>
+            <div id="dropzone-glosario" class="bg-surface-container-low p-8 border-2 border-dashed border-outline-variant rounded-xl transition-colors">
+              <div class="flex flex-col items-center text-center mb-5">
+                <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+                <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+              </div>
+              <input type="file" id="input-excel-glosario" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+              <div id="preview-carga-glosario" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+                <p class="text-sm mb-1">Filas a cargar: <strong id="preview-filas-glosario" class="font-gordita-bold text-primary"></strong></p>
+                <p id="preview-omitidos-glosario" class="text-xs text-amber-700 mb-3" style="display:none;"></p>
+                <button onclick="confirmarCargaGlosario()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar carga</button>
+              </div>
+              <p id="estado-carga-glosario" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+            </div>
+          </div>
+
           <div id="form-glosario" class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end" style="display:none;">
             <input id="glosario-sucursal" placeholder="Sucursal (código completo)" class="px-3 py-2 border border-outline-variant rounded text-sm md:col-span-2">
             <div class="relative">
@@ -2211,6 +2235,7 @@ async function cargarSesion() {
     document.getElementById('config-tab-contratistas').style.display = 'none';
     document.getElementById('config-tab-usuarios').style.display = 'none';
     document.getElementById('btn-agregar-glosario').style.display = 'none';
+    document.getElementById('btn-cargar-glosario').style.display = 'none';
   } else {
     const seccionAdminIngresos = document.getElementById('admin-ingresos');
     if (seccionAdminIngresos) seccionAdminIngresos.style.display = 'block';
@@ -4191,6 +4216,109 @@ async function guardarGlosario() {
   const { error } = await supabaseClient.from('glosario_sucursales').upsert(registro);
   if (error) { alert('Error: ' + error.message); return; }
   document.getElementById('form-glosario').style.display = 'none';
+  await cargarGlosario();
+  await cargarSucursalesSinRegistrar();
+}
+
+function descargarGlosario() {
+  const filas = glosarioActual.map((g) => ({
+    'SUCURSAL': g.sucursal,
+    'TIPO DE SUCURSAL': g.tipo_sucursal || '',
+    'REGIÓN': g.region || '',
+    'SUCURSAL SECUNDARIA': g.sucursal_secundaria || '',
+    'TIPO DE GASTO': g.tipo_gasto || '',
+  }));
+  const hoja = XLSX.utils.json_to_sheet(filas);
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, 'Glosario');
+  const fecha = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(libro, `glosario_sucursales_${fecha}.xlsx`);
+}
+
+function mostrarCargaGlosario() {
+  const wrap = document.getElementById('carga-glosario-wrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+}
+
+const TIPOS_GASTO_VALIDOS_GLOSARIO = new Set(['COSTOS DIRECTOS', 'GASTOS OPERATIVOS']);
+let filasParaCargarGlosario = null;
+
+document.getElementById('input-excel-glosario').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja);
+
+      const tiposValidos = new Set(opcionesGlosario('tipo_sucursal'));
+      const regionesValidas = new Set(opcionesGlosario('region'));
+      const avisos = [];
+
+      filasParaCargarGlosario = filas.map((fila, indice) => {
+        const sucursal = (fila['SUCURSAL'] || '').toString().trim();
+        if (!sucursal) throw new Error('Fila ' + (indice + 2) + ': falta la columna SUCURSAL.');
+
+        const tipoSucursal = (fila['TIPO DE SUCURSAL'] || '').toString().trim();
+        const region = (fila['REGIÓN'] || fila['REGION'] || '').toString().trim();
+        const tipoGasto = (fila['TIPO DE GASTO'] || '').toString().trim().toUpperCase();
+
+        // Tipo de sucursal y Región son catálogo cerrado (7 valores cada uno, usados por la
+        // lógica de cálculo) — un valor que no existe en el catálogo probablemente es un error
+        // de dedo, así que se avisa aunque no bloquee la carga.
+        if (tipoSucursal && !tiposValidos.has(tipoSucursal)) {
+          avisos.push('Fila ' + (indice + 2) + ': tipo de sucursal "' + tipoSucursal + '" no está en el catálogo.');
+        }
+        if (region && !regionesValidas.has(region)) {
+          avisos.push('Fila ' + (indice + 2) + ': región "' + region + '" no está en el catálogo.');
+        }
+        // Tipo de gasto sí tiene un check constraint en la base — si no coincide, la carga entera
+        // fallaría al confirmar, así que aquí se bloquea de una vez con un mensaje claro.
+        if (tipoGasto && !TIPOS_GASTO_VALIDOS_GLOSARIO.has(tipoGasto)) {
+          throw new Error('Fila ' + (indice + 2) + ': "TIPO DE GASTO" debe ser COSTOS DIRECTOS o GASTOS OPERATIVOS (vino "' + fila['TIPO DE GASTO'] + '").');
+        }
+
+        return {
+          sucursal,
+          tipo_sucursal: tipoSucursal || null,
+          region: region || null,
+          sucursal_secundaria: (fila['SUCURSAL SECUNDARIA'] || '').toString().trim() || null,
+          tipo_gasto: tipoGasto || null,
+        };
+      });
+
+      document.getElementById('preview-filas-glosario').textContent = filasParaCargarGlosario.length.toLocaleString('es-MX');
+      const elAvisos = document.getElementById('preview-omitidos-glosario');
+      if (avisos.length > 0) {
+        elAvisos.style.display = 'block';
+        elAvisos.textContent = avisos.slice(0, 8).join(' · ') + (avisos.length > 8 ? ' · (+' + (avisos.length - 8) + ' más)' : '');
+      } else {
+        elAvisos.style.display = 'none';
+      }
+      document.getElementById('preview-carga-glosario').style.display = 'block';
+      document.getElementById('estado-carga-glosario').textContent = '';
+    } catch (error) {
+      filasParaCargarGlosario = null;
+      document.getElementById('preview-carga-glosario').style.display = 'none';
+      document.getElementById('estado-carga-glosario').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaGlosario() {
+  if (!filasParaCargarGlosario || filasParaCargarGlosario.length === 0) return;
+  document.getElementById('estado-carga-glosario').textContent = 'Cargando...';
+  const { error } = await supabaseClient.from('glosario_sucursales').upsert(filasParaCargarGlosario);
+  if (error) {
+    document.getElementById('estado-carga-glosario').textContent = 'Error: ' + error.message;
+    return;
+  }
+  document.getElementById('estado-carga-glosario').textContent = 'Carga completada: ' + filasParaCargarGlosario.length.toLocaleString('es-MX') + ' filas.';
+  document.getElementById('preview-carga-glosario').style.display = 'none';
+  filasParaCargarGlosario = null;
   await cargarGlosario();
   await cargarSucursalesSinRegistrar();
 }
@@ -10156,6 +10284,7 @@ configurarDropzone('dropzone-cargar', 'input-excel');
 configurarDropzone('dropzone-ingresos', 'input-excel-ingresos');
 configurarDropzone('dropzone-flota', 'input-excel-flota');
 configurarDropzone('dropzone-unidades', 'input-excel-unidades');
+configurarDropzone('dropzone-glosario', 'input-excel-glosario');
 configurarDropzone('dropzone-poliza', 'input-excel-poliza');
 configurarDropzone('dropzone-hc-poliza', 'input-excel-hc-poliza');
 configurarDropzone('dropzone-presupuesto', 'input-excel-presupuesto');
