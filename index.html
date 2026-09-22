@@ -122,6 +122,9 @@
         <li><button data-vista="flota" onclick="abrirPilar('flota')" title="Flota Vehicular" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">local_shipping</span><span class="text-sm sidebar-texto">Flota Vehicular</span>
         </button></li>
+        <li><button data-vista="gasolina" onclick="abrirPilar('gasolina')" title="Gasolina" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
+          <span class="material-symbols-outlined">local_gas_station</span><span class="text-sm sidebar-texto">Gasolina</span>
+        </button></li>
         <li><button data-vista="config" id="nav-config" onclick="mostrarVista('config')" title="Configuración" class="w-full flex items-center gap-sm p-sm rounded-lg text-on-surface-variant font-gordita-regular hover:bg-surface-container transition-colors text-left">
           <span class="material-symbols-outlined">settings</span><span class="text-sm sidebar-texto">Configuración</span>
         </button></li>
@@ -579,6 +582,7 @@
           <button id="config-tab-cargar" onclick="mostrarSubConfig('cargar')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Cargar Datos</button>
           <button id="config-tab-ingresos" onclick="mostrarSubConfig('ingresos')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Ingresos Reales</button>
           <button id="config-tab-flota" onclick="mostrarSubConfig('flota')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Flota Vehicular</button>
+          <button id="config-tab-gasolina" onclick="mostrarSubConfig('gasolina')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Gasolina</button>
           <button id="config-tab-unidades" onclick="mostrarSubConfig('unidades')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Unidades Autorizadas</button>
           <button id="config-tab-poliza" onclick="mostrarSubConfig('poliza')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">Pólizas (Operaciones)</button>
           <button id="config-tab-hc-poliza" onclick="mostrarSubConfig('hc-poliza')" class="px-4 py-2 text-xs font-gordita-bold rounded transition-colors text-on-surface-variant">HC Firmadas x Póliza</button>
@@ -724,6 +728,24 @@
               <button onclick="confirmarCargaFlota()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
             </div>
             <p id="estado-carga-flota" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
+          </div>
+        </div>
+
+        <div id="config-sub-gasolina" class="config-sub" style="display:none;">
+          <p class="text-on-surface-variant text-sm mb-6">Sube la hoja "Report" de la descarga cruda de Edenred (transacciones de tarjetas de combustible). El cruce de Modelo/Año contra la flota vehicular y la clasificación de Tipo de Sucursal se calculan automáticamente al ver el pilar — no hace falta agregarlos a mano.</p>
+          <div id="dropzone-gasolina" class="bg-white p-8 border-2 border-dashed border-outline-variant rounded-xl shadow-sm transition-colors">
+            <div class="flex flex-col items-center text-center mb-5">
+              <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:32px;">cloud_upload</span>
+              <p class="text-sm text-on-surface-variant">Arrastra el archivo aquí, o usa el botón</p>
+            </div>
+            <input type="file" id="input-excel-gasolina" accept=".xlsx,.xls" class="block mx-auto text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-gordita-bold file:text-xs file:uppercase file:tracking-widest file:bg-primary file:text-on-primary hover:file:opacity-90 file:cursor-pointer">
+            <div id="preview-carga-gasolina" class="mt-6 pt-6 border-t border-outline-variant" style="display:none;">
+              <p class="text-sm mb-1">Rango detectado: <strong id="preview-rango-gasolina" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-sm mb-3">Transacciones a cargar: <strong id="preview-filas-gasolina" class="font-gordita-bold text-primary"></strong></p>
+              <p class="text-xs text-secondary font-gordita-bold mb-4">Esto reemplazará todas las transacciones de gasolina existentes con fecha en ese rango.</p>
+              <button onclick="confirmarCargaGasolina()" class="px-4 py-2 bg-primary text-on-primary font-gordita-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity">Confirmar y reemplazar</button>
+            </div>
+            <p id="estado-carga-gasolina" class="mt-4 text-sm font-gordita-bold text-secondary"></p>
           </div>
         </div>
 
@@ -1844,6 +1866,209 @@
         </div>
       </div>
 
+      <div class="vista" id="vista-pilar-gasolina">
+        <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
+        </button>
+        <div class="mb-8">
+          <span class="font-gordita-bold text-xs text-secondary uppercase tracking-widest">Pilar del Negocio</span>
+          <h1 class="font-gordita-bold text-4xl text-primary mt-1">Gasolina</h1>
+          <p id="pilar-gasolina-periodo" class="text-sm text-on-surface-variant mt-2">-</p>
+        </div>
+
+        <div id="gasolina-breadcrumb" class="flex items-center gap-2 text-xs font-gordita-bold text-on-surface-variant mb-4" style="display:none;">
+          <button onclick="volverNivelGasolina('nacional')" class="hover:text-primary transition-colors">Nacional</button>
+          <span id="gasolina-breadcrumb-tipo-wrap" style="display:none;"><span class="material-symbols-outlined text-sm align-middle">chevron_right</span> <button onclick="volverNivelGasolina('tipo')" id="gasolina-breadcrumb-tipo" class="hover:text-primary transition-colors"></button></span>
+          <span id="gasolina-breadcrumb-sucursal-wrap" style="display:none;"><span class="material-symbols-outlined text-sm align-middle">chevron_right</span> <button onclick="volverNivelGasolina('sucursal')" id="gasolina-breadcrumb-sucursal" class="hover:text-primary transition-colors"></button></span>
+          <span id="gasolina-breadcrumb-placa-wrap" style="display:none;"><span class="material-symbols-outlined text-sm align-middle">chevron_right</span> <span id="gasolina-breadcrumb-placa" class="text-primary"></span></span>
+        </div>
+
+        <!-- Nivel 1: Nacional -->
+        <div id="gasolina-nivel-nacional" class="gasolina-nivel">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Litros Consumidos</p>
+              <h2 id="gasolina-kpi-litros" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto Total</p>
+              <h2 id="gasolina-kpi-gasto" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Precio Prom. / Litro</p>
+              <h2 id="gasolina-kpi-precio" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Desviación Rendimiento Prom.</p>
+              <h2 id="gasolina-kpi-rendimiento" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+          </div>
+
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+            <div class="head-row flex items-start justify-between flex-wrap gap-3 mb-1">
+              <div>
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Consumo Semanal · Excedente · Precio Ponderado</h3>
+                <p class="text-xs text-on-surface-variant mt-1" id="gasolina-todo-desc">Barras = litros · rojo/verde = excedente vs. meta · línea punteada = precio ponderado $/L</p>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex bg-surface-container-low rounded-lg p-1 text-[11px] font-gordita-bold" id="gasolina-toggle-referencia">
+                  <span data-ref="promedio" class="px-3 py-1.5 rounded-md cursor-pointer bg-white shadow-sm text-primary">vs. Promedio</span>
+                  <span data-ref="presupuesto" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">vs. Presupuesto</span>
+                </div>
+                <div class="flex bg-surface-container-low rounded-lg p-1 text-[11px] font-gordita-bold" id="gasolina-toggle-ventana">
+                  <span data-n="8" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">8 sem</span>
+                  <span data-n="14" class="px-3 py-1.5 rounded-md cursor-pointer bg-white shadow-sm text-primary">14 sem</span>
+                  <span data-n="30" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">30 sem</span>
+                </div>
+              </div>
+            </div>
+            <div class="gasolina-chart-box" style="height:300px; position:relative;">
+              <canvas id="gasolina-chart-todo"></canvas>
+            </div>
+          </section>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Ranking por Tipo de Sucursal</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Clic para ver el desglose por sucursal.</p>
+              </div>
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Tipo de Sucursal</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
+                  </tr>
+                </thead>
+                <tbody id="gasolina-ranking-tipo-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </section>
+
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Ranking de Gasolineras</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Por precio ponderado $/L, top 10 por número de transacciones.</p>
+              </div>
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Gasolinera</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Transacciones</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">vs. Flota</th>
+                  </tr>
+                </thead>
+                <tbody id="gasolina-ranking-gasolineras-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Patrón de Consumo por Hora y Día de la Semana</h3>
+            <p class="text-xs text-on-surface-variant mb-4">Entre más oscuro, más transacciones en ese cruce hora × día.</p>
+            <div class="gasolina-heatmap" id="gasolina-heatmap-grid" style="display:grid; grid-template-columns:60px repeat(24, 1fr); gap:2px; align-items:center;"></div>
+          </section>
+        </div>
+
+        <!-- Nivel 2: por Tipo de Sucursal -> ranking de Sucursales -->
+        <div id="gasolina-nivel-tipo" class="gasolina-nivel" style="display:none;">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Sucursales · <span id="gasolina-tipo-titulo"></span></h3>
+              <p class="text-xs text-on-surface-variant mt-1">Clic en una sucursal para ver el desglose por placa.</p>
+            </div>
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
+                </tr>
+              </thead>
+              <tbody id="gasolina-ranking-sucursal-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal · <span id="gasolina-tipo-chart-titulo"></span></h3>
+            <div class="gasolina-chart-box" style="height:300px; position:relative;">
+              <canvas id="gasolina-chart-tipo"></canvas>
+            </div>
+          </section>
+        </div>
+
+        <!-- Nivel 3: por Sucursal -> ranking de Placas -->
+        <div id="gasolina-nivel-sucursal" class="gasolina-nivel" style="display:none;">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Placas · <span id="gasolina-sucursal-titulo"></span></h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ordenado por desviación de rendimiento promedio (peor primero). Clic en una placa para el detalle del vehículo.</p>
+            </div>
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Modelo / Año</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Desv. Rendimiento</th>
+                </tr>
+              </thead>
+              <tbody id="gasolina-ranking-placa-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Frecuencia de Cargas por Placa</h3>
+            <p class="text-xs text-on-surface-variant mb-4">Últimas 10 semanas. Entre más oscuro, más veces cargó esa semana.</p>
+            <div class="gasolina-freqgrid" id="gasolina-freqgrid" style="display:grid; grid-template-columns:110px repeat(10, 1fr); gap:3px; font-size:10px;"></div>
+          </section>
+        </div>
+
+        <!-- Nivel 4: detalle de Placa -->
+        <div id="gasolina-nivel-placa" class="gasolina-nivel" style="display:none;">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-gutter">
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Placa</p><h2 id="gasolina-placa-kpi-placa" class="font-gordita-bold text-xl text-primary">-</h2></div>
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Modelo / Año</p><h2 id="gasolina-placa-kpi-modelo" class="font-gordita-bold text-xl text-primary">-</h2></div>
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Sucursal</p><h2 id="gasolina-placa-kpi-sucursal" class="font-gordita-bold text-sm text-primary">-</h2></div>
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Tipo de Sucursal</p><h2 id="gasolina-placa-kpi-tipo" class="font-gordita-bold text-sm text-primary">-</h2></div>
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Desv. Rendimiento Prom.</p><h2 id="gasolina-placa-kpi-desviacion" class="font-gordita-bold text-xl">-</h2></div>
+            </div>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
+            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal</h3>
+            <div class="gasolina-chart-box" style="height:300px; position:relative;">
+              <canvas id="gasolina-chart-placa"></canvas>
+            </div>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Transacciones</h3>
+              <p class="text-xs text-on-surface-variant mt-1">Fila en rojo si esa transacción rindió menos de lo esperado (desviación negativa).</p>
+            </div>
+            <div style="max-height:420px; overflow-y:auto;">
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant sticky top-0">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Fecha</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Gasolinera</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Desv. Rendimiento</th>
+                  </tr>
+                </thead>
+                <tbody id="gasolina-placa-transacciones-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+
       <div class="vista" id="vista-pilar-capitalhumano">
         <button onclick="mostrarVista('overview')" class="mb-4 flex items-center gap-1 text-sm font-gordita-bold text-on-surface-variant hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Volver al Overview
@@ -2298,7 +2523,7 @@ async function mostrarVista(nombre) {
 }
 
 function mostrarSubConfig(nombre) {
-  ['glosario', 'cargar', 'ingresos', 'flota', 'unidades', 'poliza', 'hc-poliza', 'presupuesto', 'contratistas', 'usuarios'].forEach((n) => {
+  ['glosario', 'cargar', 'ingresos', 'flota', 'gasolina', 'unidades', 'poliza', 'hc-poliza', 'presupuesto', 'contratistas', 'usuarios'].forEach((n) => {
     document.getElementById('config-sub-' + n).style.display = n === nombre ? 'block' : 'none';
     const tab = document.getElementById('config-tab-' + n);
     tab.classList.toggle('bg-primary', n === nombre);
@@ -2694,6 +2919,85 @@ async function confirmarCargaFlota() {
   invalidarCache('flota_vehicular');
   document.getElementById('estado-carga-flota').textContent = 'Carga completada: ' + filasParaCargarFlota.length + ' vehículos.';
   document.getElementById('preview-carga-flota').style.display = 'none';
+}
+
+// La columna FECHA del Report de Edenred viene como texto "DD/MM/YYYY" (no como fecha de
+// Excel), y HORA como texto "HH:MM:SS" — ambas se usan tal cual, sin pasar por
+// fechaISODesdeCelda (que espera un serial numérico de Excel).
+function fechaISODesdeTextoGasolina(texto) {
+  const partes = String(texto).trim().split('/');
+  if (partes.length !== 3) {
+    throw new Error('Fecha de gasolina no reconocida: "' + texto + '" (se esperaba DD/MM/YYYY)');
+  }
+  const [dia, mes, anio] = partes;
+  return anio + '-' + mes.padStart(2, '0') + '-' + dia.padStart(2, '0');
+}
+
+let filasParaCargarGasolina = null;
+let ventanaParaCargarGasolina = null;
+
+document.getElementById('input-excel-gasolina').addEventListener('change', function (evento) {
+  const archivo = evento.target.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function (e) {
+    try {
+      const libro = XLSX.read(e.target.result, { type: 'array' });
+      const hoja = libro.Sheets['Report'] || libro.Sheets[libro.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(hoja);
+
+      filasParaCargarGasolina = filas.map((fila, indice) => {
+        try {
+          return {
+            fecha: fechaISODesdeTextoGasolina(fila['FECHA']),
+            hora: fila['HORA'] || null,
+            placa: fila['Placas'] || null,
+            sucursal: fila['Sucursal'] || null,
+            vin: fila['VIN'] || null,
+            capacidad_tanque: fila['CAPACIDAD DE TANQUE'] ?? null,
+            tipo_transaccion: fila['TRANSACCIÓN'] || null,
+            precio_por_litro: fila['PRECIO LTS CON DESCUENTO'] ?? null,
+            litros: fila['LITROS'] ?? null,
+            monto: fila['NETO'] ?? null,
+            gasolinera: fila['ESTACIÓN DE SERVICIO'] || null,
+            desviacion_rendimiento_pct: fila['DESVIACIÓN DE RENDIMIENTO %'] ?? null,
+            desviacion_rendimiento_monto: fila['DESVIACIÓN DE RENDIMIENTO EN $'] ?? null,
+            razon_social: fila['Razon social'] || null,
+          };
+        } catch (errorFila) {
+          throw new Error('Fila ' + (indice + 2) + ' del Excel: ' + errorFila.message);
+        }
+      });
+
+      const fechas = filasParaCargarGasolina.map((f) => f.fecha);
+      ventanaParaCargarGasolina = {
+        fechaMin: fechas.reduce((a, b) => (a < b ? a : b)),
+        fechaMax: fechas.reduce((a, b) => (a > b ? a : b)),
+      };
+      document.getElementById('preview-rango-gasolina').textContent = ventanaParaCargarGasolina.fechaMin + ' a ' + ventanaParaCargarGasolina.fechaMax;
+      document.getElementById('preview-filas-gasolina').textContent = filasParaCargarGasolina.length;
+      document.getElementById('preview-carga-gasolina').style.display = 'block';
+    } catch (error) {
+      document.getElementById('estado-carga-gasolina').textContent = 'Error al leer el archivo: ' + error.message;
+    }
+  };
+  lector.readAsArrayBuffer(archivo);
+});
+
+async function confirmarCargaGasolina() {
+  document.getElementById('estado-carga-gasolina').textContent = 'Cargando...';
+  const { error } = await supabaseClient.rpc('reemplazar_gasolina_transacciones', {
+    filas: filasParaCargarGasolina,
+    p_fecha_min: ventanaParaCargarGasolina.fechaMin,
+    p_fecha_max: ventanaParaCargarGasolina.fechaMax,
+  });
+  if (error) {
+    document.getElementById('estado-carga-gasolina').textContent = 'Error: ' + error.message;
+    return;
+  }
+  invalidarCache('gasolina_transacciones');
+  document.getElementById('estado-carga-gasolina').textContent = 'Carga completada: ' + filasParaCargarGasolina.length + ' transacciones.';
+  document.getElementById('preview-carga-gasolina').style.display = 'none';
 }
 
 const MAPEO_COLUMNAS_UNIDADES_AUTORIZADAS = [
@@ -6506,6 +6810,7 @@ async function abrirPilar(nombre) {
       capitalhumano: cargarPilarCapitalHumano,
       financieros: cargarPilarFinancieros,
       flota: cargarPilarFlota,
+      gasolina: cargarPilarGasolina,
     }[nombre];
     if (cargador) await cargador();
   } finally {
@@ -9177,6 +9482,410 @@ async function cargarPilarFlota() {
   if (flotaAreaActual) await abrirAreaFlota(flotaAreaActual);
 }
 
+// ===================== Gasolina =====================
+// Modelo/Año (flota_vehicular) y Tipo de Sucursal (prefijo de la transacción, ver
+// Calc.tipoSucursalGasolina) se resuelven en el cliente al cargar el pilar, no se guardan en
+// gasolina_transacciones — así el histórico no se desactualiza si el maestro de vehículos
+// cambia. Ver docs/superpowers/specs/2026-09-22-modulo-gasolina-design.md.
+
+let gasolinaDatos = null; // { transacciones: [clasificadas], presupuestoGasolina: [...] }
+let gasolinaEstado = { nivel: 'nacional', tipo: null, sucursal: null, placa: null, ventanaN: 14, referencia: 'promedio' };
+let gasolinaCharts = {};
+
+async function cargarPilarGasolina() {
+  const glosarioMap = obtenerGlosarioMap();
+  const [transaccionesCrudas, flotaVehicularCruda, presupuestoCrudo] = await Promise.all([
+    obtenerTablaCompleta('gasolina_transacciones'),
+    obtenerTablaCompleta('flota_vehicular'),
+    obtenerTablaCompleta('presupuesto'),
+  ]);
+  const flotaMap = {};
+  flotaVehicularCruda.forEach((v) => { if (v.placa) flotaMap[v.placa] = v; });
+
+  const transacciones = transaccionesCrudas.map((t) => Calc.clasificarGasolina(t, flotaMap, glosarioMap));
+  const presupuestoGasolina = presupuestoCrudo.filter((p) => (p.familia || '').toUpperCase().indexOf('GASOLINA') !== -1);
+  gasolinaDatos = { transacciones, presupuestoGasolina };
+
+  if (transacciones.length === 0) {
+    document.getElementById('pilar-gasolina-periodo').textContent = 'Sin transacciones cargadas todavía — súbelas en Configuración → Gasolina.';
+  } else {
+    const fechas = transacciones.map((t) => t.fecha).filter(Boolean).sort();
+    document.getElementById('pilar-gasolina-periodo').textContent = 'Datos del ' + fechas[0] + ' al ' + fechas[fechas.length - 1];
+  }
+
+  gasolinaEstado.tipo = null;
+  gasolinaEstado.sucursal = null;
+  gasolinaEstado.placa = null;
+  mostrarNivelGasolina('nacional');
+  renderizarNivelNacionalGasolina();
+}
+
+function transaccionesEnAmbitoGasolina() {
+  if (!gasolinaDatos) return [];
+  let filas = gasolinaDatos.transacciones;
+  if (gasolinaEstado.tipo) filas = filas.filter((t) => t.tipoSucursal === gasolinaEstado.tipo);
+  if (gasolinaEstado.sucursal) filas = filas.filter((t) => t.sucursal === gasolinaEstado.sucursal);
+  return filas;
+}
+
+function kpisGasolina(transacciones) {
+  let litros = 0, monto = 0, sumaDesv = 0, conteoDesv = 0;
+  const placas = new Set();
+  transacciones.forEach((t) => {
+    litros += t.litros || 0;
+    monto += t.monto || 0;
+    if (t.placa) placas.add(t.placa);
+    if (typeof t.desviacion_rendimiento_pct === 'number') { sumaDesv += t.desviacion_rendimiento_pct; conteoDesv += 1; }
+  });
+  return {
+    litros, monto, unidades: placas.size,
+    precioPonderado: litros > 0 ? monto / litros : 0,
+    desviacionPromedio: conteoDesv > 0 ? sumaDesv / conteoDesv : null,
+  };
+}
+
+function distritosEnAmbitoGasolina(transacciones) {
+  const glosarioMap = obtenerGlosarioMap();
+  const set = new Set();
+  transacciones.forEach((t) => {
+    const entrada = glosarioMap[t.sucursal];
+    if (entrada && entrada.sucursal_secundaria) set.add(entrada.sucursal_secundaria);
+  });
+  return Array.from(set);
+}
+
+// Suma el presupuesto (familia "GASOLINA") del mes más reciente disponible para los distritos
+// dados (null = sin filtro, todos los distritos). Simplificación v1: usa un solo mes uniforme
+// para toda la ventana visible en vez de emparejar mes por mes con cada semana.
+function presupuestoMensualGasolina(distritos) {
+  if (!gasolinaDatos || !gasolinaDatos.presupuestoGasolina.length) return 0;
+  const filas = gasolinaDatos.presupuestoGasolina.filter((p) => !distritos || distritos.includes(p.distrito));
+  if (!filas.length) return 0;
+  const mesMasReciente = filas.reduce((max, p) => (p.mes > max ? p.mes : max), filas[0].mes);
+  return filas.filter((p) => p.mes === mesMasReciente).reduce((s, p) => s + (Number(p.monto) || 0), 0);
+}
+
+function mostrarNivelGasolina(nivel) {
+  ['nacional', 'tipo', 'sucursal', 'placa'].forEach((n) => {
+    document.getElementById('gasolina-nivel-' + n).style.display = n === nivel ? 'block' : 'none';
+  });
+  gasolinaEstado.nivel = nivel;
+  document.getElementById('gasolina-breadcrumb').style.display = nivel === 'nacional' ? 'none' : 'flex';
+  document.getElementById('gasolina-breadcrumb-tipo-wrap').style.display = nivel !== 'nacional' ? 'inline' : 'none';
+  document.getElementById('gasolina-breadcrumb-sucursal-wrap').style.display = (nivel === 'sucursal' || nivel === 'placa') ? 'inline' : 'none';
+  document.getElementById('gasolina-breadcrumb-placa-wrap').style.display = nivel === 'placa' ? 'inline' : 'none';
+}
+
+function volverNivelGasolina(nivel) {
+  if (nivel === 'nacional') {
+    gasolinaEstado.tipo = null; gasolinaEstado.sucursal = null; gasolinaEstado.placa = null;
+    mostrarNivelGasolina('nacional'); renderizarNivelNacionalGasolina();
+  } else if (nivel === 'tipo') {
+    gasolinaEstado.sucursal = null; gasolinaEstado.placa = null;
+    mostrarNivelGasolina('tipo'); renderizarNivelTipoGasolina();
+  } else if (nivel === 'sucursal') {
+    gasolinaEstado.placa = null;
+    mostrarNivelGasolina('sucursal'); renderizarNivelSucursalGasolina();
+  }
+}
+
+function renderizarNivelNacionalGasolina() {
+  const transacciones = gasolinaDatos.transacciones;
+  const kpis = kpisGasolina(transacciones);
+  document.getElementById('gasolina-kpi-litros').textContent = Math.round(kpis.litros).toLocaleString('es-MX') + ' L';
+  document.getElementById('gasolina-kpi-gasto').textContent = formatoMoneda(kpis.monto);
+  document.getElementById('gasolina-kpi-precio').textContent = '$' + kpis.precioPonderado.toFixed(2);
+  const elRend = document.getElementById('gasolina-kpi-rendimiento');
+  elRend.textContent = kpis.desviacionPromedio === null ? '—' : kpis.desviacionPromedio.toFixed(1) + '%';
+  elRend.className = 'font-gordita-bold text-2xl ' + (kpis.desviacionPromedio === null ? 'text-primary' : (kpis.desviacionPromedio < 0 ? 'text-error' : 'text-qiora-green'));
+
+  renderizarRankingTipoSucursalGasolina(transacciones);
+  renderizarRankingGasolinerasGasolina(transacciones);
+  renderizarHeatmapGasolina(transacciones);
+  renderizarChartTodoGasolina('gasolina-chart-todo', transacciones);
+}
+
+function renderizarRankingTipoSucursalGasolina(transacciones) {
+  const filas = Calc.agruparGasolinaPorGrupo(transacciones, 'tipoSucursal');
+  const cuerpo = document.getElementById('gasolina-ranking-tipo-body');
+  cuerpo.innerHTML = filas.map((f) => `
+    <tr class="hover:bg-surface-container-low/50 cursor-pointer transition-colors" onclick="abrirTipoSucursalGasolina('${f.clave.replace(/'/g, "\\'")}')">
+      <td class="px-6 py-3 font-gordita-bold text-primary">${f.clave}</td>
+      <td class="px-6 py-3 text-right">${Math.round(f.litros).toLocaleString('es-MX')}</td>
+      <td class="px-6 py-3 text-right">${formatoMoneda(f.monto)}</td>
+      <td class="px-6 py-3 text-right">$${f.precioPonderado.toFixed(2)}</td>
+      <td class="px-6 py-3 text-right">${f.unidades}</td>
+    </tr>`).join('');
+}
+
+function renderizarRankingGasolinerasGasolina(transacciones) {
+  const filas = Calc.rankingGasolinerasGasolina(transacciones).slice(0, 10);
+  const cuerpo = document.getElementById('gasolina-ranking-gasolineras-body');
+  cuerpo.innerHTML = filas.map((f) => `
+    <tr class="hover:bg-surface-container-low/50 transition-colors">
+      <td class="px-6 py-3">${f.gasolinera}</td>
+      <td class="px-6 py-3 text-right">${f.transacciones}</td>
+      <td class="px-6 py-3 text-right">$${f.precioPonderado.toFixed(2)}</td>
+      <td class="px-6 py-3 text-right ${f.vsPromedioFlotaPct === null ? '' : (f.vsPromedioFlotaPct > 0 ? 'text-error' : 'text-qiora-green')}">${f.vsPromedioFlotaPct === null ? '—' : (f.vsPromedioFlotaPct > 0 ? '+' : '') + f.vsPromedioFlotaPct.toFixed(1) + '%'}</td>
+    </tr>`).join('');
+}
+
+function renderizarHeatmapGasolina(transacciones) {
+  const matriz = Calc.agruparGasolinaPorHoraDia(transacciones);
+  const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  let max = 1;
+  matriz.forEach((fila) => fila.forEach((v) => { if (v > max) max = v; }));
+  let html = '<div></div>';
+  for (let h = 0; h < 24; h++) html += `<div style="font-size:8px; color:#b3aeae; text-align:center;">${h}</div>`;
+  matriz.forEach((fila, di) => {
+    html += `<div style="font-size:9.5px; color:#7e7576; font-weight:700; text-align:right; padding-right:6px;">${dias[di]}</div>`;
+    fila.forEach((v, h) => {
+      const alpha = Math.min(v / max, 1).toFixed(2);
+      html += `<div style="aspect-ratio:1; border-radius:3px; background:rgba(27,79,114,${alpha});" title="${dias[di]} ${h}:00 — ${v} transacciones"></div>`;
+    });
+  });
+  document.getElementById('gasolina-heatmap-grid').innerHTML = html;
+}
+
+// Combo "Todo": barras (litros o $ según referencia) + excedente rojo/verde + línea de precio
+// ponderado. Ventana horizontal fija (ventanaN) y altura vertical fija (CSS .gasolina-chart-box)
+// — validado con el usuario vía Visual Companion antes de implementar (ver spec §7).
+function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
+  const semanas = Calc.agruparGasolinaPorSemana(transaccionesAmbito);
+  const ventana = semanas.slice(-gasolinaEstado.ventanaN);
+  if (gasolinaCharts[canvasId]) { gasolinaCharts[canvasId].destroy(); delete gasolinaCharts[canvasId]; }
+  if (ventana.length === 0) return;
+
+  let etiquetaSerie, valores, excedentes;
+  if (gasolinaEstado.referencia === 'presupuesto') {
+    const distritos = (gasolinaEstado.tipo || gasolinaEstado.sucursal) ? distritosEnAmbitoGasolina(transaccionesAmbito) : null;
+    const presupuestoMensual = presupuestoMensualGasolina(distritos);
+    const resultado = Calc.calcularExcedenteVsPresupuesto(ventana, presupuestoMensual);
+    valores = resultado.semanas.map((s) => s.monto);
+    excedentes = resultado.semanas.map((s) => s.excedente);
+    etiquetaSerie = 'Gasto semanal ($)';
+  } else {
+    const resultado = Calc.calcularExcedenteVsPromedio(ventana);
+    valores = resultado.semanas.map((s) => s.litros);
+    excedentes = resultado.semanas.map((s) => s.excedente);
+    etiquetaSerie = 'Litros consumidos';
+  }
+  const precios = ventana.map((s) => s.precioPonderado);
+  const etiquetas = ventana.map((s) => s.semana);
+  const mostrarEtiquetas = ventana.length <= 20;
+  const esMoneda = gasolinaEstado.referencia === 'presupuesto';
+
+  gasolinaCharts[canvasId] = new Chart(document.getElementById(canvasId), {
+    data: {
+      labels: etiquetas,
+      datasets: [
+        { type: 'bar', label: etiquetaSerie, data: valores, backgroundColor: '#7c7530', yAxisID: 'y', maxBarThickness: 34, order: 2 },
+        { type: 'line', label: 'Precio x litro (ponderado)', data: precios, yAxisID: 'y1', borderColor: '#1b1b1b', borderDash: [4, 3], borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: '#fff', pointBorderColor: '#1b1b1b', tension: .25, order: 1 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: mostrarEtiquetas ? 30 : 14, bottom: 6 } },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + (c.dataset.yAxisID === 'y1' ? '$' + c.parsed.y.toFixed(2) : (esMoneda ? formatoMoneda(c.parsed.y) : c.parsed.y.toLocaleString('es-MX') + ' L')) } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: ventana.length > 20 ? 7 : 9 } } },
+        y: { display: false, min: Math.min(...valores) * 0.9, max: Math.max(...valores) * 1.15 },
+        y1: { display: false, min: Math.min(...precios) - 1, max: Math.max(...precios) + 1 },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasGasolinaTodo' + canvasId,
+      afterDatasetsDraw(c) {
+        if (!mostrarEtiquetas) return;
+        const ctx = c.ctx;
+        const metaBar = c.getDatasetMeta(0);
+        const metaLine = c.getDatasetMeta(1);
+        metaBar.data.forEach((bar, i) => {
+          ctx.save();
+          ctx.font = 'bold 9px -apple-system, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#1b1b1b';
+          ctx.fillText(esMoneda ? formatoCompacto(valores[i]) : Math.round(valores[i]).toLocaleString('es-MX'), bar.x, bar.y - 10);
+          const exc = excedentes[i];
+          const excTxt = esMoneda ? formatoCompacto(Math.abs(exc)) : Math.round(Math.abs(exc)).toLocaleString('es-MX');
+          const texto = exc >= 0 ? '+' + excTxt : '(' + excTxt + ')';
+          ctx.fillStyle = exc >= 0 ? '#1E8449' : '#ba1a1a';
+          ctx.fillText(texto, bar.x, bar.y - 22);
+          ctx.restore();
+        });
+        metaLine.data.forEach((pt, i) => {
+          ctx.save();
+          ctx.font = 'bold 9px -apple-system, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#1b1b1b';
+          ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - 9);
+          ctx.restore();
+        });
+      },
+    }],
+  });
+}
+
+function rerenderizarChartActivoGasolina() {
+  if (gasolinaEstado.nivel === 'nacional') renderizarChartTodoGasolina('gasolina-chart-todo', gasolinaDatos.transacciones);
+  else if (gasolinaEstado.nivel === 'tipo') renderizarChartTodoGasolina('gasolina-chart-tipo', transaccionesEnAmbitoGasolina());
+}
+
+document.getElementById('gasolina-toggle-ventana').addEventListener('click', (evento) => {
+  const span = evento.target.closest('span[data-n]');
+  if (!span) return;
+  gasolinaEstado.ventanaN = parseInt(span.dataset.n, 10);
+  document.querySelectorAll('#gasolina-toggle-ventana span').forEach((s) => {
+    s.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+    s.classList.add('text-on-surface-variant');
+  });
+  span.classList.add('bg-white', 'shadow-sm', 'text-primary');
+  span.classList.remove('text-on-surface-variant');
+  rerenderizarChartActivoGasolina();
+});
+
+document.getElementById('gasolina-toggle-referencia').addEventListener('click', (evento) => {
+  const span = evento.target.closest('span[data-ref]');
+  if (!span) return;
+  gasolinaEstado.referencia = span.dataset.ref;
+  document.querySelectorAll('#gasolina-toggle-referencia span').forEach((s) => {
+    s.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+    s.classList.add('text-on-surface-variant');
+  });
+  span.classList.add('bg-white', 'shadow-sm', 'text-primary');
+  span.classList.remove('text-on-surface-variant');
+  document.getElementById('gasolina-todo-desc').textContent = gasolinaEstado.referencia === 'presupuesto'
+    ? 'Barras = gasto $ · rojo/verde = excedente vs. presupuesto prorrateado a semana · línea punteada = precio ponderado $/L'
+    : 'Barras = litros · rojo/verde = excedente vs. promedio de la ventana visible · línea punteada = precio ponderado $/L';
+  rerenderizarChartActivoGasolina();
+});
+
+function abrirTipoSucursalGasolina(tipo) {
+  gasolinaEstado.tipo = tipo;
+  gasolinaEstado.sucursal = null;
+  gasolinaEstado.placa = null;
+  document.getElementById('gasolina-breadcrumb-tipo').textContent = tipo;
+  mostrarNivelGasolina('tipo');
+  renderizarNivelTipoGasolina();
+}
+
+function renderizarNivelTipoGasolina() {
+  document.getElementById('gasolina-tipo-titulo').textContent = gasolinaEstado.tipo;
+  document.getElementById('gasolina-tipo-chart-titulo').textContent = gasolinaEstado.tipo;
+  const transacciones = transaccionesEnAmbitoGasolina();
+  const filas = Calc.agruparGasolinaPorGrupo(transacciones, 'sucursal');
+  const cuerpo = document.getElementById('gasolina-ranking-sucursal-body');
+  cuerpo.innerHTML = filas.map((f) => `
+    <tr class="hover:bg-surface-container-low/50 cursor-pointer transition-colors" onclick="abrirSucursalGasolina('${f.clave.replace(/'/g, "\\'")}')">
+      <td class="px-6 py-3 font-gordita-bold text-primary">${f.clave}</td>
+      <td class="px-6 py-3 text-right">${Math.round(f.litros).toLocaleString('es-MX')}</td>
+      <td class="px-6 py-3 text-right">${formatoMoneda(f.monto)}</td>
+      <td class="px-6 py-3 text-right">$${f.precioPonderado.toFixed(2)}</td>
+      <td class="px-6 py-3 text-right">${f.unidades}</td>
+    </tr>`).join('');
+  renderizarChartTodoGasolina('gasolina-chart-tipo', transacciones);
+}
+
+function abrirSucursalGasolina(sucursal) {
+  gasolinaEstado.sucursal = sucursal;
+  gasolinaEstado.placa = null;
+  document.getElementById('gasolina-breadcrumb-sucursal').textContent = sucursal;
+  mostrarNivelGasolina('sucursal');
+  renderizarNivelSucursalGasolina();
+}
+
+function renderizarNivelSucursalGasolina() {
+  document.getElementById('gasolina-sucursal-titulo').textContent = gasolinaEstado.sucursal;
+  const transacciones = transaccionesEnAmbitoGasolina();
+  const filas = Calc.agruparGasolinaPorPlaca(transacciones);
+  const cuerpo = document.getElementById('gasolina-ranking-placa-body');
+  cuerpo.innerHTML = filas.map((f) => {
+    const desvTxt = f.desviacionPromedioPct === null ? '—' : f.desviacionPromedioPct.toFixed(1) + '%';
+    const desvClase = f.desviacionPromedioPct === null ? 'text-on-surface-variant' : (f.desviacionPromedioPct < 0 ? 'text-error' : 'text-qiora-green');
+    return `<tr class="hover:bg-surface-container-low/50 cursor-pointer transition-colors" onclick="abrirPlacaGasolina('${f.placa.replace(/'/g, "\\'")}')">
+      <td class="px-6 py-3 font-gordita-bold text-primary">${f.placa}</td>
+      <td class="px-6 py-3">${f.modelo || '—'}${f.anio ? ' · ' + f.anio : ''}</td>
+      <td class="px-6 py-3 text-right">${Math.round(f.litros).toLocaleString('es-MX')}</td>
+      <td class="px-6 py-3 text-right">${formatoMoneda(f.monto)}</td>
+      <td class="px-6 py-3 text-right font-gordita-bold ${desvClase}">${desvTxt}</td>
+    </tr>`;
+  }).join('');
+  renderizarFrecuenciaPorPlacaGasolina(transacciones);
+}
+
+function renderizarFrecuenciaPorPlacaGasolina(transacciones) {
+  const frecuencia = Calc.agruparGasolinaFrecuenciaPorPlaca(transacciones);
+  const porPlaca = Calc.agruparGasolinaPorPlaca(transacciones).slice(0, 8);
+  const semanas = Calc.agruparGasolinaPorSemana(transacciones).map((s) => s.semana).slice(-10);
+  const grid = document.getElementById('gasolina-freqgrid');
+  let html = '<div></div>';
+  semanas.forEach((s) => { html += `<div style="font-size:9px; color:#b3aeae; text-align:center;">${s.slice(5)}</div>`; });
+  porPlaca.forEach((p) => {
+    html += `<div style="font-weight:700; display:flex; align-items:center;">${p.placa}</div>`;
+    semanas.forEach((s) => {
+      const n = (frecuencia[p.placa] && frecuencia[p.placa][s]) || 0;
+      const bg = n >= 5 ? '#ba1a1a' : n >= 3 ? '#e08a3c' : n >= 1 ? '#2E86C1' : '#e2dede';
+      html += `<div style="aspect-ratio:1; border-radius:3px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:9px; font-weight:700; background:${bg};">${n || ''}</div>`;
+    });
+  });
+  grid.innerHTML = html;
+}
+
+function abrirPlacaGasolina(placa) {
+  gasolinaEstado.placa = placa;
+  document.getElementById('gasolina-breadcrumb-placa').textContent = placa;
+  mostrarNivelGasolina('placa');
+  renderizarNivelPlacaGasolina();
+}
+
+function renderizarNivelPlacaGasolina() {
+  const transacciones = gasolinaDatos.transacciones
+    .filter((t) => t.placa === gasolinaEstado.placa)
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0));
+  const primero = transacciones[0] || {};
+  document.getElementById('gasolina-placa-kpi-placa').textContent = gasolinaEstado.placa;
+  document.getElementById('gasolina-placa-kpi-modelo').textContent = (primero.modelo || '—') + (primero.anio ? ' · ' + primero.anio : '');
+  document.getElementById('gasolina-placa-kpi-sucursal').textContent = primero.sucursal || '—';
+  document.getElementById('gasolina-placa-kpi-tipo').textContent = primero.tipoSucursal || '—';
+  const conDesv = transacciones.filter((t) => typeof t.desviacion_rendimiento_pct === 'number');
+  const desviacionProm = conDesv.length ? conDesv.reduce((s, t) => s + t.desviacion_rendimiento_pct, 0) / conDesv.length : null;
+  const elDesv = document.getElementById('gasolina-placa-kpi-desviacion');
+  elDesv.textContent = desviacionProm === null ? '—' : desviacionProm.toFixed(1) + '%';
+  elDesv.className = 'font-gordita-bold text-xl ' + (desviacionProm === null ? 'text-primary' : (desviacionProm < 0 ? 'text-error' : 'text-qiora-green'));
+
+  const semanas = Calc.agruparGasolinaPorSemana(transacciones).slice(-gasolinaEstado.ventanaN);
+  if (gasolinaCharts['gasolina-chart-placa']) { gasolinaCharts['gasolina-chart-placa'].destroy(); delete gasolinaCharts['gasolina-chart-placa']; }
+  if (semanas.length > 0) {
+    gasolinaCharts['gasolina-chart-placa'] = new Chart(document.getElementById('gasolina-chart-placa'), {
+      type: 'bar',
+      data: {
+        labels: semanas.map((s) => s.semana),
+        datasets: [{ label: 'Litros', data: semanas.map((s) => s.litros), backgroundColor: '#1B4F72', maxBarThickness: 30, borderRadius: 4 }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.y.toLocaleString('es-MX') + ' L' } } },
+        scales: { x: { grid: { display: false } }, y: { display: false } },
+      },
+    });
+  }
+
+  const cuerpo = document.getElementById('gasolina-placa-transacciones-body');
+  cuerpo.innerHTML = transacciones.map((t) => {
+    const negativo = typeof t.desviacion_rendimiento_pct === 'number' && t.desviacion_rendimiento_pct < 0;
+    return `<tr class="${negativo ? 'bg-error/5' : ''}">
+      <td class="px-6 py-3">${t.fecha || ''}${t.hora ? ' ' + t.hora : ''}</td>
+      <td class="px-6 py-3">${t.gasolinera || '—'}</td>
+      <td class="px-6 py-3 text-right">${(t.litros || 0).toFixed(1)}</td>
+      <td class="px-6 py-3 text-right">$${(t.precio_por_litro || 0).toFixed(2)}</td>
+      <td class="px-6 py-3 text-right">${formatoMoneda(t.monto || 0)}</td>
+      <td class="px-6 py-3 text-right ${negativo ? 'text-error font-gordita-bold' : ''}">${typeof t.desviacion_rendimiento_pct === 'number' ? t.desviacion_rendimiento_pct.toFixed(1) + '%' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
 function calcularPresupuestoAgregado(presupuesto, clavesMeses, distritoFiltro) {
   let ingresoPresupuestado = 0;
   let gastoPresupuestado = 0;
@@ -10283,6 +10992,7 @@ function configurarDropzone(dropzoneId, inputId) {
 configurarDropzone('dropzone-cargar', 'input-excel');
 configurarDropzone('dropzone-ingresos', 'input-excel-ingresos');
 configurarDropzone('dropzone-flota', 'input-excel-flota');
+configurarDropzone('dropzone-gasolina', 'input-excel-gasolina');
 configurarDropzone('dropzone-unidades', 'input-excel-unidades');
 configurarDropzone('dropzone-glosario', 'input-excel-glosario');
 configurarDropzone('dropzone-poliza', 'input-excel-poliza');
