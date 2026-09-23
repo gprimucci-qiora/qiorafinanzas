@@ -1916,7 +1916,7 @@
             <div class="head-row flex items-start justify-between flex-wrap gap-3 mb-1">
               <div>
                 <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Consumo Semanal · Excedente · Precio Ponderado</h3>
-                <p class="text-xs text-on-surface-variant mt-1" id="gasolina-todo-desc">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró). Debajo, el equivalente en pesos de cada semana y el precio ponderado por separado.</p>
+                <p class="text-xs text-on-surface-variant mt-1" id="gasolina-todo-desc">Barras = <strong>litros</strong> consumidos por semana. Meta = promedio de litros de las semanas visibles aquí (cambia si cambias la ventana). Rojo = arriba de la meta (gastó de más) · Verde = abajo (ahorró).</p>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex bg-surface-container-low rounded-lg p-1 text-[11px] font-gordita-bold" id="gasolina-toggle-referencia">
@@ -9907,7 +9907,10 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
   const precios = ventana.map((s) => s.precioPonderado);
   const etiquetas = ventana.map((s) => s.semana);
   const esMoneda = gasolinaEstado.referencia === 'presupuesto';
-  const mostrarEtiquetas = ventana.length <= 20;
+  // Las etiquetas de monto siempre se muestran (para no tener que hacer hover), solo se
+  // encoge la letra cuando hay muchas semanas visibles.
+  const mostrarEtiquetas = true;
+  const tamanoFuenteEtiqueta = ventana.length > 20 ? 7 : 9;
   // Equivalente en $ del excedente: si ya se ve en $ (vs. presupuesto), el excedente ya es $; si
   // se ve en litros (vs. promedio), se valoriza al precio ponderado de esa semana.
   const excedentesMonto = esMoneda ? excedentes : excedentes.map((e, i) => e * precios[i]);
@@ -9970,10 +9973,9 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
         ctx.fillText(etiquetaMeta, area.right, yMeta - 3);
         ctx.restore();
 
-        if (!mostrarEtiquetas) return;
         c.getDatasetMeta(0).data.forEach((bar, i) => {
           ctx.save();
-          ctx.font = "bold 9px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.font = 'bold ' + tamanoFuenteEtiqueta + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillStyle = '#1b1b1b';
           ctx.fillText(esMoneda ? formatoCompacto(valores[i]) : Math.round(valores[i]).toLocaleString('es-MX') + ' L', bar.x, bar.y - 10);
           ctx.restore();
@@ -10002,11 +10004,10 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       plugins: [{
         id: 'etiquetasPrecioGasolina' + precioCanvasId,
         afterDatasetsDraw(c) {
-          if (!mostrarEtiquetas) return;
           const ctx = c.ctx;
           c.getDatasetMeta(0).data.forEach((pt, i) => {
             ctx.save();
-            ctx.font = "bold 8px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#4c4546';
+            ctx.font = 'bold ' + tamanoFuenteEtiqueta + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#4c4546';
             ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - 4);
             ctx.restore();
           });
@@ -10050,7 +10051,7 @@ function rerenderizarChartActivoGasolina() {
 // nivel (sufijo del canvasId de la gráfica principal) para poder tener varias en la página.
 function renderizarMiniCardsGasolina(canvasId, ventana) {
   const sufijo = canvasId.replace('gasolina-chart-', '');
-  const mostrarEtiquetas = ventana.length <= 20;
+  const tamanoFuenteEtiqueta = ventana.length > 20 ? 6.5 : 8;
   const config = [
     { campo: 'transacciones', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
     { campo: 'unidades', color: '#85C1E9', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
@@ -10067,7 +10068,7 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
       data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3 }] },
       options: {
         maintainAspectRatio: false,
-        layout: { padding: { top: mostrarEtiquetas ? 14 : 2 } },
+        layout: { padding: { top: 14 } },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
@@ -10077,11 +10078,10 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
       plugins: [{
         id: 'etiquetasMini' + id,
         afterDatasetsDraw(c) {
-          if (!mostrarEtiquetas) return;
           const ctx = c.ctx;
           c.getDatasetMeta(0).data.forEach((bar, i) => {
             ctx.save();
-            ctx.font = "bold 8px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#1b1b1b';
+            ctx.font = 'bold ' + tamanoFuenteEtiqueta + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#1b1b1b';
             ctx.fillText(fmt(data[i]), bar.x, bar.y - 3);
             ctx.restore();
           });
@@ -10170,9 +10170,9 @@ document.getElementById('gasolina-toggle-referencia').addEventListener('click', 
   });
   span.classList.add('bg-white', 'shadow-sm', 'text-primary');
   span.classList.remove('text-on-surface-variant');
-  document.getElementById('gasolina-todo-desc').textContent = gasolinaEstado.referencia === 'presupuesto'
-    ? 'Barras = gasto $ · rojo/verde = excedente vs. presupuesto prorrateado a semana · línea punteada = precio ponderado $/L'
-    : 'Barras = litros · rojo/verde = excedente vs. promedio de la ventana visible · línea punteada = precio ponderado $/L';
+  document.getElementById('gasolina-todo-desc').innerHTML = gasolinaEstado.referencia === 'presupuesto'
+    ? 'Barras = <strong>gasto en pesos</strong> por semana. Meta = tu presupuesto mensual de Gasolina de este distrito, dividido entre semanas. Rojo = arriba del presupuesto (se pasó) · Verde = abajo (le sobró).'
+    : 'Barras = <strong>litros</strong> consumidos por semana. Meta = promedio de litros de las semanas visibles aquí (cambia si cambias la ventana). Rojo = arriba de la meta (gastó de más) · Verde = abajo (ahorró).';
   rerenderizarChartActivoGasolina();
 });
 

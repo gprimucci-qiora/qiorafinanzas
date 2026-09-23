@@ -384,11 +384,13 @@
     });
   }
 
+  // La semana de negocio de Gasolina corre viernes a jueves (no lunes a domingo) — así lo pidió
+  // el usuario, coincide con el ciclo de corte que ya usa en su Excel.
   function inicioSemanaGasolina(fechaISO) {
     const d = new Date(fechaISO + 'T00:00:00');
     const diaJs = d.getDay(); // 0=domingo..6=sábado
-    const diff = diaJs === 0 ? -6 : 1 - diaJs;
-    d.setDate(d.getDate() + diff);
+    const diff = (diaJs - 5 + 7) % 7; // días desde el viernes más reciente (viernes=0)
+    d.setDate(d.getDate() - diff);
     return toISODate(d);
   }
 

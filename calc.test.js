@@ -558,20 +558,20 @@ test('clasificarGasolina deja modelo/anio/empleadoAsignado en null si la placa n
 test('agruparGasolinaPorSemana calcula precioPonderado como promedio simple de precio_por_litro por transacción (no por litros/monto)', () => {
   const transacciones = [
     // monto y litros deliberadamente distintos entre sí, para probar que el precio no se deriva de ahí
-    { fecha: '2026-01-05', litros: 40, monto: 999, precio_por_litro: 20, placa: 'A1' }, // lunes
-    { fecha: '2026-01-07', litros: 10, monto: 50, precio_por_litro: 21, placa: 'A2' }, // miercoles, misma semana
-    { fecha: '2026-01-12', litros: 20, monto: 440, precio_por_litro: 22, placa: 'A1' }, // lunes siguiente
+    { fecha: '2026-01-05', litros: 40, monto: 999, precio_por_litro: 20, placa: 'A1' }, // lunes, semana viernes 2026-01-02
+    { fecha: '2026-01-07', litros: 10, monto: 50, precio_por_litro: 21, placa: 'A2' }, // miercoles, misma semana (viernes a jueves)
+    { fecha: '2026-01-12', litros: 20, monto: 440, precio_por_litro: 22, placa: 'A1' }, // lunes siguiente, semana viernes 2026-01-09
   ];
   const resultado = Calc.agruparGasolinaPorSemana(transacciones);
   assert.strictEqual(resultado.length, 2);
-  assert.strictEqual(resultado[0].semana, '2026-01-05');
+  assert.strictEqual(resultado[0].semana, '2026-01-02');
   assert.strictEqual(resultado[0].litros, 50);
   assert.strictEqual(resultado[0].monto, 1049);
   assert.strictEqual(resultado[0].transacciones, 2);
   assert.strictEqual(resultado[0].unidades, 2);
   // (20 + 21) / 2 = 20.5 — promedio por transacción, NO ponderado por litros ni monto
   assert.strictEqual(resultado[0].precioPonderado, 20.5);
-  assert.strictEqual(resultado[1].semana, '2026-01-12');
+  assert.strictEqual(resultado[1].semana, '2026-01-09');
   assert.strictEqual(resultado[1].unidades, 1);
 });
 
@@ -647,13 +647,13 @@ test('agruparGasolinaPorHoraDia arma una matriz 7x24 con conteo de transacciones
 
 test('agruparGasolinaFrecuenciaPorPlaca cuenta cargas por placa y semana', () => {
   const transacciones = [
-    { fecha: '2026-01-05', placa: 'A1' },
-    { fecha: '2026-01-06', placa: 'A1' },
-    { fecha: '2026-01-12', placa: 'A1' },
+    { fecha: '2026-01-05', placa: 'A1' }, // semana viernes 2026-01-02
+    { fecha: '2026-01-06', placa: 'A1' }, // misma semana
+    { fecha: '2026-01-12', placa: 'A1' }, // semana viernes 2026-01-09
   ];
   const resultado = Calc.agruparGasolinaFrecuenciaPorPlaca(transacciones);
-  assert.strictEqual(resultado['A1']['2026-01-05'], 2);
-  assert.strictEqual(resultado['A1']['2026-01-12'], 1);
+  assert.strictEqual(resultado['A1']['2026-01-02'], 2);
+  assert.strictEqual(resultado['A1']['2026-01-09'], 1);
 });
 
 test('rankingGasolinerasGasolina usa precio_por_litro de Edenred (no monto/litros) y calcula variación vs promedio de flota', () => {
