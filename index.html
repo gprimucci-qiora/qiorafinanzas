@@ -1885,7 +1885,7 @@
 
         <!-- Nivel 1: Nacional -->
         <div id="gasolina-nivel-nacional" class="gasolina-nivel">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-lg">
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-gutter mb-lg">
             <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
               <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Litros Consumidos</p>
               <h2 id="gasolina-kpi-litros" class="font-gordita-bold text-2xl text-primary">-</h2>
@@ -1901,6 +1901,14 @@
             <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
               <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Unidades Activas</p>
               <h2 id="gasolina-kpi-unidades" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Transacciones</p>
+              <h2 id="gasolina-kpi-transacciones" class="font-gordita-bold text-2xl text-primary">-</h2>
+            </div>
+            <div class="bg-white p-6 border border-outline-variant rounded-xl shadow-sm">
+              <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Carga Prom. (L/transacción)</p>
+              <h2 id="gasolina-kpi-carga-promedio" class="font-gordita-bold text-2xl text-primary">-</h2>
             </div>
           </div>
 
@@ -1924,6 +1932,20 @@
             </div>
             <div class="gasolina-chart-box" style="height:300px; position:relative;">
               <canvas id="gasolina-chart-todo"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-gutter mt-4 pt-4 border-t border-outline-variant">
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Transacciones / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-transacciones-todo"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Unidades Activas / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-unidades-todo"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Carga Prom. (L) / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-cargaPromedio-todo"></canvas></div>
+              </div>
             </div>
           </section>
 
@@ -2043,6 +2065,20 @@
             <div class="gasolina-chart-box" style="height:300px; position:relative;">
               <canvas id="gasolina-chart-tipo"></canvas>
             </div>
+            <div class="grid grid-cols-3 gap-gutter mt-4 pt-4 border-t border-outline-variant">
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Transacciones / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-transacciones-tipo"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Unidades Activas / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-unidades-tipo"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Carga Prom. (L) / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-cargaPromedio-tipo"></canvas></div>
+              </div>
+            </div>
           </section>
         </div>
 
@@ -2075,9 +2111,10 @@
         <!-- Nivel 4: detalle de Placa -->
         <div id="gasolina-nivel-placa" class="gasolina-nivel" style="display:none;">
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-gutter">
               <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Placa</p><h2 id="gasolina-placa-kpi-placa" class="font-gordita-bold text-xl text-primary">-</h2></div>
               <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Modelo / Año</p><h2 id="gasolina-placa-kpi-modelo" class="font-gordita-bold text-xl text-primary">-</h2></div>
+              <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Cuadrilla / Empleado</p><h2 id="gasolina-placa-kpi-cuadrilla" class="font-gordita-bold text-sm text-primary">-</h2></div>
               <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Sucursal</p><h2 id="gasolina-placa-kpi-sucursal" class="font-gordita-bold text-sm text-primary">-</h2></div>
               <div><p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Tipo de Sucursal</p><h2 id="gasolina-placa-kpi-tipo" class="font-gordita-bold text-sm text-primary">-</h2></div>
             </div>
@@ -2086,6 +2123,20 @@
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal</h3>
             <div class="gasolina-chart-box" style="height:300px; position:relative;">
               <canvas id="gasolina-chart-placa"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-gutter mt-4 pt-4 border-t border-outline-variant">
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Transacciones / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-transacciones-placa"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Unidades Activas / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-unidades-placa"></canvas></div>
+              </div>
+              <div>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Carga Prom. (L) / Semana</p>
+                <div style="height:70px;"><canvas id="gasolina-mini-cargaPromedio-placa"></canvas></div>
+              </div>
             </div>
           </section>
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -9602,17 +9653,21 @@ function transaccionesEnAmbitoGasolina() {
 }
 
 function kpisGasolina(transacciones) {
-  let litros = 0, monto = 0, sumaPrecioPorLitros = 0;
+  let litros = 0, monto = 0, sumaPrecios = 0;
   const placas = new Set();
   transacciones.forEach((t) => {
     litros += t.litros || 0;
     monto += t.monto || 0;
-    sumaPrecioPorLitros += (t.precio_por_litro || 0) * (t.litros || 0);
+    sumaPrecios += (t.precio_por_litro || 0);
     if (t.placa) placas.add(t.placa);
   });
+  const transacciones_ = transacciones.length;
   return {
-    litros, monto, unidades: placas.size,
-    precioPonderado: litros > 0 ? sumaPrecioPorLitros / litros : 0, // precio_por_litro de Edenred, ponderado por litros — no monto/litros
+    litros, monto, unidades: placas.size, transacciones: transacciones_,
+    cargaPromedio: transacciones_ > 0 ? litros / transacciones_ : 0,
+    // precio_por_litro de Edenred, promedio simple por transacción (ponderado por # de
+    // transacciones a ese precio) — no por litros ni monto/litros.
+    precioPonderado: transacciones_ > 0 ? sumaPrecios / transacciones_ : 0,
   };
 }
 
@@ -9670,6 +9725,8 @@ function renderizarNivelNacionalGasolina() {
   document.getElementById('gasolina-kpi-gasto').textContent = formatoMoneda(kpis.monto);
   document.getElementById('gasolina-kpi-precio').textContent = '$' + kpis.precioPonderado.toFixed(2);
   document.getElementById('gasolina-kpi-unidades').textContent = kpis.unidades.toLocaleString('es-MX');
+  document.getElementById('gasolina-kpi-transacciones').textContent = kpis.transacciones.toLocaleString('es-MX');
+  document.getElementById('gasolina-kpi-carga-promedio').textContent = kpis.cargaPromedio.toFixed(1) + ' L';
 
   renderizarRankingTipoSucursalGasolina(transacciones);
   renderizarRankingGasolinerasGasolina(transacciones);
@@ -9776,24 +9833,27 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
   if (gasolinaCharts[canvasId]) { gasolinaCharts[canvasId].destroy(); delete gasolinaCharts[canvasId]; }
   if (ventana.length === 0) return;
 
-  let etiquetaSerie, valores, excedentes;
+  let etiquetaSerie, valores, excedentes, metaValor;
   if (gasolinaEstado.referencia === 'presupuesto') {
     const distritos = (gasolinaEstado.tipo || gasolinaEstado.sucursal) ? distritosEnAmbitoGasolina(transaccionesAmbito) : null;
     const presupuestoMensual = presupuestoMensualGasolina(distritos);
     const resultado = Calc.calcularExcedenteVsPresupuesto(ventana, presupuestoMensual);
     valores = resultado.semanas.map((s) => s.monto);
     excedentes = resultado.semanas.map((s) => s.excedente);
+    metaValor = resultado.meta;
     etiquetaSerie = 'Gasto semanal ($)';
   } else {
     const resultado = Calc.calcularExcedenteVsPromedio(ventana);
     valores = resultado.semanas.map((s) => s.litros);
     excedentes = resultado.semanas.map((s) => s.excedente);
+    metaValor = resultado.meta;
     etiquetaSerie = 'Litros consumidos';
   }
   const precios = ventana.map((s) => s.precioPonderado);
   const etiquetas = ventana.map((s) => s.semana);
   const mostrarEtiquetas = ventana.length <= 20;
   const esMoneda = gasolinaEstado.referencia === 'presupuesto';
+  const etiquetaMeta = 'Consumo promedio (' + ventana.length + ' sem.): ' + (esMoneda ? formatoCompacto(metaValor) : Math.round(metaValor).toLocaleString('es-MX') + ' L');
 
   gasolinaCharts[canvasId] = new Chart(document.getElementById(canvasId), {
     data: {
@@ -9806,7 +9866,7 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: mostrarEtiquetas ? 30 : 14, bottom: 6 } },
+      layout: { padding: { top: mostrarEtiquetas ? 30 : 14, bottom: mostrarEtiquetas ? 22 : 8, right: 8 } },
       onClick: (evento, elementos) => {
         if (!elementos.length) return;
         abrirDrillDownSemanaGasolina(ventana[elementos[0].index].semana, transaccionesAmbito);
@@ -9824,15 +9884,36 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { family: 'Gordita', size: ventana.length > 20 ? 7 : 9 } } },
-        y: { display: false, min: Math.min(...valores) * 0.9, max: Math.max(...valores) * 1.15 },
+        y: { display: false, min: Math.min(...valores, metaValor) * 0.9, max: Math.max(...valores, metaValor) * 1.15 },
         y1: { display: false, min: Math.min(...precios) - 1, max: Math.max(...precios) + 1 },
       },
     },
     plugins: [{
       id: 'etiquetasGasolinaTodo' + canvasId,
       afterDatasetsDraw(c) {
-        if (!mostrarEtiquetas) return;
         const ctx = c.ctx;
+        const area = c.chartArea;
+
+        // Línea de referencia del consumo promedio (meta) + etiqueta — siempre visible, sea cual
+        // sea la ventana, para dejar claro contra qué se está comparando cada semana.
+        const yMeta = c.scales.y.getPixelForValue(metaValor);
+        ctx.save();
+        ctx.strokeStyle = '#9c9691';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(area.left, yMeta);
+        ctx.lineTo(area.right, yMeta);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = "bold 9px 'Gordita', sans-serif";
+        ctx.fillStyle = '#7e7576';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = yMeta - area.top < 12 ? 'top' : 'bottom';
+        ctx.fillText(etiquetaMeta, area.right, yMeta - 3);
+        ctx.restore();
+
+        if (!mostrarEtiquetas) return;
         const metaBar = c.getDatasetMeta(0);
         const metaLine = c.getDatasetMeta(1);
         metaBar.data.forEach((bar, i) => {
@@ -9840,11 +9921,16 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
           ctx.font = "bold 9px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillStyle = '#1b1b1b';
           ctx.fillText(esMoneda ? formatoCompacto(valores[i]) : Math.round(valores[i]).toLocaleString('es-MX'), bar.x, bar.y - 10);
+          // Excedente: si la semana quedó arriba del promedio, la etiqueta flota arriba de la
+          // barra (junto al valor); si quedó abajo, se ancla cerca de la base de la gráfica.
           const exc = excedentes[i];
           const excTxt = esMoneda ? formatoCompacto(Math.abs(exc)) : Math.round(Math.abs(exc)).toLocaleString('es-MX');
-          const texto = exc >= 0 ? '+' + excTxt : '(' + excTxt + ')';
           ctx.fillStyle = exc >= 0 ? '#1E8449' : '#ba1a1a';
-          ctx.fillText(texto, bar.x, bar.y - 22);
+          if (exc >= 0) {
+            ctx.fillText('+' + excTxt, bar.x, bar.y - 22);
+          } else {
+            ctx.fillText('(' + excTxt + ')', bar.x, area.bottom - 12);
+          }
           ctx.restore();
         });
         metaLine.data.forEach((pt, i) => {
@@ -9857,11 +9943,45 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       },
     }],
   });
+
+  renderizarMiniCardsGasolina(canvasId, ventana);
 }
 
 function rerenderizarChartActivoGasolina() {
   if (gasolinaEstado.nivel === 'nacional') renderizarChartTodoGasolina('gasolina-chart-todo', gasolinaDatos.transacciones);
   else if (gasolinaEstado.nivel === 'tipo') renderizarChartTodoGasolina('gasolina-chart-tipo', transaccionesEnAmbitoGasolina());
+  else if (gasolinaEstado.nivel === 'placa') renderizarNivelPlacaGasolina();
+}
+
+// Tarjetas chicas de tendencia semanal (mismo criterio de ventana que la gráfica principal):
+// Transacciones, Unidades Activas y Carga Promedio por semana. Un id de canvas distinto por
+// nivel (sufijo del canvasId de la gráfica principal) para poder tener varias en la página.
+function renderizarMiniCardsGasolina(canvasId, ventana) {
+  const sufijo = canvasId.replace('gasolina-chart-', '');
+  const config = [
+    { campo: 'transacciones', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
+    { campo: 'unidades', color: '#85C1E9', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
+    { campo: 'cargaPromedio', color: '#1B4F72', fmt: (v) => v.toFixed(1) + ' L' },
+  ];
+  config.forEach(({ campo, color, fmt }) => {
+    const id = 'gasolina-mini-' + campo + '-' + sufijo;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const data = ventana.map((s) => campo === 'cargaPromedio' ? (s.transacciones > 0 ? s.litros / s.transacciones : 0) : s[campo]);
+    if (gasolinaCharts[id]) { gasolinaCharts[id].destroy(); delete gasolinaCharts[id]; }
+    gasolinaCharts[id] = new Chart(el, {
+      type: 'bar',
+      data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3 }] },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
+        },
+        scales: { x: { display: false }, y: { display: false, min: Math.min(...data) * 0.85, max: Math.max(...data) * 1.15 || 1 } },
+      },
+    });
+  });
 }
 
 // Clic en una barra de la gráfica "Todo" (una semana) abre el desglose de esa semana por el
@@ -10029,28 +10149,11 @@ function renderizarNivelPlacaGasolina() {
   const primero = transacciones[0] || {};
   document.getElementById('gasolina-placa-kpi-placa').textContent = gasolinaEstado.placa;
   document.getElementById('gasolina-placa-kpi-modelo').textContent = (primero.modelo || '—') + (primero.anio ? ' · ' + primero.anio : '');
+  document.getElementById('gasolina-placa-kpi-cuadrilla').textContent = primero.empleadoAsignado || '—';
   document.getElementById('gasolina-placa-kpi-sucursal').textContent = primero.sucursal || '—';
   document.getElementById('gasolina-placa-kpi-tipo').textContent = primero.tipoSucursal || '—';
 
-  const semanas = Calc.agruparGasolinaPorSemana(transacciones).slice(-gasolinaEstado.ventanaN);
-  if (gasolinaCharts['gasolina-chart-placa']) { gasolinaCharts['gasolina-chart-placa'].destroy(); delete gasolinaCharts['gasolina-chart-placa']; }
-  if (semanas.length > 0) {
-    gasolinaCharts['gasolina-chart-placa'] = new Chart(document.getElementById('gasolina-chart-placa'), {
-      type: 'bar',
-      data: {
-        labels: semanas.map((s) => s.semana),
-        datasets: [{ label: 'Litros', data: semanas.map((s) => s.litros), backgroundColor: '#1B4F72', maxBarThickness: 30, borderRadius: 4 }],
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => c.parsed.y.toLocaleString('es-MX') + ' L' } },
-        },
-        scales: { x: { grid: { display: false }, ticks: { font: { family: 'Gordita' } } }, y: { display: false } },
-      },
-    });
-  }
+  renderizarChartTodoGasolina('gasolina-chart-placa', transacciones);
 
   const cuerpo = document.getElementById('gasolina-placa-transacciones-body');
   cuerpo.innerHTML = transacciones.map((t) => `<tr>

@@ -535,30 +535,32 @@ test('tipoSucursalGasolina cae en "Otros / Sin Clasificar" para prefijo desconoc
   assert.strictEqual(Calc.tipoSucursalGasolina(null, {}), 'Otros / Sin Clasificar');
 });
 
-test('clasificarGasolina agrega modelo/anio desde flotaMap y tipoSucursal', () => {
-  const flotaMap = { 'ABC123': { modelo: 'NP300', anio: 2022 } };
+test('clasificarGasolina agrega modelo/anio/empleadoAsignado desde flotaMap y tipoSucursal', () => {
+  const flotaMap = { 'ABC123': { modelo: 'NP300', anio: 2022, empleado_asignado: 'JUAN PEREZ' } };
   const glosarioMap = { 'CTA-TPI-INT-XAL XALAPA': { tipo_sucursal: 'DISTRITO' } };
   const transaccion = { placa: 'ABC123', sucursal: 'CTA-TPI-INT-XAL XALAPA', litros: 40 };
   const resultado = Calc.clasificarGasolina(transaccion, flotaMap, glosarioMap);
   assert.strictEqual(resultado.modelo, 'NP300');
   assert.strictEqual(resultado.anio, 2022);
+  assert.strictEqual(resultado.empleadoAsignado, 'JUAN PEREZ');
   assert.strictEqual(resultado.tipoSucursal, 'DISTRITO');
   assert.strictEqual(resultado.litros, 40);
 });
 
-test('clasificarGasolina deja modelo/anio en null si la placa no tiene match en flota', () => {
+test('clasificarGasolina deja modelo/anio/empleadoAsignado en null si la placa no tiene match en flota', () => {
   const resultado = Calc.clasificarGasolina({ placa: 'ZZZ999', sucursal: 'IFR-TPX-01' }, {}, {});
   assert.strictEqual(resultado.modelo, null);
   assert.strictEqual(resultado.anio, null);
+  assert.strictEqual(resultado.empleadoAsignado, null);
   assert.strictEqual(resultado.tipoSucursal, 'Infraestructura / Planta Externa');
 });
 
-test('agruparGasolinaPorSemana calcula precioPonderado desde precio_por_litro (Edenred), no desde monto/litros', () => {
+test('agruparGasolinaPorSemana calcula precioPonderado como promedio simple de precio_por_litro por transacción (no por litros/monto)', () => {
   const transacciones = [
-    // monto deliberadamente distinto de litros*precio_por_litro, para probar que no se deriva de ahí
-    { fecha: '2026-01-05', litros: 40, monto: 999, precio_por_litro: 20 }, // lunes
-    { fecha: '2026-01-07', litros: 10, monto: 50, precio_por_litro: 21 }, // miercoles, misma semana
-    { fecha: '2026-01-12', litros: 20, monto: 440, precio_por_litro: 22 }, // lunes siguiente
+    // monto y litros deliberadamente distintos entre sí, para probar que el precio no se deriva de ahí
+    { fecha: '2026-01-05', litros: 40, monto: 999, precio_por_litro: 20, placa: 'A1' }, // lunes
+    { fecha: '2026-01-07', litros: 10, monto: 50, precio_por_litro: 21, placa: 'A2' }, // miercoles, misma semana
+    { fecha: '2026-01-12', litros: 20, monto: 440, precio_por_litro: 22, placa: 'A1' }, // lunes siguiente
   ];
   const resultado = Calc.agruparGasolinaPorSemana(transacciones);
   assert.strictEqual(resultado.length, 2);
@@ -566,9 +568,11 @@ test('agruparGasolinaPorSemana calcula precioPonderado desde precio_por_litro (E
   assert.strictEqual(resultado[0].litros, 50);
   assert.strictEqual(resultado[0].monto, 1049);
   assert.strictEqual(resultado[0].transacciones, 2);
-  // (40*20 + 10*21) / 50 = 20.2, NO 1049/50
-  assert.strictEqual(resultado[0].precioPonderado, 20.2);
+  assert.strictEqual(resultado[0].unidades, 2);
+  // (20 + 21) / 2 = 20.5 — promedio por transacción, NO ponderado por litros ni monto
+  assert.strictEqual(resultado[0].precioPonderado, 20.5);
   assert.strictEqual(resultado[1].semana, '2026-01-12');
+  assert.strictEqual(resultado[1].unidades, 1);
 });
 
 test('calcularExcedenteVsPromedio usa el promedio de litros de la ventana como meta', () => {

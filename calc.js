@@ -371,13 +371,15 @@
     return match ? match.tipo : 'Otros / Sin Clasificar';
   }
 
-  // Modelo/Año vienen de flota_vehicular (cruce por Placa); si la placa no tiene match,
-  // quedan null y la transacción se reporta bajo "Sin Match" en vez de perderse silenciosamente.
+  // Modelo/Año/Empleado Asignado (= cuadrilla, una unidad por cuadrilla) vienen de
+  // flota_vehicular (cruce por Placa); si la placa no tiene match, quedan null y la transacción
+  // se reporta bajo "Sin Match" en vez de perderse silenciosamente.
   function clasificarGasolina(transaccion, flotaMap, glosarioMap) {
     const vehiculo = flotaMap[transaccion.placa];
     return Object.assign({}, transaccion, {
       modelo: vehiculo ? vehiculo.modelo : null,
       anio: vehiculo ? vehiculo.anio : null,
+      empleadoAsignado: vehiculo ? vehiculo.empleado_asignado : null,
       tipoSucursal: tipoSucursalGasolina(transaccion.sucursal, glosarioMap),
     });
   }
@@ -390,19 +392,20 @@
     return toISODate(d);
   }
 
-  // precioPonderado usa el precio_por_litro que ya manda Edenred por transacción (ponderado por
-  // litros), NO monto/litros — el monto puede incluir cargos que no son estrictamente $/L, así
-  // que se respeta el precio que Edenred ya calculó en vez de recalcularlo.
+  // precioPonderado usa el precio_por_litro que ya manda Edenred por transacción, ponderado por
+  // NÚMERO DE TRANSACCIONES a ese precio (equivale al promedio simple de precio_por_litro entre
+  // todas las transacciones) — NO por litros ni por monto/litros, según criterio del usuario.
   function agruparGasolinaPorSemana(transacciones) {
     const porSemana = {};
     transacciones.forEach((t) => {
       if (!t.fecha) return;
       const semana = inicioSemanaGasolina(t.fecha);
-      const s = porSemana[semana] = porSemana[semana] || { semana, litros: 0, monto: 0, transacciones: 0, sumaPrecioPorLitros: 0 };
+      const s = porSemana[semana] = porSemana[semana] || { semana, litros: 0, monto: 0, transacciones: 0, sumaPrecios: 0, placas: new Set() };
       s.litros += t.litros || 0;
       s.monto += t.monto || 0;
       s.transacciones += 1;
-      s.sumaPrecioPorLitros += (t.precio_por_litro || 0) * (t.litros || 0);
+      s.sumaPrecios += (t.precio_por_litro || 0);
+      if (t.placa) s.placas.add(t.placa);
     });
     return Object.values(porSemana)
       .map((s) => ({
@@ -410,7 +413,8 @@
         litros: s.litros,
         monto: s.monto,
         transacciones: s.transacciones,
-        precioPonderado: s.litros > 0 ? s.sumaPrecioPorLitros / s.litros : 0,
+        unidades: s.placas.size,
+        precioPonderado: s.transacciones > 0 ? s.sumaPrecios / s.transacciones : 0,
       }))
       .sort((a, b) => (a.semana < b.semana ? -1 : a.semana > b.semana ? 1 : 0));
   }
@@ -437,11 +441,11 @@
     const grupos = {};
     transaccionesClasificadas.forEach((t) => {
       const clave = t[campo] || 'Sin Clasificar';
-      grupos[clave] = grupos[clave] || { clave, litros: 0, monto: 0, transacciones: 0, placas: new Set(), sumaPrecioPorLitros: 0 };
+      grupos[clave] = grupos[clave] || { clave, litros: 0, monto: 0, transacciones: 0, placas: new Set(), sumaPrecios: 0 };
       grupos[clave].litros += t.litros || 0;
       grupos[clave].monto += t.monto || 0;
       grupos[clave].transacciones += 1;
-      grupos[clave].sumaPrecioPorLitros += (t.precio_por_litro || 0) * (t.litros || 0);
+      grupos[clave].sumaPrecios += (t.precio_por_litro || 0);
       if (t.placa) grupos[clave].placas.add(t.placa);
     });
     return Object.values(grupos)
@@ -451,7 +455,7 @@
         monto: g.monto,
         transacciones: g.transacciones,
         unidades: g.placas.size,
-        precioPonderado: g.litros > 0 ? g.sumaPrecioPorLitros / g.litros : 0,
+        precioPonderado: g.transacciones > 0 ? g.sumaPrecios / g.transacciones : 0,
       }))
       .sort((a, b) => b.monto - a.monto);
   }
@@ -504,23 +508,23 @@
 
   function rankingGasolinerasGasolina(transacciones) {
     const porGasolinera = {};
-    let litrosTotales = 0;
-    let sumaPrecioPorLitrosTotal = 0;
+    let transaccionesTotales = 0;
+    let sumaPreciosTotal = 0;
     transacciones.forEach((t) => {
       if (!t.gasolinera) return;
-      const g = porGasolinera[t.gasolinera] = porGasolinera[t.gasolinera] || { gasolinera: t.gasolinera, litros: 0, monto: 0, transacciones: 0, sumaPrecioPorLitros: 0 };
+      const g = porGasolinera[t.gasolinera] = porGasolinera[t.gasolinera] || { gasolinera: t.gasolinera, litros: 0, monto: 0, transacciones: 0, sumaPrecios: 0 };
       g.litros += t.litros || 0;
       g.monto += t.monto || 0;
       g.transacciones += 1;
-      const aporte = (t.precio_por_litro || 0) * (t.litros || 0);
-      g.sumaPrecioPorLitros += aporte;
-      litrosTotales += t.litros || 0;
-      sumaPrecioPorLitrosTotal += aporte;
+      const precio = t.precio_por_litro || 0;
+      g.sumaPrecios += precio;
+      transaccionesTotales += 1;
+      sumaPreciosTotal += precio;
     });
-    const precioPromedioFlota = litrosTotales > 0 ? sumaPrecioPorLitrosTotal / litrosTotales : 0;
+    const precioPromedioFlota = transaccionesTotales > 0 ? sumaPreciosTotal / transaccionesTotales : 0;
     return Object.values(porGasolinera)
       .map((g) => {
-        const precioPonderado = g.litros > 0 ? g.sumaPrecioPorLitros / g.litros : 0;
+        const precioPonderado = g.transacciones > 0 ? g.sumaPrecios / g.transacciones : 0;
         return {
           gasolinera: g.gasolinera,
           litros: g.litros,
