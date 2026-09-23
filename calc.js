@@ -552,6 +552,7 @@
     agruparIngresosPorBucket,
     tipoSucursalGasolina,
     clasificarGasolina,
+    inicioSemanaGasolina,
     agruparGasolinaPorSemana,
     calcularExcedenteVsPromedio,
     calcularExcedenteVsPresupuesto,

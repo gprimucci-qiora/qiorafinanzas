@@ -2319,6 +2319,38 @@
   </div>
 </div>
 
+<div id="modal-drilldown-semana-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownSemanaGasolina()">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p id="drilldown-semana-gasolina-subtitulo" class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">-</p>
+        <h3 id="drilldown-semana-gasolina-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownSemanaGasolina()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-3 gap-gutter mb-lg">
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Litros</p>
+          <h2 id="drilldown-semana-gasolina-kpi-litros" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto</p>
+          <h2 id="drilldown-semana-gasolina-kpi-gasto" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Precio Prom. / Litro</p>
+          <h2 id="drilldown-semana-gasolina-kpi-precio" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+      </div>
+      <h4 id="drilldown-semana-gasolina-desglose-titulo" class="font-gordita-bold text-xs text-primary uppercase tracking-wide mb-3">Desglose</h4>
+      <div style="height:240px;"><canvas id="grafica-drilldown-semana-gasolina"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <div id="modal-drilldown-flota" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;">
   <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
@@ -9680,6 +9712,13 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       responsive: true,
       maintainAspectRatio: false,
       layout: { padding: { top: mostrarEtiquetas ? 30 : 14, bottom: 6 } },
+      onClick: (evento, elementos) => {
+        if (!elementos.length) return;
+        abrirDrillDownSemanaGasolina(ventana[elementos[0].index].semana, transaccionesAmbito);
+      },
+      onHover: (evento, elementos) => {
+        evento.native.target.style.cursor = elementos.length ? 'pointer' : 'default';
+      },
       plugins: {
         legend: { position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
         tooltip: {
@@ -9728,6 +9767,62 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
 function rerenderizarChartActivoGasolina() {
   if (gasolinaEstado.nivel === 'nacional') renderizarChartTodoGasolina('gasolina-chart-todo', gasolinaDatos.transacciones);
   else if (gasolinaEstado.nivel === 'tipo') renderizarChartTodoGasolina('gasolina-chart-tipo', transaccionesEnAmbitoGasolina());
+}
+
+// Clic en una barra de la gráfica "Todo" (una semana) abre el desglose de esa semana por el
+// siguiente nivel del drill-down (Tipo de Sucursal desde Nacional, Sucursal desde un Tipo),
+// sin salir del nivel actual.
+let graficaDrilldownSemanaGasolina = null;
+
+function abrirDrillDownSemanaGasolina(semanaISO, transaccionesAmbito) {
+  const transaccionesSemana = transaccionesAmbito.filter((t) => t.fecha && Calc.inicioSemanaGasolina(t.fecha) === semanaISO);
+  const kpis = kpisGasolina(transaccionesSemana);
+
+  const fin = new Date(semanaISO + 'T00:00:00');
+  fin.setDate(fin.getDate() + 6);
+  const finISO = fin.toISOString().slice(0, 10);
+  document.getElementById('drilldown-semana-gasolina-titulo').textContent = 'Semana del ' + semanaISO + ' al ' + finISO;
+  document.getElementById('drilldown-semana-gasolina-subtitulo').textContent = gasolinaEstado.tipo || 'Nacional';
+
+  const campo = gasolinaEstado.tipo ? 'sucursal' : 'tipoSucursal';
+  document.getElementById('drilldown-semana-gasolina-desglose-titulo').textContent = 'Desglose ' + (gasolinaEstado.tipo ? 'por Sucursal' : 'por Tipo de Sucursal');
+
+  document.getElementById('drilldown-semana-gasolina-kpi-litros').textContent = Math.round(kpis.litros).toLocaleString('es-MX') + ' L';
+  document.getElementById('drilldown-semana-gasolina-kpi-gasto').textContent = formatoMoneda(kpis.monto);
+  document.getElementById('drilldown-semana-gasolina-kpi-precio').textContent = '$' + kpis.precioPonderado.toFixed(2);
+
+  const filas = Calc.agruparGasolinaPorGrupo(transaccionesSemana, campo).slice(0, 10);
+
+  if (graficaDrilldownSemanaGasolina) graficaDrilldownSemanaGasolina.destroy();
+  graficaDrilldownSemanaGasolina = new Chart(document.getElementById('grafica-drilldown-semana-gasolina'), {
+    type: 'bar',
+    data: {
+      labels: filas.map((f) => f.clave),
+      datasets: [{ label: 'Litros', data: filas.map((f) => f.litros), backgroundColor: '#7c7530', borderRadius: 4, maxBarThickness: 26 }],
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (c) => c.parsed.x.toLocaleString('es-MX') + ' L · ' + formatoMoneda(filas[c.dataIndex].monto) },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Gordita' } } },
+        y: { grid: { display: false }, ticks: { font: { family: 'Gordita' } } },
+      },
+    },
+  });
+
+  document.getElementById('modal-drilldown-semana-gasolina').style.display = 'flex';
+}
+
+function cerrarDrillDownSemanaGasolina() {
+  document.getElementById('modal-drilldown-semana-gasolina').style.display = 'none';
 }
 
 document.getElementById('gasolina-toggle-ventana').addEventListener('click', (evento) => {
