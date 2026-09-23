@@ -9529,17 +9529,18 @@ function transaccionesEnAmbitoGasolina() {
 }
 
 function kpisGasolina(transacciones) {
-  let litros = 0, monto = 0, sumaDesv = 0, conteoDesv = 0;
+  let litros = 0, monto = 0, sumaDesv = 0, conteoDesv = 0, sumaPrecioPorLitros = 0;
   const placas = new Set();
   transacciones.forEach((t) => {
     litros += t.litros || 0;
     monto += t.monto || 0;
+    sumaPrecioPorLitros += (t.precio_por_litro || 0) * (t.litros || 0);
     if (t.placa) placas.add(t.placa);
     if (typeof t.desviacion_rendimiento_pct === 'number') { sumaDesv += t.desviacion_rendimiento_pct; conteoDesv += 1; }
   });
   return {
     litros, monto, unidades: placas.size,
-    precioPonderado: litros > 0 ? monto / litros : 0,
+    precioPonderado: litros > 0 ? sumaPrecioPorLitros / litros : 0, // precio_por_litro de Edenred, ponderado por litros — no monto/litros
     desviacionPromedio: conteoDesv > 0 ? sumaDesv / conteoDesv : null,
   };
 }

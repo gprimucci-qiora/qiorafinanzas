@@ -553,19 +553,21 @@ test('clasificarGasolina deja modelo/anio en null si la placa no tiene match en 
   assert.strictEqual(resultado.tipoSucursal, 'Infraestructura / Planta Externa');
 });
 
-test('agruparGasolinaPorSemana agrupa por lunes de la semana y calcula precio ponderado', () => {
+test('agruparGasolinaPorSemana calcula precioPonderado desde precio_por_litro (Edenred), no desde monto/litros', () => {
   const transacciones = [
-    { fecha: '2026-01-05', litros: 40, monto: 800 }, // lunes
-    { fecha: '2026-01-07', litros: 10, monto: 210 }, // miercoles, misma semana
-    { fecha: '2026-01-12', litros: 20, monto: 440 }, // lunes siguiente
+    // monto deliberadamente distinto de litros*precio_por_litro, para probar que no se deriva de ahí
+    { fecha: '2026-01-05', litros: 40, monto: 999, precio_por_litro: 20 }, // lunes
+    { fecha: '2026-01-07', litros: 10, monto: 50, precio_por_litro: 21 }, // miercoles, misma semana
+    { fecha: '2026-01-12', litros: 20, monto: 440, precio_por_litro: 22 }, // lunes siguiente
   ];
   const resultado = Calc.agruparGasolinaPorSemana(transacciones);
   assert.strictEqual(resultado.length, 2);
   assert.strictEqual(resultado[0].semana, '2026-01-05');
   assert.strictEqual(resultado[0].litros, 50);
-  assert.strictEqual(resultado[0].monto, 1010);
+  assert.strictEqual(resultado[0].monto, 1049);
   assert.strictEqual(resultado[0].transacciones, 2);
-  assert.strictEqual(resultado[0].precioPonderado, 1010 / 50);
+  // (40*20 + 10*21) / 50 = 20.2, NO 1049/50
+  assert.strictEqual(resultado[0].precioPonderado, 20.2);
   assert.strictEqual(resultado[1].semana, '2026-01-12');
 });
 
@@ -637,10 +639,10 @@ test('agruparGasolinaFrecuenciaPorPlaca cuenta cargas por placa y semana', () =>
   assert.strictEqual(resultado['A1']['2026-01-12'], 1);
 });
 
-test('rankingGasolinerasGasolina calcula precio ponderado y variación vs promedio de flota', () => {
+test('rankingGasolinerasGasolina usa precio_por_litro de Edenred (no monto/litros) y calcula variación vs promedio de flota', () => {
   const transacciones = [
-    { gasolinera: 'OXXO A', litros: 10, monto: 220 }, // $22/L
-    { gasolinera: 'PEMEX B', litros: 10, monto: 180 }, // $18/L
+    { gasolinera: 'OXXO A', litros: 10, monto: 999, precio_por_litro: 22 }, // monto no coincide con 10*22
+    { gasolinera: 'PEMEX B', litros: 10, monto: 1, precio_por_litro: 18 },
   ];
   const resultado = Calc.rankingGasolinerasGasolina(transacciones);
   const oxxo = resultado.find((r) => r.gasolinera === 'OXXO A');
