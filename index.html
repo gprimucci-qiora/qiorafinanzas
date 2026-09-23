@@ -9988,7 +9988,7 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: mostrarEtiquetas ? 26 : 10, bottom: 6, right: 8 } },
+      layout: { padding: { top: mostrarEtiquetas ? 26 : 10, bottom: 6, left: 22, right: 22 } },
       onClick: (evento, elementos) => {
         if (!elementos.length) return;
         abrirDrillDownSemanaGasolina(ventana[elementos[0].index].semana, transaccionesAmbito);
@@ -10049,16 +10049,19 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
   });
 
   // Panel de precio separado — línea sutil, sin eje compartido con las barras (evita el eje
-  // secundario invisible que hacía difícil leer la gráfica anterior). Etiqueta de $/L visible
-  // arriba de cada punto, sin necesidad de hover.
+  // secundario invisible que hacía difícil leer la gráfica anterior). El objetivo de esta
+  // gráfica es la TENDENCIA visual de la línea; con pocas semanas visibles también se etiqueta
+  // cada punto, pero con muchas (30 sem) las etiquetas se ocultan para no tapar la forma de la
+  // línea — el detalle exacto sigue disponible en el tooltip.
+  const mostrarEtiquetasPrecio = ventana.length <= 14;
   const precioEl = document.getElementById(precioCanvasId);
   if (precioEl) {
     gasolinaCharts[precioCanvasId] = new Chart(precioEl, {
       type: 'line',
-      data: { labels: etiquetas, datasets: [{ data: precios, borderColor: '#1b1b1b', borderWidth: 1.5, pointRadius: 2, tension: .25 }] },
+      data: { labels: etiquetas, datasets: [{ data: precios, borderColor: '#1b1b1b', borderWidth: 1.5, pointRadius: ventana.length > 20 ? 1.5 : 2, tension: .25 }] },
       options: {
         maintainAspectRatio: false,
-        layout: { padding: { top: mostrarEtiquetas ? 16 : 4 } },
+        layout: { padding: { top: mostrarEtiquetasPrecio ? 16 : 6, left: 22, right: 22 } },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => '$' + c.parsed.y.toFixed(2) + '/L' } },
@@ -10068,6 +10071,7 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       plugins: [{
         id: 'etiquetasPrecioGasolina' + precioCanvasId,
         afterDatasetsDraw(c) {
+          if (!mostrarEtiquetasPrecio) return;
           const ctx = c.ctx;
           c.getDatasetMeta(0).data.forEach((pt, i) => {
             ctx.save();
@@ -10115,7 +10119,10 @@ function rerenderizarChartActivoGasolina() {
 // nivel (sufijo del canvasId de la gráfica principal) para poder tener varias en la página.
 function renderizarMiniCardsGasolina(canvasId, ventana) {
   const sufijo = canvasId.replace('gasolina-chart-', '');
-  const tamanoFuenteEtiqueta = ventana.length > 20 ? 6.5 : 8;
+  // Estas tarjetas son angostas (1/3 del ancho de la principal) — con 30 barras las etiquetas ya
+  // no caben sin encimarse, así que se ocultan y solo queda la forma de la tendencia (el detalle
+  // exacto sigue en el tooltip).
+  const mostrarEtiquetasMini = ventana.length <= 14;
   const config = [
     { campo: 'transacciones', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
     { campo: 'unidades', color: '#85C1E9', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
@@ -10132,7 +10139,7 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
       data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3 }] },
       options: {
         maintainAspectRatio: false,
-        layout: { padding: { top: 14 } },
+        layout: { padding: { top: mostrarEtiquetasMini ? 14 : 4, left: 10, right: 10 } },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
@@ -10142,10 +10149,11 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
       plugins: [{
         id: 'etiquetasMini' + id,
         afterDatasetsDraw(c) {
+          if (!mostrarEtiquetasMini) return;
           const ctx = c.ctx;
           c.getDatasetMeta(0).data.forEach((bar, i) => {
             ctx.save();
-            ctx.font = 'bold ' + tamanoFuenteEtiqueta + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#1b1b1b';
+            ctx.font = "bold 8px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#1b1b1b';
             ctx.fillText(fmt(data[i]), bar.x, bar.y - 3);
             ctx.restore();
           });
