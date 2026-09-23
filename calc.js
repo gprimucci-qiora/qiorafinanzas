@@ -539,6 +539,38 @@
       .sort((a, b) => b.transacciones - a.transacciones);
   }
 
+  // Desglose día por día (7 filas, en orden calendario desde semanaISO) de una semana ya
+  // filtrada — para el drill-down por semana del gráfico "Consumo Semanal". precioPonderado usa
+  // el mismo criterio que el resto del módulo: promedio simple de precio_por_litro por
+  // transacción, no litros ni monto/litros.
+  function calcularMetricasPorDiaSemanaGasolina(transaccionesSemana, semanaISO) {
+    const base = new Date(semanaISO + 'T00:00:00');
+    const dias = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(base);
+      d.setDate(d.getDate() + i);
+      const fecha = toISODate(d);
+      const deEseDia = transaccionesSemana.filter((t) => t.fecha === fecha);
+      let litros = 0;
+      let monto = 0;
+      let sumaPrecios = 0;
+      deEseDia.forEach((t) => {
+        litros += t.litros || 0;
+        monto += t.monto || 0;
+        sumaPrecios += (t.precio_por_litro || 0);
+      });
+      dias.push({
+        fecha,
+        nombreDia: d.toLocaleDateString('es-MX', { weekday: 'long' }),
+        transacciones: deEseDia.length,
+        litros,
+        monto,
+        precioPonderado: deEseDia.length > 0 ? sumaPrecios / deEseDia.length : 0,
+      });
+    }
+    return dias;
+  }
+
   return {
     computeVentana,
     clasificarFactura,
@@ -569,5 +601,6 @@
     agruparGasolinaPorHoraDia,
     agruparGasolinaFrecuenciaPorPlaca,
     rankingGasolinerasGasolina,
+    calcularMetricasPorDiaSemanaGasolina,
   };
 });

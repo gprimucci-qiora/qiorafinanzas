@@ -666,3 +666,25 @@ test('rankingGasolinerasGasolina usa precio_por_litro de Edenred (no monto/litro
   assert.strictEqual(oxxo.precioPonderado, 22);
   assert.ok(oxxo.vsPromedioFlotaPct > 0); // 22 > promedio de 20
 });
+
+test('calcularMetricasPorDiaSemanaGasolina arma 7 días en orden calendario desde el viernes de esa semana', () => {
+  const transacciones = [
+    { fecha: '2026-08-07', litros: 10, monto: 200, precio_por_litro: 20 }, // viernes, dia 0
+    { fecha: '2026-08-07', litros: 5, monto: 110, precio_por_litro: 22 }, // mismo dia, segunda transaccion
+    { fecha: '2026-08-10', litros: 8, monto: 160, precio_por_litro: 20 }, // lunes, dia 3
+  ];
+  const dias = Calc.calcularMetricasPorDiaSemanaGasolina(transacciones, '2026-08-07');
+  assert.strictEqual(dias.length, 7);
+  assert.strictEqual(dias[0].fecha, '2026-08-07');
+  assert.strictEqual(dias[0].transacciones, 2);
+  assert.strictEqual(dias[0].litros, 15);
+  assert.strictEqual(dias[0].monto, 310);
+  assert.strictEqual(dias[0].precioPonderado, 21); // (20+22)/2
+  assert.strictEqual(dias[1].fecha, '2026-08-08');
+  assert.strictEqual(dias[1].transacciones, 0);
+  assert.strictEqual(dias[1].precioPonderado, 0);
+  assert.strictEqual(dias[3].fecha, '2026-08-10');
+  assert.strictEqual(dias[3].transacciones, 1);
+  assert.strictEqual(dias[3].litros, 8);
+  assert.strictEqual(dias[6].fecha, '2026-08-13');
+});
