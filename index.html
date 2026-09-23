@@ -2487,7 +2487,7 @@
 </div>
 
 <div id="modal-drilldown-hora-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownHoraGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[88vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <div>
         <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Patrón de Consumo</p>
@@ -2533,7 +2533,7 @@
 </div>
 
 <div id="modal-drilldown-mini-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownMiniGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <h3 id="drilldown-mini-gasolina-titulo" class="font-gordita-bold text-xl text-primary">-</h3>
       <button onclick="cerrarDrillDownMiniGasolina()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
@@ -2555,13 +2555,13 @@
           <h2 id="drilldown-mini-gasolina-kpi-min" class="font-gordita-bold text-xl text-primary">-</h2>
         </div>
       </div>
-      <div style="height:320px;"><canvas id="grafica-drilldown-mini-gasolina"></canvas></div>
+      <div style="height:440px;"><canvas id="grafica-drilldown-mini-gasolina"></canvas></div>
     </div>
   </div>
 </div>
 
 <div id="modal-drilldown-semana-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownSemanaGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[88vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <div>
         <p id="drilldown-semana-gasolina-subtitulo" class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">-</p>
@@ -10316,21 +10316,39 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
   document.getElementById('drilldown-mini-gasolina-kpi-max').textContent = data.length ? fmt(Math.max(...data)) : '—';
   document.getElementById('drilldown-mini-gasolina-kpi-min').textContent = data.length ? fmt(Math.min(...data)) : '—';
 
+  // En "Gasto" se agrega el precio ponderado como línea en un segundo eje — para ver a la par
+  // qué tanto del cambio en gasto es por precio y qué tanto es por consumo.
+  const esGasto = campo === 'gasto';
+  const precios = esGasto ? ventana.map((s) => s.precioPonderado) : null;
   const tamanoFuente = ventana.length > 20 ? 8 : 10;
+
+  const datasets = [{ type: 'bar', label: titulo, data, backgroundColor: color, borderRadius: 4, maxBarThickness: 34, yAxisID: 'y', order: 2 }];
+  if (esGasto) {
+    datasets.push({
+      type: 'line', label: 'Precio x litro (ponderado)', data: precios, yAxisID: 'y1',
+      borderColor: '#1b1b1b', borderDash: [4, 3], borderWidth: 1.5, pointRadius: 3,
+      pointBackgroundColor: '#fff', pointBorderColor: '#1b1b1b', tension: .25, order: 1,
+    });
+  }
+
   if (graficaDrilldownMiniGasolina) graficaDrilldownMiniGasolina.destroy();
   graficaDrilldownMiniGasolina = new Chart(document.getElementById('grafica-drilldown-mini-gasolina'), {
-    type: 'bar',
-    data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, borderRadius: 4, maxBarThickness: 34 }] },
+    data: { labels: ventana.map((s) => s.semana), datasets },
     options: {
       maintainAspectRatio: false,
       layout: { padding: { top: 28, left: 14, right: 14 } },
       plugins: {
-        legend: { display: false },
-        tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
+        legend: { display: esGasto, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          titleFont: { family: 'Gordita', weight: 'bold' },
+          bodyFont: { family: 'Gordita' },
+          callbacks: { label: (c) => c.dataset.yAxisID === 'y1' ? '$' + c.parsed.y.toFixed(2) + '/L' : fmt(c.parsed.y) },
+        },
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { family: 'Gordita', size: ventana.length > 20 ? 7 : 9 } } },
         y: { display: false, min: Math.min(...data) * 0.85, max: Math.max(...data) * 1.15 || 1 },
+        y1: { display: false, min: esGasto ? Math.min(...precios) - 1 : 0, max: esGasto ? Math.max(...precios) + 1 : 1 },
       },
     },
     plugins: [{
@@ -10343,6 +10361,14 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
           ctx.fillText(fmt(data[i]), bar.x, bar.y - 10);
           ctx.restore();
         });
+        if (esGasto) {
+          c.getDatasetMeta(1).data.forEach((pt, i) => {
+            ctx.save();
+            ctx.font = 'bold ' + tamanoFuente + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1b1b1b';
+            ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - 9);
+            ctx.restore();
+          });
+        }
       },
     }],
   });
