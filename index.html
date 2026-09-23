@@ -10301,11 +10301,15 @@ function rerenderizarChartActivoGasolina() {
 // (uno es dinero, el otro consumo físico) pero siempre de la mano con unidades activas y
 // transacciones, para poder ver los 4 juntos. Un id de canvas distinto por nivel (sufijo del
 // canvasId de la gráfica principal) para poder tener varias en la página.
+// Color homologado: "Unidades Activas" siempre es #85C1E9 (azul claro) donde sea que aparezca —
+// como barras en su propia tarjeta, o como línea de referencia sobre Transacciones y Litros.
+const COLOR_UNIDADES_ACTIVAS_GASOLINA = '#85C1E9';
+
 const MINI_CONFIG_GASOLINA = [
   { campo: 'gasto', titulo: 'Gasto / Semana', color: '#ba1a1a', fmt: (v) => formatoMoneda(v) },
-  { campo: 'litros', titulo: 'Litros / Semana', color: '#7c7530', fmt: (v) => Math.round(v).toLocaleString('es-MX') + ' L' },
-  { campo: 'transacciones', titulo: 'Transacciones / Semana', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
-  { campo: 'unidades', titulo: 'Unidades Activas / Semana', color: '#85C1E9', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
+  { campo: 'litros', titulo: 'Litros / Semana', color: '#7c7530', fmt: (v) => Math.round(v).toLocaleString('es-MX') + ' L', conUnidades: true },
+  { campo: 'transacciones', titulo: 'Transacciones / Semana', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX'), conUnidades: true },
+  { campo: 'unidades', titulo: 'Unidades Activas / Semana', color: COLOR_UNIDADES_ACTIVAS_GASOLINA, fmt: (v) => Math.round(v).toLocaleString('es-MX') },
 ];
 
 function valorMiniGasolina(s, campo) {
@@ -10314,21 +10318,35 @@ function valorMiniGasolina(s, campo) {
   return s[campo] || 0;
 }
 
+// Transacciones y Litros llevan encima una línea de Unidades Activas (mismo color homologado en
+// todas las gráficas) — para ver de un vistazo si un cambio es por más unidades trabajando o por
+// más actividad de las mismas unidades.
 function renderizarMiniCardsGasolina(canvasId, ventana) {
   const sufijo = canvasId.replace('gasolina-chart-', '');
   // Estas tarjetas son angostas (1/4 del ancho de la principal) — con 30 barras las etiquetas ya
   // no caben sin encimarse, así que se ocultan y solo queda la forma de la tendencia. Clic en
   // cualquiera abre esa misma gráfica en grande, con etiquetas siempre visibles.
   const mostrarEtiquetasMini = ventana.length <= 14;
-  MINI_CONFIG_GASOLINA.forEach(({ campo, titulo, color, fmt }) => {
+  const unidadesData = ventana.map((s) => s.unidades || 0);
+  MINI_CONFIG_GASOLINA.forEach(({ campo, titulo, color, fmt, conUnidades }) => {
     const id = 'gasolina-mini-' + campo + '-' + sufijo;
     const el = document.getElementById(id);
     if (!el) return;
     const data = ventana.map((s) => valorMiniGasolina(s, campo));
     if (gasolinaCharts[id]) { gasolinaCharts[id].destroy(); delete gasolinaCharts[id]; }
+
+    const datasets = [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3, yAxisID: 'y', order: 2 }];
+    if (conUnidades) {
+      datasets.push({
+        type: 'line', data: unidadesData, yAxisID: 'y1', order: 1,
+        borderColor: COLOR_UNIDADES_ACTIVAS_GASOLINA, borderWidth: 1.5, pointRadius: mostrarEtiquetasMini ? 2 : 0, tension: .25,
+        pointBackgroundColor: '#fff', pointBorderColor: COLOR_UNIDADES_ACTIVAS_GASOLINA,
+      });
+    }
+
     gasolinaCharts[id] = new Chart(el, {
       type: 'bar',
-      data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3 }] },
+      data: { labels: ventana.map((s) => s.semana), datasets },
       options: {
         maintainAspectRatio: false,
         layout: { padding: { top: mostrarEtiquetasMini ? 14 : 4, left: 10, right: 10 } },
@@ -10336,9 +10354,16 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
         onHover: (evento) => { evento.native.target.style.cursor = 'pointer'; },
         plugins: {
           legend: { display: false },
-          tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
+          tooltip: {
+            titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' },
+            callbacks: { label: (c) => c.dataset.yAxisID === 'y1' ? 'Unidades activas: ' + c.parsed.y.toLocaleString('es-MX') : fmt(c.parsed.y) },
+          },
         },
-        scales: { x: { display: false }, y: { display: false, min: Math.min(...data) * 0.85, max: Math.max(...data) * 1.15 || 1 } },
+        scales: {
+          x: { display: false },
+          y: { display: false, min: Math.min(...data) * 0.85, max: Math.max(...data) * 1.15 || 1 },
+          y1: { display: false, min: Math.min(...unidadesData) * 0.7, max: Math.max(...unidadesData) * 1.3 || 1 },
+        },
       },
       plugins: [{
         id: 'etiquetasMini' + id,
