@@ -456,33 +456,22 @@
       .sort((a, b) => b.monto - a.monto);
   }
 
-  // Nivel 4: por Placa, ordenado por desviación de rendimiento promedio (más negativa/peor
-  // primero) — sin necesidad de definir un umbral fijo, el orden ya resalta los peores casos.
+  // Nivel 4: por Placa, ordenado por gasto (mayor a menor). La desviación de rendimiento que
+  // manda Edenred no se usa — los valores observados en datos reales son atípicos/poco fiables
+  // (ej. -62024%), así que v1 no la considera para ordenar ni para resaltar nada.
   function agruparGasolinaPorPlaca(transaccionesClasificadas) {
     const porPlaca = {};
     transaccionesClasificadas.forEach((t) => {
       porPlaca[t.placa] = porPlaca[t.placa] || {
         placa: t.placa, modelo: t.modelo, anio: t.anio, sucursal: t.sucursal,
-        litros: 0, monto: 0, transacciones: 0, sumaDesviacionPct: 0, conteoDesviacion: 0,
+        litros: 0, monto: 0, transacciones: 0,
       };
       const p = porPlaca[t.placa];
       p.litros += t.litros || 0;
       p.monto += t.monto || 0;
       p.transacciones += 1;
-      if (typeof t.desviacion_rendimiento_pct === 'number') {
-        p.sumaDesviacionPct += t.desviacion_rendimiento_pct;
-        p.conteoDesviacion += 1;
-      }
     });
-    return Object.values(porPlaca)
-      .map((p) => Object.assign({}, p, {
-        desviacionPromedioPct: p.conteoDesviacion > 0 ? p.sumaDesviacionPct / p.conteoDesviacion : null,
-      }))
-      .sort((a, b) => {
-        if (a.desviacionPromedioPct === null) return 1;
-        if (b.desviacionPromedioPct === null) return -1;
-        return a.desviacionPromedioPct - b.desviacionPromedioPct;
-      });
+    return Object.values(porPlaca).sort((a, b) => b.monto - a.monto);
   }
 
   // Matriz [día 0=lunes..6=domingo][hora 0-23] = # de transacciones, para el heatmap de patrón.

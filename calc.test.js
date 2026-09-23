@@ -601,19 +601,20 @@ test('agruparGasolinaPorGrupo agrupa por tipoSucursal y cuenta placas únicas', 
   assert.strictEqual(distrito.transacciones, 3);
 });
 
-test('agruparGasolinaPorPlaca ordena por desviacion de rendimiento promedio, peor primero', () => {
+test('agruparGasolinaPorPlaca agrupa por placa y ordena por gasto, mayor a menor', () => {
   const transacciones = [
-    { placa: 'A1', litros: 10, monto: 200, desviacion_rendimiento_pct: -5 },
-    { placa: 'A1', litros: 10, monto: 200, desviacion_rendimiento_pct: -15 },
-    { placa: 'A2', litros: 10, monto: 200, desviacion_rendimiento_pct: 5 },
-    { placa: 'A3', litros: 10, monto: 200 }, // sin desviación -> va al final
+    { placa: 'A1', litros: 10, monto: 200 },
+    { placa: 'A1', litros: 10, monto: 200 },
+    { placa: 'A2', litros: 10, monto: 500 },
+    { placa: 'A3', litros: 10, monto: 100 },
   ];
   const resultado = Calc.agruparGasolinaPorPlaca(transacciones);
-  assert.strictEqual(resultado[0].placa, 'A1');
-  assert.strictEqual(resultado[0].desviacionPromedioPct, -10);
-  assert.strictEqual(resultado[1].placa, 'A2');
+  assert.strictEqual(resultado[0].placa, 'A2');
+  assert.strictEqual(resultado[0].monto, 500);
+  assert.strictEqual(resultado[1].placa, 'A1');
+  assert.strictEqual(resultado[1].monto, 400);
+  assert.strictEqual(resultado[1].litros, 20);
   assert.strictEqual(resultado[2].placa, 'A3');
-  assert.strictEqual(resultado[2].desviacionPromedioPct, null);
 });
 
 test('agruparGasolinaPorHoraDia arma una matriz 7x24 con conteo de transacciones', () => {
