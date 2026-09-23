@@ -10311,6 +10311,10 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
 let graficaDrilldownMiniGasolina = null;
 
 function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
+  // El modal se muestra ANTES de crear la gráfica: Chart.js mide el tamaño del canvas al
+  // construirse, y con el modal todavía en display:none el canvas mide 0x0 y la gráfica sale en
+  // blanco aunque los datos estén bien.
+  document.getElementById('modal-drilldown-mini-gasolina').style.display = 'flex';
   const data = ventana.map((s) => valorMiniGasolina(s, campo));
   document.getElementById('drilldown-mini-gasolina-titulo').textContent = titulo;
   const promedio = data.length ? data.reduce((a, b) => a + b, 0) / data.length : 0;
@@ -10382,8 +10386,6 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
       },
     }],
   });
-
-  document.getElementById('modal-drilldown-mini-gasolina').style.display = 'flex';
 }
 
 function cerrarDrillDownMiniGasolina() {
@@ -10395,6 +10397,7 @@ function cerrarDrillDownMiniGasolina() {
 // de barras, con la etiqueta $/L siempre arriba de su propio marcador (zigzag si hay muchas
 // semanas, mismo criterio que el resto de los popups).
 function abrirDrillDownPrecioGasolina(ventana) {
+  document.getElementById('modal-drilldown-mini-gasolina').style.display = 'flex';
   const data = ventana.map((s) => s.precioPonderado);
   const fmt = (v) => '$' + v.toFixed(2) + '/L';
   document.getElementById('drilldown-mini-gasolina-titulo').textContent = 'Precio x Litro Ponderado';
@@ -10439,8 +10442,6 @@ function abrirDrillDownPrecioGasolina(ventana) {
       },
     }],
   });
-
-  document.getElementById('modal-drilldown-mini-gasolina').style.display = 'flex';
 }
 
 // Clic en una barra de la gráfica "Todo" (una semana) abre el desglose de esa semana por el
@@ -10449,6 +10450,7 @@ function abrirDrillDownPrecioGasolina(ventana) {
 let graficaDrilldownSemanaGasolina = null;
 
 function abrirDrillDownSemanaGasolina(semanaISO, transaccionesAmbito) {
+  document.getElementById('modal-drilldown-semana-gasolina').style.display = 'flex';
   const transaccionesSemana = transaccionesAmbito.filter((t) => t.fecha && Calc.inicioSemanaGasolina(t.fecha) === semanaISO);
   const kpis = kpisGasolina(transaccionesSemana);
 
@@ -10505,8 +10507,6 @@ function abrirDrillDownSemanaGasolina(semanaISO, transaccionesAmbito) {
       },
     },
   });
-
-  document.getElementById('modal-drilldown-semana-gasolina').style.display = 'flex';
 }
 
 function cerrarDrillDownSemanaGasolina() {
