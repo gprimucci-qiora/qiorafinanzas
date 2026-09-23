@@ -2486,6 +2486,52 @@
   </div>
 </div>
 
+<div id="modal-drilldown-hora-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownHoraGasolina()">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <div>
+        <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Patrón de Consumo</p>
+        <h3 id="drilldown-hora-gasolina-titulo" class="font-gordita-bold text-xl text-primary mt-1">-</h3>
+      </div>
+      <button onclick="cerrarDrillDownHoraGasolina()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-3 gap-gutter mb-lg">
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Transacciones</p>
+          <h2 id="drilldown-hora-gasolina-kpi-transacciones" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Litros</p>
+          <h2 id="drilldown-hora-gasolina-kpi-litros" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+        <div class="bg-surface-container-low p-4 rounded-lg">
+          <p class="font-gordita-bold text-[10px] text-on-surface-variant uppercase tracking-wider mb-1">Gasto</p>
+          <h2 id="drilldown-hora-gasolina-kpi-gasto" class="font-gordita-bold text-xl text-primary">-</h2>
+        </div>
+      </div>
+      <h4 class="font-gordita-bold text-xs text-primary uppercase tracking-wide mb-3">Placas en este cruce hora × día (top 15 por # de cargas)</h4>
+      <div class="overflow-hidden border border-outline-variant rounded-lg">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+              <th class="px-4 py-2 font-gordita-bold uppercase tracking-widest">Placa</th>
+              <th class="px-4 py-2 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+              <th class="px-4 py-2 font-gordita-bold uppercase tracking-widest text-right">Cargas</th>
+              <th class="px-4 py-2 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+              <th class="px-4 py-2 font-gordita-bold uppercase tracking-widest text-right">Monto</th>
+            </tr>
+          </thead>
+          <tbody id="drilldown-hora-gasolina-body" class="divide-y divide-outline-variant"></tbody>
+        </table>
+      </div>
+      <p class="text-xs text-on-surface-variant mt-3">Clic en una placa para ver su detalle.</p>
+    </div>
+  </div>
+</div>
+
 <div id="modal-drilldown-mini-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownMiniGasolina()">
   <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
@@ -9958,7 +10004,10 @@ function renderizarRankingConsumoPlacasGasolina(transacciones) {
     </tr>`).join('');
 }
 
+let gasolinaHeatmapTransacciones = [];
+
 function renderizarHeatmapGasolina(transacciones) {
+  gasolinaHeatmapTransacciones = transacciones;
   const matriz = Calc.agruparGasolinaPorHoraDia(transacciones);
   const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   let max = 1;
@@ -9969,10 +10018,46 @@ function renderizarHeatmapGasolina(transacciones) {
     html += `<div style="font-size:9.5px; color:#7e7576; font-weight:700; text-align:right; padding-right:6px;">${dias[di]}</div>`;
     fila.forEach((v, h) => {
       const alpha = Math.min(v / max, 1).toFixed(2);
-      html += `<div style="aspect-ratio:1; border-radius:3px; background:rgba(27,79,114,${alpha});" title="${dias[di]} ${h}:00 — ${v} transacciones"></div>`;
+      const colorTexto = alpha > 0.55 ? '#fff' : '#4c4546';
+      const etiqueta = v > 0 ? `<span style="font-size:8px; font-weight:700; color:${colorTexto};">${v}</span>` : '';
+      const clic = v > 0 ? ` onclick="abrirDrillDownHoraGasolina(${di}, ${h})" class="cursor-pointer"` : '';
+      html += `<div${clic} style="aspect-ratio:1; border-radius:3px; background:rgba(27,79,114,${alpha}); display:flex; align-items:center; justify-content:center;" title="${dias[di]} ${h}:00 — ${v} transacciones">${etiqueta}</div>`;
     });
   });
   document.getElementById('gasolina-heatmap-grid').innerHTML = html;
+}
+
+function abrirDrillDownHoraGasolina(dia, hora) {
+  const diasLargos = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const transaccionesCelda = gasolinaHeatmapTransacciones.filter((t) => {
+    if (!t.fecha || !t.hora) return false;
+    const diaJs = new Date(t.fecha + 'T00:00:00').getDay();
+    const diaCalc = diaJs === 0 ? 6 : diaJs - 1;
+    const horaCalc = parseInt(String(t.hora).split(':')[0], 10);
+    return diaCalc === dia && horaCalc === hora;
+  });
+  const kpis = kpisGasolina(transaccionesCelda);
+  const horaTxt = String(hora).padStart(2, '0');
+  document.getElementById('drilldown-hora-gasolina-titulo').textContent = diasLargos[dia] + ' ' + horaTxt + ':00 – ' + horaTxt + ':59';
+  document.getElementById('drilldown-hora-gasolina-kpi-transacciones').textContent = kpis.transacciones.toLocaleString('es-MX');
+  document.getElementById('drilldown-hora-gasolina-kpi-litros').textContent = Math.round(kpis.litros).toLocaleString('es-MX') + ' L';
+  document.getElementById('drilldown-hora-gasolina-kpi-gasto').textContent = formatoMoneda(kpis.monto);
+
+  const filas = Calc.agruparGasolinaPorPlaca(transaccionesCelda).slice().sort((a, b) => b.transacciones - a.transacciones).slice(0, 15);
+  const cuerpo = document.getElementById('drilldown-hora-gasolina-body');
+  cuerpo.innerHTML = filas.map((f) => `<tr class="hover:bg-surface-container-low/50 cursor-pointer transition-colors" onclick="cerrarDrillDownHoraGasolina(); abrirPlacaGasolina('${f.placa.replace(/'/g, "\\'")}')">
+      <td class="px-4 py-2 font-gordita-bold text-primary">${f.placa}</td>
+      <td class="px-4 py-2">${f.sucursal || '—'}</td>
+      <td class="px-4 py-2 text-right">${f.transacciones}</td>
+      <td class="px-4 py-2 text-right">${Math.round(f.litros).toLocaleString('es-MX')}</td>
+      <td class="px-4 py-2 text-right">${formatoMoneda(f.monto)}</td>
+    </tr>`).join('');
+
+  document.getElementById('modal-drilldown-hora-gasolina').style.display = 'flex';
+}
+
+function cerrarDrillDownHoraGasolina() {
+  document.getElementById('modal-drilldown-hora-gasolina').style.display = 'none';
 }
 
 // Combo "Todo": barras (litros o $ según referencia) + excedente rojo/verde + línea de precio
