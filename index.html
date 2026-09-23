@@ -10321,6 +10321,10 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
   const esGasto = campo === 'gasto';
   const precios = esGasto ? ventana.map((s) => s.precioPonderado) : null;
   const tamanoFuente = ventana.length > 20 ? 8 : 10;
+  // Con muchas semanas visibles, una etiqueta por punto en una sola fila no cabe sin encimarse
+  // con la vecina — se alternan en 2 alturas (zigzag), así cada etiqueta le "gana" el doble de
+  // espacio horizontal a costa de un poco más de espacio vertical (que sí sobra).
+  const zigzag = ventana.length > 14;
 
   const datasets = [{ type: 'bar', label: titulo, data, backgroundColor: color, borderRadius: 4, maxBarThickness: 34, yAxisID: 'y', order: 2 }];
   if (esGasto) {
@@ -10336,7 +10340,7 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
     data: { labels: ventana.map((s) => s.semana), datasets },
     options: {
       maintainAspectRatio: false,
-      layout: { padding: { top: 28, left: 14, right: 14 } },
+      layout: { padding: { top: zigzag ? 48 : 28, left: 14, right: 14 } },
       plugins: {
         legend: { display: esGasto, position: 'bottom', labels: { font: { family: 'Gordita' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
         tooltip: {
@@ -10358,14 +10362,18 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
         c.getDatasetMeta(0).data.forEach((bar, i) => {
           ctx.save();
           ctx.font = 'bold ' + tamanoFuente + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1b1b1b';
-          ctx.fillText(fmt(data[i]), bar.x, bar.y - 10);
+          const offset = zigzag ? (i % 2 === 0 ? 10 : 24) : 10;
+          const texto = zigzag && esGasto ? formatoCompacto(data[i]) : fmt(data[i]);
+          ctx.fillText(texto, bar.x, bar.y - offset);
           ctx.restore();
         });
         if (esGasto) {
           c.getDatasetMeta(1).data.forEach((pt, i) => {
             ctx.save();
             ctx.font = 'bold ' + tamanoFuente + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1b1b1b';
-            ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - 9);
+            const offset = zigzag ? (i % 2 === 0 ? 9 : 22) : 9;
+            // Siempre arriba del marcador (encima del punto), nunca debajo.
+            ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - offset);
             ctx.restore();
           });
         }
