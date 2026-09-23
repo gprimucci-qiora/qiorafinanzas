@@ -2006,18 +2006,22 @@
               <div class="px-6 py-4 border-b border-outline-variant flex items-start justify-between flex-wrap gap-3">
                 <div>
                   <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Gasolineras por Precio</h3>
-                  <p class="text-xs text-on-surface-variant mt-1">Top 10. % del Total = transacciones ahí / transacciones totales.</p>
+                  <p class="text-xs text-on-surface-variant mt-1">Top 10. % vs Promedio = contra el precio promedio ponderado de toda la flota en este ámbito.</p>
                 </div>
-                <div class="flex bg-surface-container-low rounded-lg p-1 text-[11px] font-gordita-bold" id="gasolina-toggle-precio-gasolineras">
-                  <span data-orden="barato" class="px-3 py-1.5 rounded-md cursor-pointer bg-white shadow-sm text-primary">Más barato</span>
-                  <span data-orden="caro" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">Más caro</span>
-                </div>
+                <select id="gasolina-orden-precio-gasolineras" class="text-[11px] font-gordita-bold border border-outline-variant rounded-lg px-2 py-1.5 bg-white cursor-pointer">
+                  <option value="barato">Más barato</option>
+                  <option value="caro">Más caro</option>
+                  <option value="vsPromedio">Más arriba del promedio</option>
+                  <option value="transacciones">Más transacciones</option>
+                  <option value="pctTotal">% del total</option>
+                </select>
               </div>
               <table class="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Gasolinera</th>
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">% vs Promedio</th>
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Transacciones</th>
                     <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">% del Total</th>
                   </tr>
@@ -9864,35 +9868,37 @@ function renderizarRankingGasolinerasGasolina(transacciones) {
 
 let gasolinaOrdenPrecioGasolineras = 'barato';
 
+const ORDENES_PRECIO_GASOLINERAS = {
+  barato: (a, b) => a.precioPonderado - b.precioPonderado,
+  caro: (a, b) => b.precioPonderado - a.precioPonderado,
+  vsPromedio: (a, b) => (b.vsPromedioFlotaPct ?? -Infinity) - (a.vsPromedioFlotaPct ?? -Infinity),
+  transacciones: (a, b) => b.transacciones - a.transacciones,
+  pctTotal: (a, b) => b.transacciones - a.transacciones, // % del total es proporcional a transacciones, mismo orden
+};
+
 function renderizarRankingPrecioGasolinerasGasolina(transacciones) {
   const todas = Calc.rankingGasolinerasGasolina(transacciones);
   const totalTransacciones = todas.reduce((s, g) => s + g.transacciones, 0);
-  const ordenadas = todas.slice().sort((a, b) => (
-    gasolinaOrdenPrecioGasolineras === 'caro' ? b.precioPonderado - a.precioPonderado : a.precioPonderado - b.precioPonderado
-  ));
+  const ordenadas = todas.slice().sort(ORDENES_PRECIO_GASOLINERAS[gasolinaOrdenPrecioGasolineras]);
   const filas = ordenadas.slice(0, 10);
   const cuerpo = document.getElementById('gasolina-ranking-precio-gasolineras-body');
   cuerpo.innerHTML = filas.map((f) => {
     const pct = totalTransacciones > 0 ? (f.transacciones / totalTransacciones) * 100 : 0;
+    const vsProm = f.vsPromedioFlotaPct;
+    const vsPromTxt = vsProm === null ? '—' : (vsProm > 0 ? '+' : '') + vsProm.toFixed(1) + '%';
+    const vsPromClase = vsProm === null ? '' : (vsProm > 0 ? 'text-error' : 'text-qiora-green');
     return `<tr class="hover:bg-surface-container-low/50 transition-colors">
       <td class="px-6 py-3">${f.gasolinera}</td>
       <td class="px-6 py-3 text-right font-gordita-bold text-primary">$${f.precioPonderado.toFixed(2)}</td>
+      <td class="px-6 py-3 text-right font-gordita-bold ${vsPromClase}">${vsPromTxt}</td>
       <td class="px-6 py-3 text-right">${f.transacciones}</td>
-      <td class="px-6 py-3 text-right">${pct.toFixed(1)}%</td>
+      <td class="px-6 py-3 text-right">${pct < 0.1 && pct > 0 ? '<0.1%' : pct.toFixed(1) + '%'}</td>
     </tr>`;
   }).join('');
 }
 
-document.getElementById('gasolina-toggle-precio-gasolineras').addEventListener('click', (evento) => {
-  const span = evento.target.closest('span[data-orden]');
-  if (!span) return;
-  gasolinaOrdenPrecioGasolineras = span.dataset.orden;
-  document.querySelectorAll('#gasolina-toggle-precio-gasolineras span').forEach((s) => {
-    s.classList.remove('bg-white', 'shadow-sm', 'text-primary');
-    s.classList.add('text-on-surface-variant');
-  });
-  span.classList.add('bg-white', 'shadow-sm', 'text-primary');
-  span.classList.remove('text-on-surface-variant');
+document.getElementById('gasolina-orden-precio-gasolineras').addEventListener('change', (evento) => {
+  gasolinaOrdenPrecioGasolineras = evento.target.value;
   if (gasolinaDatos) renderizarRankingPrecioGasolinerasGasolina(gasolinaDatos.transacciones);
 });
 
