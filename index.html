@@ -2047,25 +2047,7 @@
 
         <!-- Nivel 2: por Tipo de Sucursal -> ranking de Sucursales -->
         <div id="gasolina-nivel-tipo" class="gasolina-nivel" style="display:none;">
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
-            <div class="px-6 py-4 border-b border-outline-variant">
-              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Sucursales · <span id="gasolina-tipo-titulo"></span></h3>
-              <p class="text-xs text-on-surface-variant mt-1">Clic en una sucursal para ver el desglose por placa.</p>
-            </div>
-            <table class="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Sucursal</th>
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
-                </tr>
-              </thead>
-              <tbody id="gasolina-ranking-sucursal-body" class="divide-y divide-outline-variant"></tbody>
-            </table>
-          </section>
-          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal · <span id="gasolina-tipo-chart-titulo"></span></h3>
             <p class="text-xs text-on-surface-variant mb-2">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró).</p>
             <div class="gasolina-chart-box" style="height:220px; position:relative;">
@@ -2091,27 +2073,28 @@
               </div>
             </div>
           </section>
-        </div>
-
-        <!-- Nivel 3: por Sucursal -> ranking de Placas -->
-        <div id="gasolina-nivel-sucursal" class="gasolina-nivel" style="display:none;">
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
             <div class="px-6 py-4 border-b border-outline-variant">
-              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Placas · <span id="gasolina-sucursal-titulo"></span></h3>
-              <p class="text-xs text-on-surface-variant mt-1">Ordenado por gasto (mayor a menor). Clic en una placa para el detalle del vehículo.</p>
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Sucursales · <span id="gasolina-tipo-titulo"></span></h3>
+              <p class="text-xs text-on-surface-variant mt-1">Clic en una sucursal para ver el desglose por placa.</p>
             </div>
             <table class="w-full text-left border-collapse text-sm">
               <thead>
                 <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
-                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Modelo / Año</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Sucursal</th>
                   <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
                   <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Unidades</th>
                 </tr>
               </thead>
-              <tbody id="gasolina-ranking-placa-body" class="divide-y divide-outline-variant"></tbody>
+              <tbody id="gasolina-ranking-sucursal-body" class="divide-y divide-outline-variant"></tbody>
             </table>
           </section>
+        </div>
+
+        <!-- Nivel 3: por Sucursal -> ranking de Placas -->
+        <div id="gasolina-nivel-sucursal" class="gasolina-nivel" style="display:none;">
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal · <span id="gasolina-sucursal-chart-titulo"></span></h3>
             <p class="text-xs text-on-surface-variant mb-2">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró).</p>
@@ -2137,6 +2120,23 @@
                 <div style="height:70px;"><canvas id="gasolina-mini-cargaPromedio-sucursal"></canvas></div>
               </div>
             </div>
+          </section>
+          <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-lg">
+            <div class="px-6 py-4 border-b border-outline-variant">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Placas · <span id="gasolina-sucursal-titulo"></span></h3>
+              <p class="text-xs text-on-surface-variant mt-1">Ordenado por gasto (mayor a menor). Clic en una placa para el detalle del vehículo.</p>
+            </div>
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Modelo / Año</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                  <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                </tr>
+              </thead>
+              <tbody id="gasolina-ranking-placa-body" class="divide-y divide-outline-variant"></tbody>
+            </table>
           </section>
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Frecuencia de Cargas por Placa</h3>
@@ -9983,7 +9983,8 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
   });
 
   // Panel de precio separado — línea sutil, sin eje compartido con las barras (evita el eje
-  // secundario invisible que hacía difícil leer la gráfica anterior).
+  // secundario invisible que hacía difícil leer la gráfica anterior). Etiqueta de $/L visible
+  // arriba de cada punto, sin necesidad de hover.
   const precioEl = document.getElementById(precioCanvasId);
   if (precioEl) {
     gasolinaCharts[precioCanvasId] = new Chart(precioEl, {
@@ -9991,12 +9992,26 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       data: { labels: etiquetas, datasets: [{ data: precios, borderColor: '#1b1b1b', borderWidth: 1.5, pointRadius: 2, tension: .25 }] },
       options: {
         maintainAspectRatio: false,
+        layout: { padding: { top: mostrarEtiquetas ? 16 : 4 } },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => '$' + c.parsed.y.toFixed(2) + '/L' } },
         },
         scales: { x: { display: false }, y: { display: false } },
       },
+      plugins: [{
+        id: 'etiquetasPrecioGasolina' + precioCanvasId,
+        afterDatasetsDraw(c) {
+          if (!mostrarEtiquetas) return;
+          const ctx = c.ctx;
+          c.getDatasetMeta(0).data.forEach((pt, i) => {
+            ctx.save();
+            ctx.font = "bold 8px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#4c4546';
+            ctx.fillText('$' + precios[i].toFixed(2), pt.x, pt.y - 4);
+            ctx.restore();
+          });
+        },
+      }],
     });
   }
 
@@ -10035,10 +10050,11 @@ function rerenderizarChartActivoGasolina() {
 // nivel (sufijo del canvasId de la gráfica principal) para poder tener varias en la página.
 function renderizarMiniCardsGasolina(canvasId, ventana) {
   const sufijo = canvasId.replace('gasolina-chart-', '');
+  const mostrarEtiquetas = ventana.length <= 20;
   const config = [
     { campo: 'transacciones', color: '#2E86C1', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
     { campo: 'unidades', color: '#85C1E9', fmt: (v) => Math.round(v).toLocaleString('es-MX') },
-    { campo: 'cargaPromedio', color: '#1B4F72', fmt: (v) => v.toFixed(1) + ' L' },
+    { campo: 'cargaPromedio', color: '#1B4F72', fmt: (v) => v.toFixed(1) + 'L' },
   ];
   config.forEach(({ campo, color, fmt }) => {
     const id = 'gasolina-mini-' + campo + '-' + sufijo;
@@ -10051,12 +10067,26 @@ function renderizarMiniCardsGasolina(canvasId, ventana) {
       data: { labels: ventana.map((s) => s.semana), datasets: [{ data, backgroundColor: color, maxBarThickness: 20, borderRadius: 3 }] },
       options: {
         maintainAspectRatio: false,
+        layout: { padding: { top: mostrarEtiquetas ? 14 : 2 } },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
         },
         scales: { x: { display: false }, y: { display: false, min: Math.min(...data) * 0.85, max: Math.max(...data) * 1.15 || 1 } },
       },
+      plugins: [{
+        id: 'etiquetasMini' + id,
+        afterDatasetsDraw(c) {
+          if (!mostrarEtiquetas) return;
+          const ctx = c.ctx;
+          c.getDatasetMeta(0).data.forEach((bar, i) => {
+            ctx.save();
+            ctx.font = "bold 8px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#1b1b1b';
+            ctx.fillText(fmt(data[i]), bar.x, bar.y - 3);
+            ctx.restore();
+          });
+        },
+      }],
     });
   });
 }
