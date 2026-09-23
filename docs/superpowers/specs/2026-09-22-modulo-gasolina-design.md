@@ -44,7 +44,7 @@ create table gasolina_transacciones (
   tipo_transaccion text,                -- 'CONSUMO' | 'ANULACIÓN DE CONSUMO'
   precio_por_litro numeric,
   litros numeric,
-  monto numeric,                        -- columna "NETO"; negativo en anulaciones
+  monto numeric,                        -- columna "M.N." (moneda nacional); negativo en anulaciones
   gasolinera text,                      -- columna "ESTACIÓN DE SERVICIO"
   desviacion_rendimiento_pct numeric,
   desviacion_rendimiento_monto numeric,
@@ -78,7 +78,7 @@ Columnas que se leen de la hoja `Report` (descarga cruda de Edenred, sin modific
 | TRANSACCIÓN | tipo_transaccion |
 | PRECIO LTS CON DESCUENTO | precio_por_litro |
 | LITROS | litros |
-| NETO | monto |
+| M.N. | monto (la columna "NETO" viene siempre en 0 en el archivo real; "M.N." — moneda nacional — es el monto real, coincide con la columna "Monto" que el usuario ya calculaba a mano) |
 | ESTACIÓN DE SERVICIO | gasolinera |
 | DESVIACIÓN DE RENDIMIENTO % | desviacion_rendimiento_pct |
 | DESVIACIÓN DE RENDIMIENTO EN $ | desviacion_rendimiento_monto |

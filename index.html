@@ -2958,7 +2958,7 @@ document.getElementById('input-excel-gasolina').addEventListener('change', funct
             tipo_transaccion: fila['TRANSACCIÓN'] || null,
             precio_por_litro: fila['PRECIO LTS CON DESCUENTO'] ?? null,
             litros: fila['LITROS'] ?? null,
-            monto: fila['NETO'] ?? null,
+            monto: fila['M.N.'] ?? null, // "NETO" viene siempre en 0 en este archivo; el monto real está en M.N. (moneda nacional)
             gasolinera: fila['ESTACIÓN DE SERVICIO'] || null,
             desviacion_rendimiento_pct: fila['DESVIACIÓN DE RENDIMIENTO %'] ?? null,
             desviacion_rendimiento_monto: fila['DESVIACIÓN DE RENDIMIENTO EN $'] ?? null,
