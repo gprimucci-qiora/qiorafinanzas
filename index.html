@@ -1936,6 +1936,9 @@
                   <span data-n="14" class="px-3 py-1.5 rounded-md cursor-pointer bg-white shadow-sm text-primary">14 sem</span>
                   <span data-n="30" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">30 sem</span>
                 </div>
+                <button onclick="abrirDrillDownCompletaGasolina()" title="Ver en grande" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors shrink-0">
+                  <span class="material-symbols-outlined text-[18px]">open_in_full</span>
+                </button>
               </div>
             </div>
             <div class="gasolina-chart-box" style="height:220px; position:relative;">
@@ -2064,7 +2067,10 @@
         <!-- Nivel 2: por Tipo de Sucursal -> ranking de Sucursales -->
         <div id="gasolina-nivel-tipo" class="gasolina-nivel" style="display:none;">
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal · <span id="gasolina-tipo-chart-titulo"></span></h3>
+            <div class="flex items-start justify-between gap-3 mb-1">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Consumo Semanal · <span id="gasolina-tipo-chart-titulo"></span></h3>
+              <button onclick="abrirDrillDownCompletaGasolina()" title="Ver en grande" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors shrink-0"><span class="material-symbols-outlined text-[18px]">open_in_full</span></button>
+            </div>
             <p class="text-xs text-on-surface-variant mb-2">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró).</p>
             <div class="gasolina-chart-box" style="height:220px; position:relative;">
               <canvas id="gasolina-chart-tipo"></canvas>
@@ -2116,7 +2122,10 @@
         <!-- Nivel 3: por Sucursal -> ranking de Placas -->
         <div id="gasolina-nivel-sucursal" class="gasolina-nivel" style="display:none;">
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal · <span id="gasolina-sucursal-chart-titulo"></span></h3>
+            <div class="flex items-start justify-between gap-3 mb-1">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Consumo Semanal · <span id="gasolina-sucursal-chart-titulo"></span></h3>
+              <button onclick="abrirDrillDownCompletaGasolina()" title="Ver en grande" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors shrink-0"><span class="material-symbols-outlined text-[18px]">open_in_full</span></button>
+            </div>
             <p class="text-xs text-on-surface-variant mb-2">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró).</p>
             <div class="gasolina-chart-box" style="height:220px; position:relative;">
               <canvas id="gasolina-chart-sucursal"></canvas>
@@ -2181,7 +2190,10 @@
             </div>
           </section>
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 mb-lg">
-            <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Consumo Semanal</h3>
+            <div class="flex items-start justify-between gap-3 mb-1">
+              <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Consumo Semanal</h3>
+              <button onclick="abrirDrillDownCompletaGasolina()" title="Ver en grande" class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors shrink-0"><span class="material-symbols-outlined text-[18px]">open_in_full</span></button>
+            </div>
             <p class="text-xs text-on-surface-variant mb-2">Rojo = arriba del promedio (gastó de más) · Verde = abajo (ahorró).</p>
             <div class="gasolina-chart-box" style="height:220px; position:relative;">
               <canvas id="gasolina-chart-placa"></canvas>
@@ -2528,6 +2540,45 @@
         </table>
       </div>
       <p class="text-xs text-on-surface-variant mt-3">Clic en una placa para ver su detalle.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modal-drilldown-completa-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownCompletaGasolina()">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-[96vw] max-h-[92vh] overflow-y-auto">
+    <div class="p-6 border-b border-outline-variant flex justify-between items-start">
+      <h3 id="drilldown-completa-gasolina-titulo" class="font-gordita-bold text-xl text-primary">-</h3>
+      <button onclick="cerrarDrillDownCompletaGasolina()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="gasolina-chart-box" style="height:380px; position:relative;">
+        <canvas id="gasolina-chart-popup"></canvas>
+      </div>
+      <div class="grid gap-1 mt-2" id="gasolina-pillrow-popup"></div>
+      <div class="mt-4">
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 font-gordita-bold">Precio x Litro Ponderado</p>
+        <div style="height:80px; position:relative;"><canvas id="gasolina-chart-precio-popup"></canvas></div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mt-4 pt-4 border-t border-outline-variant">
+        <div>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Gasto / Semana</p>
+          <div style="height:100px;"><canvas id="gasolina-mini-gasto-popup"></canvas></div>
+        </div>
+        <div>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Litros / Semana</p>
+          <div style="height:100px;"><canvas id="gasolina-mini-litros-popup"></canvas></div>
+        </div>
+        <div>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Transacciones / Semana</p>
+          <div style="height:100px;"><canvas id="gasolina-mini-transacciones-popup"></canvas></div>
+        </div>
+        <div>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 text-center">Unidades Activas / Semana</p>
+          <div style="height:100px;"><canvas id="gasolina-mini-unidades-popup"></canvas></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -10390,6 +10441,35 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
 
 function cerrarDrillDownMiniGasolina() {
   document.getElementById('modal-drilldown-mini-gasolina').style.display = 'none';
+}
+
+// "Ver en grande": abre la gráfica "Consumo Semanal" completa (barras + insignias + precio +
+// mini-tendencias) del nivel actual, en un popup casi a pantalla completa. Reutiliza
+// renderizarChartTodoGasolina/renderizarMiniCardsGasolina tal cual, apuntando a los elementos
+// con sufijo "popup" — es la misma gráfica, solo más grande.
+function abrirDrillDownCompletaGasolina() {
+  document.getElementById('modal-drilldown-completa-gasolina').style.display = 'flex';
+  let transacciones;
+  let titulo;
+  if (gasolinaEstado.nivel === 'tipo') {
+    transacciones = transaccionesEnAmbitoGasolina();
+    titulo = 'Consumo Semanal · ' + gasolinaEstado.tipo;
+  } else if (gasolinaEstado.nivel === 'sucursal') {
+    transacciones = transaccionesEnAmbitoGasolina();
+    titulo = 'Consumo Semanal · ' + gasolinaEstado.sucursal;
+  } else if (gasolinaEstado.nivel === 'placa') {
+    transacciones = gasolinaDatos.transacciones.filter((t) => t.placa === gasolinaEstado.placa);
+    titulo = 'Consumo Semanal · ' + gasolinaEstado.placa;
+  } else {
+    transacciones = gasolinaDatos.transacciones;
+    titulo = 'Consumo Semanal · Nacional';
+  }
+  document.getElementById('drilldown-completa-gasolina-titulo').textContent = titulo;
+  renderizarChartTodoGasolina('gasolina-chart-popup', transacciones);
+}
+
+function cerrarDrillDownCompletaGasolina() {
+  document.getElementById('modal-drilldown-completa-gasolina').style.display = 'none';
 }
 
 // Clic en el panel de Precio x Litro Ponderado abre esa misma tendencia ampliada, en el mismo
