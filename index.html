@@ -867,19 +867,27 @@
           </div>
           <p id="estado-usuario" class="text-sm font-gordita-bold text-secondary mb-4"></p>
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <table id="tabla-usuarios" class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
-                  <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Nombre</th>
-                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
-                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
-                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
-                  <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Último acceso</th>
-                  <th class="px-6 py-4"></th>
-                </tr>
-              </thead>
-              <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
-            </table>
+            <div style="overflow-x:auto;">
+              <table id="tabla-usuarios" class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                    <th class="px-8 py-4 font-gordita-bold uppercase tracking-widest">Nombre</th>
+                    <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Correo</th>
+                    <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Rol</th>
+                    <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Estado</th>
+                    <th class="px-6 py-4 font-gordita-bold uppercase tracking-widest">Último acceso</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Operaciones">Op.</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Financieros">Fin.</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Capital Humano">C.H.</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Flota Vehicular">Flota</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Gasolina">Gas.</th>
+                    <th class="px-6 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
+              </table>
+            </div>
+            <p class="px-6 py-3 text-[11px] text-on-surface-variant border-t border-outline-variant">Op./Fin./C.H./Flota/Gas. = qué pilares del sidebar ve ese usuario. Desmarcar oculta ese pilar para esa persona (admin siempre ve todo, sin importar esto).</p>
           </section>
         </div>
       </div>
@@ -2570,8 +2578,20 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
-// Roles que solo pueden ver un pilar específico de la app (todo lo demás queda oculto/bloqueado).
-const PILAR_EXCLUSIVO_POR_ROL = { operaciones: 'operaciones' };
+// Acceso granular por pilar y por usuario (usuarios.pilares_permitidos). admin siempre tiene
+// acceso completo, sin importar lo que tenga guardado ese campo (para no arriesgar que un admin
+// se bloquee a sí mismo por accidente).
+const TODOS_LOS_PILARES = ['operaciones', 'financieros', 'capitalhumano', 'flota', 'gasolina'];
+
+function pilaresPermitidosDe(usuario) {
+  if (!usuario || usuario.rol === 'admin') return TODOS_LOS_PILARES;
+  const p = usuario.pilares_permitidos;
+  return (Array.isArray(p) && p.length) ? p : TODOS_LOS_PILARES;
+}
+
+function usuarioRestringido(usuario) {
+  return pilaresPermitidosDe(usuario).length < TODOS_LOS_PILARES.length;
+}
 let ultimaFechaConDatos = null;
 let modoPeriodoGlobal = 'mes';
 let rangoGlobalDesde = null;
@@ -2602,7 +2622,7 @@ async function cargarSesion() {
   }
   const { data: perfil } = await supabaseClient
     .from('usuarios')
-    .select('nombre, rol')
+    .select('nombre, rol, pilares_permitidos')
     .eq('id', session.user.id)
     .single();
   if (!perfil) {
@@ -2633,10 +2653,11 @@ async function cargarSesion() {
     if (seccionAdminIngresos) seccionAdminIngresos.style.display = 'block';
   }
 
-  const pilarExclusivo = PILAR_EXCLUSIVO_POR_ROL[perfil.rol];
-  if (pilarExclusivo) {
+  const restringido = usuarioRestringido(usuarioActual);
+  const permitidos = pilaresPermitidosDe(usuarioActual);
+  if (restringido) {
     document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => {
-      if (b.dataset.vista !== pilarExclusivo) b.closest('li').style.display = 'none';
+      if (!permitidos.includes(b.dataset.vista)) b.closest('li').style.display = 'none';
     });
     const btnVolver = document.getElementById('btn-volver-overview-operaciones');
     if (btnVolver) btnVolver.style.display = 'none';
@@ -2645,7 +2666,7 @@ async function cargarSesion() {
   mesGlobalSeleccionado = await obtenerUltimoMesConDatos();
   actualizarEtiquetaMesGlobal();
   await cargarGlosario();
-  if (pilarExclusivo) await abrirPilar(pilarExclusivo);
+  if (restringido) await abrirPilar(permitidos[0]);
   else mostrarVista('overview');
 }
 
@@ -2664,8 +2685,10 @@ function ocultarIndicadorCarga() {
 }
 
 async function mostrarVista(nombre) {
-  const pilarExclusivo = usuarioActual && PILAR_EXCLUSIVO_POR_ROL[usuarioActual.rol];
-  if (pilarExclusivo && nombre !== pilarExclusivo) return abrirPilar(pilarExclusivo);
+  if (usuarioActual && usuarioRestringido(usuarioActual)) {
+    const permitidos = pilaresPermitidosDe(usuarioActual);
+    if (!permitidos.includes(nombre)) return abrirPilar(permitidos[0]);
+  }
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
   document.getElementById('vista-' + nombre).classList.add('activa');
@@ -5559,9 +5582,27 @@ async function cargarUsuarios() {
     const accionBoton = u.activo
       ? `<button onclick="desactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-error hover:underline">Desactivar</button>`
       : `<button onclick="reactivarUsuario('${u.id}')" class="text-xs font-gordita-bold text-qiora-green hover:underline">Reactivar</button>`;
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="operaciones" ${u.rol === 'operaciones' ? 'selected' : ''}>operaciones</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td><td class="px-6 py-4">${accionBoton}</td>`;
+    const esAdmin = u.rol === 'admin';
+    const permitidos = (Array.isArray(u.pilares_permitidos) && u.pilares_permitidos.length) ? u.pilares_permitidos : TODOS_LOS_PILARES;
+    const celdaPilar = (pilar) => {
+      const marcado = esAdmin || permitidos.includes(pilar);
+      const disabled = esAdmin ? 'disabled title="Los admin siempre ven todo"' : '';
+      return `<td class="px-3 py-4 text-center"><input type="checkbox" ${marcado ? 'checked' : ''} ${disabled} onchange="actualizarPilarPermitidoUsuario('${u.id}', '${pilar}', this.checked)" class="w-4 h-4 cursor-pointer"></td>`;
+    };
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="operaciones" ${u.rol === 'operaciones' ? 'selected' : ''}>operaciones</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td>${celdaPilar('operaciones')}${celdaPilar('financieros')}${celdaPilar('capitalhumano')}${celdaPilar('flota')}${celdaPilar('gasolina')}<td class="px-6 py-4">${accionBoton}</td>`;
     cuerpo.appendChild(tr);
   });
+}
+
+async function actualizarPilarPermitidoUsuario(id, pilar, marcado) {
+  const { data: filaActual, error: errorLectura } = await supabaseClient.from('usuarios').select('pilares_permitidos').eq('id', id).single();
+  if (errorLectura) { alert('Error: ' + errorLectura.message); await cargarUsuarios(); return; }
+  const actuales = (Array.isArray(filaActual.pilares_permitidos) && filaActual.pilares_permitidos.length) ? filaActual.pilares_permitidos : TODOS_LOS_PILARES;
+  const nuevos = marcado
+    ? Array.from(new Set([...actuales, pilar]))
+    : actuales.filter((p) => p !== pilar);
+  const { error } = await supabaseClient.from('usuarios').update({ pilares_permitidos: nuevos }).eq('id', id);
+  if (error) { alert('Error: ' + error.message); await cargarUsuarios(); return; }
 }
 
 function mostrarFormularioPassword() {
@@ -6962,8 +7003,10 @@ async function cargarOverview() {
 }
 
 async function abrirPilar(nombre) {
-  const pilarExclusivo = usuarioActual && PILAR_EXCLUSIVO_POR_ROL[usuarioActual.rol];
-  if (pilarExclusivo && nombre !== pilarExclusivo) nombre = pilarExclusivo;
+  if (usuarioActual && usuarioRestringido(usuarioActual)) {
+    const permitidos = pilaresPermitidosDe(usuarioActual);
+    if (!permitidos.includes(nombre)) nombre = permitidos[0];
+  }
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
   document.getElementById('vista-pilar-' + nombre).classList.add('activa');
