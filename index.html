@@ -1966,6 +1966,51 @@
             </section>
           </div>
 
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-lg">
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant flex items-start justify-between flex-wrap gap-3">
+                <div>
+                  <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Gasolineras por Precio</h3>
+                  <p class="text-xs text-on-surface-variant mt-1">Top 10. % del Total = transacciones ahí / transacciones totales.</p>
+                </div>
+                <div class="flex bg-surface-container-low rounded-lg p-1 text-[11px] font-gordita-bold" id="gasolina-toggle-precio-gasolineras">
+                  <span data-orden="barato" class="px-3 py-1.5 rounded-md cursor-pointer bg-white shadow-sm text-primary">Más barato</span>
+                  <span data-orden="caro" class="px-3 py-1.5 rounded-md cursor-pointer text-on-surface-variant">Más caro</span>
+                </div>
+              </div>
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Gasolinera</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">$/L</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Transacciones</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">% del Total</th>
+                  </tr>
+                </thead>
+                <tbody id="gasolina-ranking-precio-gasolineras-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </section>
+
+            <section class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-outline-variant">
+                <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide">Placas que Más Consumen</h3>
+                <p class="text-xs text-on-surface-variant mt-1">Top 10 por litros. Clic para el detalle del vehículo.</p>
+              </div>
+              <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="bg-surface-container-low text-[10px] text-on-surface-variant border-b border-outline-variant">
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Placa</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Modelo / Año</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest">Sucursal</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Litros</th>
+                    <th class="px-6 py-3 font-gordita-bold uppercase tracking-widest text-right">Gasto</th>
+                  </tr>
+                </thead>
+                <tbody id="gasolina-ranking-consumo-placas-body" class="divide-y divide-outline-variant"></tbody>
+              </table>
+            </section>
+          </div>
+
           <section class="bg-white border border-outline-variant rounded-xl shadow-sm p-6">
             <h3 class="font-gordita-bold text-sm text-primary uppercase tracking-wide mb-1">Patrón de Consumo por Hora y Día de la Semana</h3>
             <p class="text-xs text-on-surface-variant mb-4">Entre más oscuro, más transacciones en ese cruce hora × día.</p>
@@ -9597,9 +9642,11 @@ function mostrarNivelGasolina(nivel) {
     document.getElementById('gasolina-nivel-' + n).style.display = n === nivel ? 'block' : 'none';
   });
   gasolinaEstado.nivel = nivel;
+  // Los segmentos intermedios solo se muestran si de verdad se pasó por ese nivel — el ranking
+  // "Placas que Más Consumen" en Nacional puede saltar directo a Placa sin pasar por Tipo/Sucursal.
   document.getElementById('gasolina-breadcrumb').style.display = nivel === 'nacional' ? 'none' : 'flex';
-  document.getElementById('gasolina-breadcrumb-tipo-wrap').style.display = nivel !== 'nacional' ? 'inline' : 'none';
-  document.getElementById('gasolina-breadcrumb-sucursal-wrap').style.display = (nivel === 'sucursal' || nivel === 'placa') ? 'inline' : 'none';
+  document.getElementById('gasolina-breadcrumb-tipo-wrap').style.display = gasolinaEstado.tipo ? 'inline' : 'none';
+  document.getElementById('gasolina-breadcrumb-sucursal-wrap').style.display = gasolinaEstado.sucursal ? 'inline' : 'none';
   document.getElementById('gasolina-breadcrumb-placa-wrap').style.display = nivel === 'placa' ? 'inline' : 'none';
 }
 
@@ -9626,6 +9673,8 @@ function renderizarNivelNacionalGasolina() {
 
   renderizarRankingTipoSucursalGasolina(transacciones);
   renderizarRankingGasolinerasGasolina(transacciones);
+  renderizarRankingPrecioGasolinerasGasolina(transacciones);
+  renderizarRankingConsumoPlacasGasolina(transacciones);
   renderizarHeatmapGasolina(transacciones);
   renderizarChartTodoGasolina('gasolina-chart-todo', transacciones);
 }
@@ -9652,6 +9701,52 @@ function renderizarRankingGasolinerasGasolina(transacciones) {
       <td class="px-6 py-3 text-right">${f.transacciones}</td>
       <td class="px-6 py-3 text-right">$${f.precioPonderado.toFixed(2)}</td>
       <td class="px-6 py-3 text-right ${f.vsPromedioFlotaPct === null ? '' : (f.vsPromedioFlotaPct > 0 ? 'text-error' : 'text-qiora-green')}">${f.vsPromedioFlotaPct === null ? '—' : (f.vsPromedioFlotaPct > 0 ? '+' : '') + f.vsPromedioFlotaPct.toFixed(1) + '%'}</td>
+    </tr>`).join('');
+}
+
+let gasolinaOrdenPrecioGasolineras = 'barato';
+
+function renderizarRankingPrecioGasolinerasGasolina(transacciones) {
+  const todas = Calc.rankingGasolinerasGasolina(transacciones);
+  const totalTransacciones = todas.reduce((s, g) => s + g.transacciones, 0);
+  const ordenadas = todas.slice().sort((a, b) => (
+    gasolinaOrdenPrecioGasolineras === 'caro' ? b.precioPonderado - a.precioPonderado : a.precioPonderado - b.precioPonderado
+  ));
+  const filas = ordenadas.slice(0, 10);
+  const cuerpo = document.getElementById('gasolina-ranking-precio-gasolineras-body');
+  cuerpo.innerHTML = filas.map((f) => {
+    const pct = totalTransacciones > 0 ? (f.transacciones / totalTransacciones) * 100 : 0;
+    return `<tr class="hover:bg-surface-container-low/50 transition-colors">
+      <td class="px-6 py-3">${f.gasolinera}</td>
+      <td class="px-6 py-3 text-right font-gordita-bold text-primary">$${f.precioPonderado.toFixed(2)}</td>
+      <td class="px-6 py-3 text-right">${f.transacciones}</td>
+      <td class="px-6 py-3 text-right">${pct.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('gasolina-toggle-precio-gasolineras').addEventListener('click', (evento) => {
+  const span = evento.target.closest('span[data-orden]');
+  if (!span) return;
+  gasolinaOrdenPrecioGasolineras = span.dataset.orden;
+  document.querySelectorAll('#gasolina-toggle-precio-gasolineras span').forEach((s) => {
+    s.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+    s.classList.add('text-on-surface-variant');
+  });
+  span.classList.add('bg-white', 'shadow-sm', 'text-primary');
+  span.classList.remove('text-on-surface-variant');
+  if (gasolinaDatos) renderizarRankingPrecioGasolinerasGasolina(gasolinaDatos.transacciones);
+});
+
+function renderizarRankingConsumoPlacasGasolina(transacciones) {
+  const filas = Calc.agruparGasolinaPorPlaca(transacciones, 'litros').slice(0, 10);
+  const cuerpo = document.getElementById('gasolina-ranking-consumo-placas-body');
+  cuerpo.innerHTML = filas.map((f) => `<tr class="hover:bg-surface-container-low/50 cursor-pointer transition-colors" onclick="abrirPlacaGasolina('${f.placa.replace(/'/g, "\\'")}')">
+      <td class="px-6 py-3 font-gordita-bold text-primary">${f.placa}</td>
+      <td class="px-6 py-3">${f.modelo || '—'}${f.anio ? ' · ' + f.anio : ''}</td>
+      <td class="px-6 py-3">${f.sucursal || '—'}</td>
+      <td class="px-6 py-3 text-right">${Math.round(f.litros).toLocaleString('es-MX')}</td>
+      <td class="px-6 py-3 text-right">${formatoMoneda(f.monto)}</td>
     </tr>`).join('');
 }
 

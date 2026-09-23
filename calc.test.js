@@ -617,6 +617,18 @@ test('agruparGasolinaPorPlaca agrupa por placa y ordena por gasto, mayor a menor
   assert.strictEqual(resultado[2].placa, 'A3');
 });
 
+test('agruparGasolinaPorPlaca ordena por litros cuando ordenarPor es "litros"', () => {
+  const transacciones = [
+    { placa: 'A1', litros: 5, monto: 500 },
+    { placa: 'A2', litros: 50, monto: 100 },
+    { placa: 'A3', litros: 20, monto: 200 },
+  ];
+  const resultado = Calc.agruparGasolinaPorPlaca(transacciones, 'litros');
+  assert.strictEqual(resultado[0].placa, 'A2');
+  assert.strictEqual(resultado[1].placa, 'A3');
+  assert.strictEqual(resultado[2].placa, 'A1');
+});
+
 test('agruparGasolinaPorHoraDia arma una matriz 7x24 con conteo de transacciones', () => {
   const transacciones = [
     { fecha: '2026-01-05', hora: '08:15:00' }, // lunes

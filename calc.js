@@ -456,10 +456,11 @@
       .sort((a, b) => b.monto - a.monto);
   }
 
-  // Nivel 4: por Placa, ordenado por gasto (mayor a menor). La desviación de rendimiento que
-  // manda Edenred no se usa — los valores observados en datos reales son atípicos/poco fiables
-  // (ej. -62024%), así que v1 no la considera para ordenar ni para resaltar nada.
-  function agruparGasolinaPorPlaca(transaccionesClasificadas) {
+  // Agrupa por Placa. ordenarPor: 'monto' (default, usado en el nivel 4 del drill-down) o
+  // 'litros' (usado en el ranking nacional "Placas que Más Consumen"). La desviación de
+  // rendimiento que manda Edenred no se usa — los valores observados en datos reales son
+  // atípicos/poco fiables (ej. -62024%), así que v1 no la considera para ordenar ni resaltar.
+  function agruparGasolinaPorPlaca(transaccionesClasificadas, ordenarPor) {
     const porPlaca = {};
     transaccionesClasificadas.forEach((t) => {
       porPlaca[t.placa] = porPlaca[t.placa] || {
@@ -471,7 +472,8 @@
       p.monto += t.monto || 0;
       p.transacciones += 1;
     });
-    return Object.values(porPlaca).sort((a, b) => b.monto - a.monto);
+    const campo = ordenarPor === 'litros' ? 'litros' : 'monto';
+    return Object.values(porPlaca).sort((a, b) => b[campo] - a[campo]);
   }
 
   // Matriz [día 0=lunes..6=domingo][hora 0-23] = # de transacciones, para el heatmap de patrón.
