@@ -2487,7 +2487,7 @@
 </div>
 
 <div id="modal-drilldown-hora-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownHoraGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[88vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-[96vw] max-h-[90vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <div>
         <p class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">Patrón de Consumo</p>
@@ -2533,7 +2533,7 @@
 </div>
 
 <div id="modal-drilldown-mini-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownMiniGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-[96vw] max-h-[92vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <h3 id="drilldown-mini-gasolina-titulo" class="font-gordita-bold text-xl text-primary">-</h3>
       <button onclick="cerrarDrillDownMiniGasolina()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0">
@@ -2555,13 +2555,13 @@
           <h2 id="drilldown-mini-gasolina-kpi-min" class="font-gordita-bold text-xl text-primary">-</h2>
         </div>
       </div>
-      <div style="height:440px;"><canvas id="grafica-drilldown-mini-gasolina"></canvas></div>
+      <div style="height:520px;"><canvas id="grafica-drilldown-mini-gasolina"></canvas></div>
     </div>
   </div>
 </div>
 
 <div id="modal-drilldown-semana-gasolina" class="fixed inset-0 bg-black/40 items-center justify-center z-50 p-6" style="display:none;" onclick="if(event.target===this) cerrarDrillDownSemanaGasolina()">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[88vh] overflow-y-auto">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-[90vw] max-h-[90vh] overflow-y-auto">
     <div class="p-6 border-b border-outline-variant flex justify-between items-start">
       <div>
         <p id="drilldown-semana-gasolina-subtitulo" class="text-xs font-gordita-bold text-secondary uppercase tracking-widest">-</p>
@@ -10191,6 +10191,8 @@ function renderizarChartTodoGasolina(canvasId, transaccionesAmbito) {
       options: {
         maintainAspectRatio: false,
         layout: { padding: { top: mostrarEtiquetasPrecio ? 16 : 6, left: 22, right: 22 } },
+        onClick: () => abrirDrillDownPrecioGasolina(ventana),
+        onHover: (evento) => { evento.native.target.style.cursor = 'pointer'; },
         plugins: {
           legend: { display: false },
           tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => '$' + c.parsed.y.toFixed(2) + '/L' } },
@@ -10386,6 +10388,59 @@ function abrirDrillDownMiniGasolina(titulo, ventana, campo, color, fmt) {
 
 function cerrarDrillDownMiniGasolina() {
   document.getElementById('modal-drilldown-mini-gasolina').style.display = 'none';
+}
+
+// Clic en el panel de Precio x Litro Ponderado abre esa misma tendencia ampliada, en el mismo
+// modal grande que las mini-tendencias (reutiliza título/KPIs/canvas), pero como línea en vez
+// de barras, con la etiqueta $/L siempre arriba de su propio marcador (zigzag si hay muchas
+// semanas, mismo criterio que el resto de los popups).
+function abrirDrillDownPrecioGasolina(ventana) {
+  const data = ventana.map((s) => s.precioPonderado);
+  const fmt = (v) => '$' + v.toFixed(2) + '/L';
+  document.getElementById('drilldown-mini-gasolina-titulo').textContent = 'Precio x Litro Ponderado';
+  const promedio = data.length ? data.reduce((a, b) => a + b, 0) / data.length : 0;
+  document.getElementById('drilldown-mini-gasolina-kpi-promedio').textContent = fmt(promedio);
+  document.getElementById('drilldown-mini-gasolina-kpi-max').textContent = data.length ? fmt(Math.max(...data)) : '—';
+  document.getElementById('drilldown-mini-gasolina-kpi-min').textContent = data.length ? fmt(Math.min(...data)) : '—';
+
+  const tamanoFuente = ventana.length > 20 ? 8 : 10;
+  const zigzag = ventana.length > 14;
+
+  if (graficaDrilldownMiniGasolina) graficaDrilldownMiniGasolina.destroy();
+  graficaDrilldownMiniGasolina = new Chart(document.getElementById('grafica-drilldown-mini-gasolina'), {
+    type: 'line',
+    data: {
+      labels: ventana.map((s) => s.semana),
+      datasets: [{ data, borderColor: '#1b1b1b', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#1b1b1b', tension: .25 }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { top: zigzag ? 48 : 28, left: 14, right: 14 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { titleFont: { family: 'Gordita', weight: 'bold' }, bodyFont: { family: 'Gordita' }, callbacks: { label: (c) => fmt(c.parsed.y) } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Gordita', size: ventana.length > 20 ? 7 : 9 } } },
+        y: { display: false, min: Math.min(...data) - 0.5, max: Math.max(...data) + 0.5 },
+      },
+    },
+    plugins: [{
+      id: 'etiquetasDrilldownPrecioGasolina',
+      afterDatasetsDraw(c) {
+        const ctx = c.ctx;
+        c.getDatasetMeta(0).data.forEach((pt, i) => {
+          ctx.save();
+          ctx.font = 'bold ' + tamanoFuente + "px 'Gordita', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1b1b1b';
+          const offset = zigzag ? (i % 2 === 0 ? 10 : 24) : 10;
+          ctx.fillText('$' + data[i].toFixed(2), pt.x, pt.y - offset);
+          ctx.restore();
+        });
+      },
+    }],
+  });
+
+  document.getElementById('modal-drilldown-mini-gasolina').style.display = 'flex';
 }
 
 // Clic en una barra de la gráfica "Todo" (una semana) abre el desglose de esa semana por el
