@@ -2820,7 +2820,11 @@ async function cargarSesion() {
   const permitidos = pilaresPermitidosDe(usuarioActual);
   if (restringido) {
     document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => {
-      if (!permitidos.includes(b.dataset.vista)) b.closest('li').style.display = 'none';
+      const v = b.dataset.vista;
+      // Configuración se deja visible si tiene permiso de cargar Gasolina, aunque no vea los
+      // demás pilares — si no, nunca podría llegar a la pestaña de carga.
+      const mostrarConfigPorCarga = v === 'config' && perfil.puede_cargar_gasolina;
+      if (!permitidos.includes(v) && !mostrarConfigPorCarga) b.closest('li').style.display = 'none';
     });
     const btnVolver = document.getElementById('btn-volver-overview-operaciones');
     if (btnVolver) btnVolver.style.display = 'none';
@@ -2850,7 +2854,8 @@ function ocultarIndicadorCarga() {
 async function mostrarVista(nombre) {
   if (usuarioActual && usuarioRestringido(usuarioActual)) {
     const permitidos = pilaresPermitidosDe(usuarioActual);
-    if (!permitidos.includes(nombre)) return abrirPilar(permitidos[0]);
+    const esConfigPorCarga = nombre === 'config' && usuarioActual.puede_cargar_gasolina;
+    if (!permitidos.includes(nombre) && !esConfigPorCarga) return abrirPilar(permitidos[0]);
   }
   document.querySelectorAll('.vista').forEach((v) => v.classList.remove('activa'));
   document.querySelectorAll('#sidebar button[data-vista]').forEach((b) => b.classList.remove('activo'));
