@@ -881,13 +881,14 @@
                     <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Capital Humano">C.H.</th>
                     <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Flota Vehicular">Flota</th>
                     <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Gasolina">Gas.</th>
+                    <th class="px-3 py-4 font-gordita-bold uppercase tracking-widest text-center" title="Puede subir el reporte de Gasolina en Configuración">Carga Gas.</th>
                     <th class="px-6 py-4"></th>
                   </tr>
                 </thead>
                 <tbody id="tabla-usuarios-body" class="text-sm divide-y divide-outline-variant"></tbody>
               </table>
             </div>
-            <p class="px-6 py-3 text-[11px] text-on-surface-variant border-t border-outline-variant">Op./Fin./C.H./Flota/Gas. = qué pilares del sidebar ve ese usuario. Desmarcar oculta ese pilar para esa persona (admin siempre ve todo, sin importar esto).</p>
+            <p class="px-6 py-3 text-[11px] text-on-surface-variant border-t border-outline-variant">Op./Fin./C.H./Flota/Gas. = qué pilares del sidebar ve ese usuario. "Carga Gas." = puede subir el reporte de Gasolina en Configuración sin ser admin. Admin siempre ve y puede cargar todo, sin importar esto.</p>
           </section>
         </div>
       </div>
@@ -2782,7 +2783,7 @@ async function cargarSesion() {
   }
   const { data: perfil } = await supabaseClient
     .from('usuarios')
-    .select('nombre, rol, pilares_permitidos')
+    .select('nombre, rol, pilares_permitidos, puede_cargar_gasolina')
     .eq('id', session.user.id)
     .single();
   if (!perfil) {
@@ -2800,6 +2801,8 @@ async function cargarSesion() {
     document.getElementById('config-tab-cargar').style.display = 'none';
     document.getElementById('config-tab-ingresos').style.display = 'none';
     document.getElementById('config-tab-flota').style.display = 'none';
+    // La carga de Gasolina la puede tener un usuario sin ser admin (usuarios.puede_cargar_gasolina).
+    if (!perfil.puede_cargar_gasolina) document.getElementById('config-tab-gasolina').style.display = 'none';
     document.getElementById('config-tab-unidades').style.display = 'none';
     document.getElementById('config-tab-poliza').style.display = 'none';
     document.getElementById('config-tab-hc-poliza').style.display = 'none';
@@ -5749,9 +5752,17 @@ async function cargarUsuarios() {
       const disabled = esAdmin ? 'disabled title="Los admin siempre ven todo"' : '';
       return `<td class="px-3 py-4 text-center"><input type="checkbox" ${marcado ? 'checked' : ''} ${disabled} onchange="actualizarPilarPermitidoUsuario('${u.id}', '${pilar}', this.checked)" class="w-4 h-4 cursor-pointer"></td>`;
     };
-    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="operaciones" ${u.rol === 'operaciones' ? 'selected' : ''}>operaciones</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td>${celdaPilar('operaciones')}${celdaPilar('financieros')}${celdaPilar('capitalhumano')}${celdaPilar('flota')}${celdaPilar('gasolina')}<td class="px-6 py-4">${accionBoton}</td>`;
+    const cargaGasolinaMarcado = esAdmin || !!u.puede_cargar_gasolina;
+    const cargaGasolinaDisabled = esAdmin ? 'disabled title="Los admin siempre pueden cargar todo"' : '';
+    const celdaCargaGasolina = `<td class="px-3 py-4 text-center"><input type="checkbox" ${cargaGasolinaMarcado ? 'checked' : ''} ${cargaGasolinaDisabled} onchange="actualizarCargaGasolinaUsuario('${u.id}', this.checked)" class="w-4 h-4 cursor-pointer"></td>`;
+    tr.innerHTML = `<td class="px-8 py-4 font-gordita-bold">${u.nombre || ''}</td><td class="px-6 py-4">${u.correo || ''}</td><td class="px-6 py-4"><select onchange="cambiarRolUsuario('${u.id}', this.value)" class="text-xs border border-outline-variant rounded px-2 py-1"><option value="finanzas" ${u.rol === 'finanzas' ? 'selected' : ''}>finanzas</option><option value="operaciones" ${u.rol === 'operaciones' ? 'selected' : ''}>operaciones</option><option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option></select></td><td class="px-6 py-4">${u.activo ? 'Activo' : 'Inactivo'}</td><td class="px-6 py-4 text-xs text-on-surface-variant">${formatoUltimoAcceso(u.ultimo_acceso)}</td>${celdaPilar('operaciones')}${celdaPilar('financieros')}${celdaPilar('capitalhumano')}${celdaPilar('flota')}${celdaPilar('gasolina')}${celdaCargaGasolina}<td class="px-6 py-4">${accionBoton}</td>`;
     cuerpo.appendChild(tr);
   });
+}
+
+async function actualizarCargaGasolinaUsuario(id, marcado) {
+  const { error } = await supabaseClient.from('usuarios').update({ puede_cargar_gasolina: marcado }).eq('id', id);
+  if (error) { alert('Error: ' + error.message); await cargarUsuarios(); return; }
 }
 
 async function actualizarPilarPermitidoUsuario(id, pilar, marcado) {
