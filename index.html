@@ -3304,28 +3304,56 @@ document.getElementById('input-excel-gasolina').addEventListener('change', funct
       const hoja = libro.Sheets['Report'] || libro.Sheets[libro.SheetNames[0]];
       const filas = XLSX.utils.sheet_to_json(hoja);
 
+      // Edenred ha cambiado la capitalización/acentos de los encabezados entre descargas
+      // (ej. "Placas" -> "PLACAS", "Sucursal" -> "SUCURSAL"). Se arma un acceso por nombre de
+      // columna normalizado (sin acentos, minúsculas, sin espacios extra) para que funcione con
+      // cualquiera de los formatos sin tener que listar cada variante a mano.
+      const normalizarEncabezado = (texto) => String(texto)
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/\s+/g, ' ').trim();
+      const leerCampo = (fila, mapaNorm, ...nombres) => {
+        for (const nombre of nombres) {
+          const clave = mapaNorm[normalizarEncabezado(nombre)];
+          if (clave !== undefined && fila[clave] !== undefined && fila[clave] !== '') return fila[clave];
+        }
+        return null;
+      };
+
+      let omitidasSinPlaca = 0;
       filasParaCargarGasolina = filas.map((fila, indice) => {
         try {
+          // El mapa de "encabezado normalizado -> encabezado real" se arma por fila a partir de
+          // sus propias llaves (sheet_to_json ya usa los encabezados de la primera fila).
+          const mapaNorm = {};
+          Object.keys(fila).forEach((k) => { mapaNorm[normalizarEncabezado(k)] = k; });
+          const placa = leerCampo(fila, mapaNorm, 'Placas');
+          if (!placa) { omitidasSinPlaca += 1; return null; }
           return {
-            fecha: fechaISODesdeTextoGasolina(fila['FECHA']),
-            hora: fila['HORA'] || null,
-            placa: fila['Placas'] || null,
-            sucursal: fila['Sucursal'] || null,
-            vin: fila['VIN'] || null,
-            capacidad_tanque: fila['CAPACIDAD DE TANQUE'] ?? null,
-            tipo_transaccion: fila['TRANSACCIÓN'] || null,
-            precio_por_litro: fila['PRECIO LTS CON DESCUENTO'] ?? null,
-            litros: fila['LITROS'] ?? null,
-            monto: fila['M.N.'] ?? null, // "NETO" viene siempre en 0 en este archivo; el monto real está en M.N. (moneda nacional)
-            gasolinera: fila['ESTACIÓN DE SERVICIO'] || null,
-            desviacion_rendimiento_pct: fila['DESVIACIÓN DE RENDIMIENTO %'] ?? null,
-            desviacion_rendimiento_monto: fila['DESVIACIÓN DE RENDIMIENTO EN $'] ?? null,
-            razon_social: fila['Razon social'] || null,
+            fecha: fechaISODesdeTextoGasolina(leerCampo(fila, mapaNorm, 'FECHA')),
+            hora: leerCampo(fila, mapaNorm, 'HORA'),
+            placa: placa,
+            sucursal: leerCampo(fila, mapaNorm, 'Sucursal'),
+            vin: leerCampo(fila, mapaNorm, 'VIN'),
+            capacidad_tanque: leerCampo(fila, mapaNorm, 'CAPACIDAD DE TANQUE'),
+            tipo_transaccion: leerCampo(fila, mapaNorm, 'TRANSACCIÓN'),
+            precio_por_litro: leerCampo(fila, mapaNorm, 'PRECIO LTS CON DESCUENTO'),
+            litros: leerCampo(fila, mapaNorm, 'LITROS'),
+            // "NETO" viene siempre en 0 en estos archivos; el monto real está en M.N. (moneda nacional)
+            monto: leerCampo(fila, mapaNorm, 'M.N.', 'MN'),
+            gasolinera: leerCampo(fila, mapaNorm, 'ESTACIÓN DE SERVICIO', 'ESTACION DE SERVICIO'),
+            desviacion_rendimiento_pct: leerCampo(fila, mapaNorm, 'DESVIACIÓN DE RENDIMIENTO %', 'DESVIACION DE RENDIMIENTO %'),
+            desviacion_rendimiento_monto: leerCampo(fila, mapaNorm, 'DESVIACIÓN DE RENDIMIENTO EN $', 'DESVIACION DE RENDIMIENTO EN $'),
+            razon_social: leerCampo(fila, mapaNorm, 'Razon social', 'Razón social'),
           };
         } catch (errorFila) {
           throw new Error('Fila ' + (indice + 2) + ' del Excel: ' + errorFila.message);
         }
-      });
+      }).filter((f) => f !== null);
+
+      if (filasParaCargarGasolina.length === 0) {
+        document.getElementById('estado-carga-gasolina').textContent = 'El archivo no tiene filas con placa. ¿Es la hoja "Report" de Edenred?';
+        return;
+      }
 
       const fechas = filasParaCargarGasolina.map((f) => f.fecha);
       ventanaParaCargarGasolina = {
@@ -3334,6 +3362,9 @@ document.getElementById('input-excel-gasolina').addEventListener('change', funct
       };
       document.getElementById('preview-rango-gasolina').textContent = ventanaParaCargarGasolina.fechaMin + ' a ' + ventanaParaCargarGasolina.fechaMax;
       document.getElementById('preview-filas-gasolina').textContent = filasParaCargarGasolina.length;
+      document.getElementById('estado-carga-gasolina').textContent = omitidasSinPlaca > 0
+        ? 'Nota: se omitieron ' + omitidasSinPlaca + ' fila(s) sin placa.'
+        : '';
       document.getElementById('preview-carga-gasolina').style.display = 'block';
     } catch (error) {
       document.getElementById('estado-carga-gasolina').textContent = 'Error al leer el archivo: ' + error.message;
